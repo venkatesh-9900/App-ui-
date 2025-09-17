@@ -1,11 +1,7 @@
 import {GenericResponse} from "@/types/teams.ts";
 
 export interface AppUserProfile {
-    displayName: string;
-    bio: string;
-    imageUrl: string;
-    imagePath?: string;
-    updatedAt?: string;
+    displayName?: string;
     email?: string;
     organization?: string;
 }

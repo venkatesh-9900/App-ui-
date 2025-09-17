@@ -53,10 +53,13 @@ import {toast} from "sonner";
 import navigation from "@/constants/navigation.tsx";
 import { commonButtonStyles, logoutButtonStyle } from "@/common/menu-styles.tsx";
 import ProfileDetailsLayout from "@/components/templates/profile-details.tsx";
+import { logoutUser } from "@/hooks/auth-service.ts";
+import { iam_logout_url } from "@/constants/iam-uri.tsx";
 
 interface SidebarProps {
   isExpanded: boolean;
   onToggle: (value: boolean) => void;
+  userProfile: AppUserProfile | null;
 }
 
 const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
@@ -64,51 +67,36 @@ const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
 export default function Sidebar({
                                   isExpanded,
                                   onToggle,
+                                  userProfile
                                 }: SidebarProps) {
-
-  const [profile, setProfile] = useState<AppUserProfile | null>(null);
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const data = await getUserProfile();
-        setProfile(data);
-      } catch (err) {
-        console.error("Failed to load user profile", err);
-      }
-    };
-    loadProfile();
-  }, []);
-
-  const displayName = profile?.displayName || "User";
-  const fallbackInitials = profile?.displayName?.slice(0, 2).toUpperCase() || "??";
-  const email = profile?.email || "user@example.com";
-  const organization = profile?.organization || "Default Organization";
+  const displayName = userProfile?.displayName || "User";
+  const fallbackInitials = userProfile?.displayName?.slice(0, 2).toUpperCase() || "??";
+  const email = userProfile?.email || "user@example.com";
+  const organization = userProfile?.organization || "Default Organization";
 
   const handleLogout = async () => {
-    try {
-      onToggle(false);
-      const sessionToken = localStorage.getItem('session_token');
-      if (sessionToken) {
-        await fetch(logoutUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${sessionToken}`,
-          },
-          credentials: 'include',
-        });
-      }
-    } catch (err) {
-      console.warn('Logout error:', err);
-    }
-    // Cleanup local storage
-    localStorage.removeItem('session_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    toast('Logged out', {
-      description: 'You have been successfully logged out.',
+    onToggle(false);
+    toast('Logging out', {
+      description: 'Please wait while we log you out',
     });
-    window.location.href = "/";
-  };
+    logoutUser({
+      successTask: (idToken: String) => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("isAuthenticated");
+        window.location.replace(iam_logout_url(idToken));
+      },
+      failureTask: () => {
+        toast('Failure', {
+          description: 'Logout failed unexpectedly. Please try again.',
+        });
+      },
+      errorTask: () => {
+        toast('Error', {
+          description: 'Logout failed due to error',
+        });
+      },
+    });
+  }
 
   const [location] = useLocation();
   const SidebarItem = ({ item }: { item: any; }) => {

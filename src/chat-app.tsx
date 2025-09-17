@@ -8,6 +8,9 @@ import { useEffect, useState } from "react";
 import { Box, CssBaseline } from "@mui/material";
 import { AppearanceProvider } from "@/contexts/AppearanceContext.tsx";
 import { TooltipProvider } from "./components/ui/tooltip";
+import {AppUserProfile} from "@/types";
+import {getUserProfile} from "@/hooks/user-service.ts";
+import {toast} from "sonner";
 
 const HEADER_HEIGHT = '80px'; // Corresponds to pt-20 (5rem)
 const SIDEBAR_WIDTH_EXPANDED = '256px'; // Corresponds to w-64 (16rem)
@@ -19,6 +22,30 @@ function ChatApp() {
         return stored ? JSON.parse(stored) : true;
     });
     const [sidebarSmExpanded, setSidebarSmExpanded] = useState(false);
+    const [profile, setProfile] = useState<AppUserProfile | null>(null);
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            await getUserProfile({
+                successTask: (data: AppUserProfile) => {
+                    console.log(data);
+                    setProfile(data);
+                },
+                failureTask: () => {
+                    toast('Failure', {
+                        description: 'Could not fetch user profile details.',
+                    });
+                },
+                errorTask: () => {
+                    toast('Error', {
+                        description: 'An unexpected error occurred while fetching user profile details.',
+                    });
+                }
+            });
+        };
+        loadProfile();
+    }, []);
+
     const toggleSidebarSm = (value: boolean) => {
         setSidebarSmExpanded(value);
     };
@@ -39,9 +66,9 @@ function ChatApp() {
         <TooltipProvider>
             <CssBaseline />
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'grey.50' }}>
-                <Header onMenuClick={() => toggleSidebarSm(true)}  />
+                <Header onMenuClick={() => toggleSidebarSm(true)} userProfile={profile} />
                 <Box sx={{ display: 'flex', flexGrow: 1, pt: HEADER_HEIGHT }}>
-                    <SidebarSm isExpanded={sidebarSmExpanded} onToggle={toggleSidebarSm} />
+                    <SidebarSm isExpanded={sidebarSmExpanded} onToggle={toggleSidebarSm} userProfile={profile} />
                     <Sidebar isExpanded={sidebarExpanded} onToggle={toggleSidebar} collapseSidebar={() => setSidebarExpanded((prev: boolean) => prev)}/>
                     <Box
                         component="main"

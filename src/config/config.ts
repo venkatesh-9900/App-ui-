@@ -9,7 +9,7 @@ const resolveApiBaseUrl = (): string => {
 
     const protocol = window.location.protocol;
     const host = window.location.hostname;
-    const port = window.location.port === "3000" ? "8080" : window.location.port;
+    const port = window.location.port === "3000" ? "10000" : window.location.port;
 
     return `${protocol}//${host}:${port}`;
 };
@@ -24,7 +24,10 @@ export const ENDPOINTS = {
     AUTH: {
         LOGIN: `${API_BASE_URL}/auth/login`,
         REGISTER: `${API_BASE_URL}/auth/register`,
-        LOGOUT: `${API_BASE_URL}/auth/logout`,
+        LOGOUT: `api/auth/logout`,
+        ACCESS_TOKEN: `/api/auth/token`,
+        REFRESH_TOKEN: `/api/auth/refresh`,
+        VALIDATE: `/api/auth/validate`,
         SESSION: `${API_BASE_URL}/auth/me`,
         GOOGLE_EXCHANGE: `${API_BASE_URL}/auth/google/exchange`,
         GOOGLE_SIGN_IN: `${API_BASE_URL}/auth/google/register-or-login`,
@@ -42,10 +45,11 @@ export const ENDPOINTS = {
         }
     },
     USERS: {
-        GET: `${API_BASE_URL}/api/user/profile`,
+        GET: `/api/auth/user-info`,
         UPDATE: `${API_BASE_URL}/api/user/profile`,
         UPLOAD_FILE: `${API_BASE_URL}/api/user/upload-profile-image`,
     },
+    FETCH_AGENTS_LIST: `/api/interaction/agents-list`,
     TEAM_MGR: {
         TEAM: {
             CREATE: `${API_BASE_URL}/api/team-management/create-team`,

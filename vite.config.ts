@@ -12,7 +12,13 @@ export default defineConfig( async ({ mode }) => {
     },
     server: {
       host: "::",
-      port: 3000,
+      port: 20000,
+      "proxy": {
+        "/api": {
+          target: "http://localhost:10000",
+          changeOrigin: true,
+        }
+      },
     },
     logLevel: 'info',
     build: {

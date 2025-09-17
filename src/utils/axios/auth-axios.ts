@@ -30,7 +30,16 @@ export default axiosAuthServices;
 
 
 export function buildHeader(isStream: boolean): AxiosRequestConfig['headers'] {
-    const token = localStorage.getItem('session_token');
+    const token = localStorage.getItem('access_token');
+    return {
+        Accept: isStream ? 'text/event-stream' : 'application/json',
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+}
+
+export function buildHeaderJSON(isStream: boolean): any {
+    const token = localStorage.getItem('access_token');
     return {
         Accept: isStream ? 'text/event-stream' : 'application/json',
         'Content-Type': 'application/json',
@@ -39,7 +48,7 @@ export function buildHeader(isStream: boolean): AxiosRequestConfig['headers'] {
 }
 
 export function buildFileHeader(): AxiosRequestHeaders {
-    const token = localStorage.getItem("session_token");
+    const token = localStorage.getItem("access_token");
     const headersMap: Record<string, string> = {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };

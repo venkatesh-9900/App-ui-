@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-    // const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    const isAuthenticated = true;
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    // const isAuthenticated = true;
     
     if (!isAuthenticated) {
         // Navigate component redirects to the login page.

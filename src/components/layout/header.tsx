@@ -22,34 +22,23 @@ import {useEffect, useState} from "react";
 import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import ProfileDetailsLayout from "@/components/templates/profile-details.tsx";
+import { logoutUser } from "@/hooks/auth-service.ts";
+
 
 const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
 
 interface HeaderProps {
   onMenuClick?: () => void;
+  userProfile: AppUserProfile | null;
 }
-export default function Header({ onMenuClick }: HeaderProps) {
-
-  const [profile, setProfile] = useState<AppUserProfile | null>(null);
+export default function Header({ onMenuClick, userProfile }: HeaderProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const data = await getUserProfile();
-        setProfile(data);
-      } catch (err) {
-        console.error("Failed to load user profile", err);
-      }
-    };
-    loadProfile();
-  }, []);
-
-  const displayName = profile?.displayName || "User";
-  const fallbackInitials = profile?.displayName?.slice(0, 2).toUpperCase() || "??";
-  const email = profile?.email || "user@example.com";
-  const organization = profile?.organization || "Default Organization";
+  const displayName = userProfile?.displayName || "User";
+  const fallbackInitials = userProfile?.displayName?.slice(0, 2).toUpperCase() || "??";
+  const email = userProfile?.email || "user@example.com";
+  const organization = userProfile?.organization || "Default Organization";
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -60,29 +49,59 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   const handleLogout = async () => {
-    try {
-      handleMenuClose();
-      const sessionToken = localStorage.getItem('session_token');
-      if (sessionToken) {
-        await fetch(logoutUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${sessionToken}`,
-          },
-          credentials: 'include',
-        });
-      }
-    } catch (err) {
-      console.warn('Logout error:', err);
-    }
-    // Cleanup local storage
-    localStorage.removeItem('session_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    toast('Logged out', {
-      description: 'You have been successfully logged out.',
+    handleMenuClose();
+    toast('Logging out', {
+      description: 'Please wait while we log you out',
     });
-    window.location.href = "/";
+    logoutUser({
+      successTask: (idToken: String) => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("isAuthenticated");
+        window.location.replace(`http://35.225.223.235:8080/realms/main/protocol/openid-connect/logout?id_token_hint=${idToken}&post_logout_redirect_uri=https%3A%2F%2Fjwt.io%2F`);
+      },
+      failureTask: () => {
+        toast('Failure', {
+          description: 'Logout failed unexpectedly. Please try again.',
+        });
+      },
+      errorTask: () => {
+        toast('Error', {
+          description: 'Logout failed due to error',
+        });
+      },
+    });
+    // try {
+      
+    //   const accessToken = localStorage.getItem('access_token');
+    //   if (accessToken) {
+    //     const response = await fetch(logoutUrl, {
+    //       method: 'GET',
+    //       headers: {
+    //         'Authorization': `Bearer ${accessToken}`,
+    //       }
+    //     });
+
+    //     if (!response.ok) {
+    //       throw new Error(`Logout failed with status: ${response.status}`);
+    //     }
+    //     const responseText = await response.text();
+    //     const idToken = JSON.parse(responseText);
+    //     console.log(idToken);
+    //     if (idToken.id_token) {
+    //       localStorage.removeItem("access_token");
+    //       localStorage.removeItem("isAuthenticated");
+    //       window.location.replace(`http://35.225.223.235:8080/realms/main/protocol/openid-connect/logout?id_token_hint=${idToken.id_token}&post_logout_redirect_uri=https%3A%2F%2Fjwt.io%2F`);
+    //     } else {
+    //       toast('Failure', {
+    //         description: 'Login failed unexpectedly. Please try again.',
+    //       });
+    //     }
+    //   }
+    // } catch (err) {
+    //   toast('Error', {
+    //     description: 'Login failed due to error',
+    //   });
+    // }
   };
 
   return (

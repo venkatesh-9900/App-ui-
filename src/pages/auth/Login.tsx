@@ -17,8 +17,8 @@ import {
     Shield,
     LogIn
 } from "lucide-react";
-import config from "../../config/config.ts";
 import { useNavigate } from "react-router-dom";
+import {iam_login_url} from "@/constants/iam-uri.tsx";
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -26,13 +26,14 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
 
-    const handleSSOLogin = (provider: string) => {
+    const handleSSOLogin = () => {
         setIsLoading(true);
         toast({
             title: `SSO Login`,
             description: `Redirecting to SSO authentication...`,
         });
-        navigate(`/auth/callback`);
+        window.location.replace(iam_login_url)
+        // navigate(`/auth/callback`);
     };
 
     if (isLoading) {
@@ -87,7 +88,7 @@ export default function LoginPage() {
                             Log-in via SSO
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 5 }}>
-                            <Button onClick={() => handleSSOLogin('Okta')} variant="outlined" fullWidth startIcon={<LogIn style={{ color: '#007dc1' }} />} sx={{ justifyContent: 'center', py: 1.5 }}>Enterprise Single Sign-On</Button>
+                            <Button onClick={() => handleSSOLogin()} variant="outlined" fullWidth startIcon={<LogIn style={{ color: '#007dc1' }} />} sx={{ justifyContent: 'center', py: 1.5 }}>Enterprise Single Sign-On</Button>
                         </Box>
                     </CardContent>
                 </Card>
