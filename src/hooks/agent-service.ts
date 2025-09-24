@@ -8,7 +8,7 @@ const API_ENDPOINT = ENDPOINTS.FETCH_AGENTS_LIST;
 
 interface getAgentsListParams {
     retry?: boolean;
-    successTask: (agentDetails: any) => void;
+    successTask: (agentDetails: string[]) => void;
     failureTask: () => void;
     errorTask: () => void;
 }
@@ -40,7 +40,11 @@ export const getAgentsList = async ({successTask, failureTask, errorTask, retry 
             }
         } else if (response.status == 200) {
             const agentsList = await response.json();
-            successTask(agentsList);
+            if (agentsList.errors && agentsList.errors.length > 0) {
+                throw new Error(`Failed to fetch agents list due to these error(s): ${agentsList.errors.join(', ')}`); 
+            } else {
+                successTask(agentsList.data.agents);
+            }
         } else {
             console.error("Failed to fetch agents list with status code:", response.status);
             failureTask();

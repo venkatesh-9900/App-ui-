@@ -24,7 +24,7 @@ export const ENDPOINTS = {
     AUTH: {
         LOGIN: `${API_BASE_URL}/auth/login`,
         REGISTER: `${API_BASE_URL}/auth/register`,
-        LOGOUT: `api/auth/logout`,
+        LOGOUT: `/api/auth/logout`,
         ACCESS_TOKEN: `/api/auth/token`,
         REFRESH_TOKEN: `/api/auth/refresh`,
         VALIDATE: `/api/auth/validate`,
@@ -34,13 +34,11 @@ export const ENDPOINTS = {
     },
     INTERACTIONS: {
         STANDARD: {
-            url: `${API_BASE_URL}/api/ai/interaction/chat`,
-            type: 'generic',
+            url: `/api/interaction/chat`,
             stream: false
         },
         STREAM_STANDARD: {
-            url: `${API_BASE_URL}/api/ai/interaction/chat-stream`,
-            type: 'generic',
+            url: `/api/interaction/chat`,
             stream: true
         }
     },
@@ -83,14 +81,17 @@ export const ENDPOINTS = {
             DELETE_BULK: `${API_BASE_URL}/api/team-management/delete-bulk-mcp-urls`
         }
     },
-    CHAT_SESSION: `${API_BASE_URL}/api/ai/sessions`,
-    CHAT_SESSION_MESSAGES: `${API_BASE_URL}/api/ai/sessions/{sessionId}/messages`,
-    DELETE_SESSION: `${API_BASE_URL}/api/ai/sessions/{sessionId}`,
+    CHAT_SESSION: `/api/interaction/fetch-all-sessions`,
+    CHAT_SESSION_MESSAGES: `/api/interaction/fetch-interaction`,
+    SHARED_CHAT_SESSION_MESSAGES: `/api/interaction/fetch-shared-interaction`,
+    FETCH_SESSION_DETAILS: `/api/interaction/fetch-session-details`,
+    DELETE_SESSION: `/api/interaction/delete-session`,
     IS_NEW_SESSION: `${API_BASE_URL}/api/ai/session/{sessionId}/isNew`,
     ARCHIVE_SESSION: `${API_BASE_URL}/api/ai/sessions/{sessionId}/archive`,
     UPDATE_SESSION_TITLE: `${API_BASE_URL}/api/ai/sessions/{sessionId}/title`,
     UPLOAD_FILE: `${API_BASE_URL}/api/ai/upload`,
     REMOVE_FILE: `${API_BASE_URL}/api/ai/message/{messageId}/attachment`,
+    TOGGLE_CHAT_SHARABILITY: `/api/interaction/toggle-session-sharability`,
 };
 export const SELECTED_ENDPOINT =
     ENDPOINTS.INTERACTIONS.STREAM_STANDARD;

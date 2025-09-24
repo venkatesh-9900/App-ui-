@@ -2,14 +2,14 @@ import {handleStreamMessage} from "@/hooks/message-service.ts";
 import {useCallback} from "react";
 import {checkIsSessionNew} from "./chat-service";
 import {triggerChatHistoryUpdate} from "@/utils/eventBus";
-import {Message, MessageContent} from "@/types";
+import {ChatMessage, Message, MessageContent} from "@/types";
 
 const TYPING_SPEED = 10; // Reduced from 20 to 10 for faster typing animation
 const LOADING_DURATION = 2500; // 2.5 seconds in milliseconds
 
 interface UseMessageHandlingProps {
-    messages: Message[];
-    setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+    messages: ChatMessage[];
+    setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
     setInput: React.Dispatch<React.SetStateAction<string>>;
     setIsThinking: React.Dispatch<React.SetStateAction<boolean>>;
     setTitle: React.Dispatch<React.SetStateAction<string>>;
@@ -72,27 +72,25 @@ export const useMessageHandling = ({
         typeWriter();
     }, [setCurrentTypingIndex, setDisplayedText]);
 
-    const handleSendMessage = useCallback( async (text: string, image?: string, sessionIdOverride?: string) => {
+    const handleSendMessage = useCallback( async (text: string, selectedAgent: string, image?: string, sessionIdOverride?: string) => {
         const sessionIdRaw = sessionIdOverride || currentChatId;
         const isNewSessionClient  = !sessionIdRaw || sessionIdRaw === '0' || sessionIdRaw.length < 10;
         const sessionId = isNewSessionClient  ? '' : sessionIdRaw;
         if (text.trim() || image) {
             const timestamp = new Date().toISOString();
-            const userMessage: Message = { id: '', text, isUser: true, image, timestamp };
+            const userMessage: ChatMessage = { author: 'user', content: text, timestamp: timestamp };
             const newMessages = [...messages, userMessage];
-            const botMessage: Message = {
-                id: '',
-                text: { summary: '', type: 'text' },
-                isUser: false,
-                timestamp: new Date().toISOString(),
+            const botMessage: ChatMessage = {
+                author: 'model',
+                content: '',
+                timestamp: new Date().toISOString()
             };
 
             const updatedMessages = [...messages, userMessage, botMessage];
             setMessages(updatedMessages);
             setIsThinking(true);
             setInput('');
-
-            let newSessionId = sessionId;
+            console.log('selectedAgent:', selectedAgent);
             await handleStreamMessage({
                 text,
                 image,
@@ -104,15 +102,10 @@ export const useMessageHandling = ({
                 setCurrentChatId,
                 updateTyping,
                 setSelectedVizUrl,
-                setIsSplitMode
+                setIsSplitMode,
+                selectedAgent
             });
-            if (!isNewSessionClient) {
-                const isNewSessionServer = await checkIsSessionNew(sessionId);
-                if (isNewSessionServer) {
-                    triggerChatHistoryUpdate();
-                    setTitle(generateTitle(text));
-                }
-            } else {
+            if (isNewSessionClient) {
                 // sessionId was empty ⇒ client already knows it’s new, so update history immediately
                 triggerChatHistoryUpdate();
                 setTitle(generateTitle(text));

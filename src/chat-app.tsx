@@ -12,7 +12,7 @@ import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import {toast} from "sonner";
 
-const HEADER_HEIGHT = '80px'; // Corresponds to pt-20 (5rem)
+const HEADER_HEIGHT = '100px'; // Corresponds to pt-20 (5rem)
 const SIDEBAR_WIDTH_EXPANDED = '256px'; // Corresponds to w-64 (16rem)
 const SIDEBAR_WIDTH_COLLAPSED = '64px'; // Corresponds to w-16 (4rem)
 

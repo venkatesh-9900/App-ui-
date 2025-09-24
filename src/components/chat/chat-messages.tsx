@@ -1,5 +1,5 @@
 import {useEffect, useRef} from 'react';
-import {ChatMessagePageProps, Message} from "@/types";
+import {ChatMessagePageProps, ChatMessage, Message} from "@/types";
 import MessageInterface from "@/components/chat/message/message-interface.tsx";
 import {hasAnyVisualization} from "@/hooks";
 import LoadingDots from "@/utils/loading-dots.tsx";
@@ -8,6 +8,7 @@ import {Box, Container} from "@mui/material";
 export function ChatMessages({
                                                              title,
                                                              input,
+                                                             readonly,
                                                              setInput,
                                                              currentChatId,
                                                              handleSendMessage,
@@ -18,23 +19,24 @@ export function ChatMessages({
                                                              displayedText,
                                                              onVizSelect,
                                                              onCloseSplitView,
-                                                             userClosedSplitView
+                                                             userClosedSplitView,
+                                                             selectedAgent
                                                          }: ChatMessagePageProps) {
     // console.log("[ChatMessages] messages:", messages);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const hasAnyViz = hasAnyVisualization(messages);
-    const getMessageText = (message: Message, index: number): string => {
+    const getMessageText = (message: ChatMessage, index: number): string => {
         if (index === currentTypingIndex) {
             return displayedText;
         }
 
-        if (typeof message.text === 'object') {
-            return typeof message.text === 'object'
-                ? message.text.summary ?? ''
-                : message.text;
-        }
+        // if (typeof message.text === 'object') {
+        //     return typeof message.text === 'object'
+        //         ? message.text.summary ?? ''
+        //         : message.text;
+        // }
 
-        return message.text;
+        return message.content;
     };
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -45,12 +47,13 @@ export function ChatMessages({
         <Box sx={{ flex: 1, overflowY: 'auto', bgcolor: 'background.paper' }}>
             <Container
                 maxWidth="lg"
-                sx={{ pt: { xs: 2, md: 4 }, pb: { xs: '140px', sm: '160px' } }}
+                sx={{ pt: { xs: 2, md: 4 }, pb: readonly ? {xs: '20px', sm: '40px'} : { xs: '140px', sm: '160px' } }}
             >
                 {messages.map((message, index) => (
                     <MessageInterface
                         key={index}
                         input={input}
+                        readonly={readonly}
                         setInput={setInput}
                         currentChatId={String(currentChatId)}
                         handleSendMessage={handleSendMessage}
@@ -59,6 +62,7 @@ export function ChatMessages({
                         displayedText={getMessageText(message, index)}
                         onVizSelect={onVizSelect}
                         onCloseSplitView={onCloseSplitView}
+                        selectedAgent={selectedAgent}
                     />
                 ))}
                 {isThinking && (
@@ -68,7 +72,7 @@ export function ChatMessages({
                         </Box>
                     </Box>
                 )}
-                <Box ref={messagesEndRef} sx={{ height: '96px' }} />
+                {!readonly && <Box ref={messagesEndRef} sx={{ height: '96px' }} />}
             </Container>
         </Box>
     );

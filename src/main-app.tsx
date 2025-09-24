@@ -10,8 +10,9 @@ import { AppearanceProvider } from "@/contexts/AppearanceContext.tsx";
 import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import {toast} from "sonner";
+import { getAgentsList } from "./hooks/agent-service";
 
-const HEADER_HEIGHT = '80px'; // Corresponds to pt-20 (5rem)
+const HEADER_HEIGHT = '100px'; // Corresponds to pt-20 (5rem)
 const SIDEBAR_WIDTH_EXPANDED = '256px'; // Corresponds to w-64 (16rem)
 const SIDEBAR_WIDTH_COLLAPSED = '64px'; // Corresponds to w-16 (4rem)
 
@@ -42,6 +43,22 @@ function MainApp() {
                     });
                 }
             });
+
+            // await getAgentsList({
+            //     successTask: (data: any) => {
+            //         console.log(data);
+            //     },
+            //     failureTask: () => {
+            //         toast('Failure', {
+            //             description: 'Could not fetch agents list.',
+            //         });
+            //     },
+            //     errorTask: () => {
+            //         toast('Error', {
+            //             description: 'An unexpected error occurred while fetching agents list.',
+            //         });
+            //     }
+            // })
         };
         loadProfile();
     }, []);

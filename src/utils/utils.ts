@@ -62,3 +62,11 @@ export const stripRenderVizUrls = (text: string): string => {
 //
 //     return 'text';
 // };
+export const getTextWithoutReasoning = (text: string): string => {
+    const regex = /<think>.*?<\/think>/g;
+    const final_text = text.replace(regex, '');
+    if (final_text.trim() == "") {
+        return "";
+    }
+    return final_text;
+}

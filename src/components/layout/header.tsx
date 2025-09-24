@@ -23,6 +23,7 @@ import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import ProfileDetailsLayout from "@/components/templates/profile-details.tsx";
 import { logoutUser } from "@/hooks/auth-service.ts";
+import { iam_logout_url } from "@/constants/iam-uri.tsx";
 
 
 const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
@@ -57,7 +58,7 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
       successTask: (idToken: String) => {
         localStorage.removeItem("access_token");
         localStorage.removeItem("isAuthenticated");
-        window.location.replace(`http://35.225.223.235:8080/realms/main/protocol/openid-connect/logout?id_token_hint=${idToken}&post_logout_redirect_uri=https%3A%2F%2Fjwt.io%2F`);
+        window.location.replace(iam_logout_url(idToken));
       },
       failureTask: () => {
         toast('Failure', {

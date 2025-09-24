@@ -8,25 +8,29 @@ import Box from "@mui/material/Box";
 interface MessageUserPlainTextProps {
     input: string;
     setInput: (value: string) => void;
+    readonly: boolean;
     currentChatId: string;
-    handleSendMessage: (message: string) => void;
+    handleSendMessage: (message: string, selectedAgent: string) => void;
     handleEditClick: () => void;
     handleUpdate: () => void;
     handleCancel: () => void;
     displayText: string;
     isEditing: boolean;
+    selectedAgent: string;
 }
 
 const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
                                                                        input,
                                                                        setInput,
+                                                                       readonly,
                                                                        currentChatId,
                                                                        handleSendMessage,
                                                                        handleEditClick,
                                                                        handleUpdate,
                                                                        handleCancel,
                                                                        displayText,
-                                                                       isEditing
+                                                                       isEditing,
+                                                                       selectedAgent
                                                                      }) => {
 
     const [editingContent, setEditingContent] = useState<string>("");
@@ -73,7 +77,7 @@ const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
     const handleSendEdit = () => {
         let message =editingContent.trim()
         setInput(message);
-        handleSendMessage(message);
+        handleSendMessage(message, selectedAgent);
         handleUpdate();
     };
 
@@ -104,7 +108,7 @@ const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
                             <Copy className="w-3 h-3 text-slate-500" />
                         )}
                     </Button>
-                    <Button
+                    {!readonly && <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleEditMessage}
@@ -112,11 +116,11 @@ const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
                         title="Edit message"
                     >
                         <Edit className="w-3 h-3 text-slate-500" />
-                    </Button>
+                    </Button>}
                 </Box>
             )}
             {/* Editing View */}
-            {isEditing ? (
+            {!readonly && isEditing ? (
                 <Box
                     component={"div"}
                     className="user-edit-message w-full whitespace-pre-line"

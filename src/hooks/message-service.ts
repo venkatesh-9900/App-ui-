@@ -1,5 +1,6 @@
 import {SELECTED_ENDPOINT} from "@/config/config.ts";
-import {Message, MessageContent} from "@/types";
+import { app_name } from "@/constants/app-name";
+import {ChatMessage, Message, MessageContent} from "@/types";
 
 export async function handleStreamMessage({
                                               text,
@@ -12,10 +13,13 @@ export async function handleStreamMessage({
                                               setCurrentChatId,
                                               updateTyping,
                                               setSelectedVizUrl,
-                                              setIsSplitMode
+                                              setIsSplitMode,
+                                              selectedAgent
                                           }: any) {
     const interactionMode = SELECTED_ENDPOINT;
-    const payload = { query: text, type: interactionMode.type,   sessionId: currentChatId === 'new' || !currentChatId ? '' : currentChatId, };
+    console.log('selectedAgent:', selectedAgent);
+    const payload = { query: text, agent: selectedAgent };
+    const newChatId: string = window.crypto.randomUUID() + '-' + new Date().toISOString();
     setIsThinking(true);
     try {
         const response = await fetch(interactionMode.url, {
@@ -23,20 +27,26 @@ export async function handleStreamMessage({
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'text/event-stream',
-                'Authorization': `Bearer ${localStorage.getItem('session_token')}`
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                'x-app-name': app_name,
+                'x-session-id': (!currentChatId || currentChatId === 0 || currentChatId === 'new') ? newChatId : currentChatId
             },
             body: JSON.stringify(payload)
         });
 
         if (!response.ok || !response.body) throw new Error(`Stream failed with status: ${response.status}`);
 
+        //const sessionId = content.replace('__SESSION_ID__:', '');
+        if (!currentChatId || currentChatId === 0 || currentChatId === 'new') {
+            setCurrentChatId(newChatId);
+        }
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
-        const botMessage: Message = {
-            id: '',
-            text: '',
-            isUser: false,
+        const botMessage: ChatMessage = {
+            author: 'model',
+            content: '',
             timestamp: new Date().toISOString(),
         };
         const updatedMessages = [...newMessages, botMessage];
@@ -53,6 +63,7 @@ export async function handleStreamMessage({
             if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
+            console.log('chunk:', chunk.replace(' ', '_').replace('\n', '$'));
             const lines = chunk.split('\n');
 
             lines.forEach((line) => {
@@ -112,23 +123,24 @@ export async function handleStreamMessage({
 
                     // Append chat data
                     result += content + '\n';
-                    updatedMessages[index].text = result;
+                    updatedMessages[index].content = result;
                     setMessages([...updatedMessages]);
                     lastEventType = null;
                 }
             });
         }
         const trimmed = result.trim();
-        updatedMessages[index].text = vizUrls.length > 0
-            ? {
-                summary: trimmed,
-                type: 'visualization',
-                visualizationUrls: vizUrls,
-            }
-            : {
-                summary: trimmed,
-                type: 'text',
-            };
+        updatedMessages[index].content = trimmed;
+        // updatedMessages[index].text = vizUrls.length > 0
+        //     ? {
+        //         summary: trimmed,
+        //         type: 'visualization',
+        //         visualizationUrls: vizUrls,
+        //     }
+        //     : {
+        //         summary: trimmed,
+        //         type: 'text',
+        //     };
 
         setMessages([...updatedMessages]);
     } catch (error: any) {

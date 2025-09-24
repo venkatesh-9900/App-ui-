@@ -14,9 +14,10 @@ interface ChatInputProps {
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
     currentChatId: string;
-    handleSendMessage: (message: string) => void;
+    handleSendMessage: (message: string, selectedAgent: string) => void;
     handleFileUpload: (file: File, sessionIdOverride?: string) => Promise<FileUploadResponse>;
     isLoading?: boolean;
+    selectedAgent: string;
 }
 
 export function ChatInput({
@@ -26,6 +27,7 @@ export function ChatInput({
                               handleSendMessage,
                               handleFileUpload,
                               isLoading = false,
+                              selectedAgent
                           }: ChatInputProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileUploadRef = useRef<FileUploadHandle>(null);
@@ -90,7 +92,7 @@ export function ChatInput({
     };
     const handleMessageSubmit = () => {
         if (!isLoading && input.trim()) {
-            handleSendMessage(input);
+            handleSendMessage(input, selectedAgent);
             setInput("");
             setAttachedFiles([]);
         }

@@ -1330,7 +1330,7 @@ function SanctionedEntitiesQA() {
   if (!showQuestion) return null;
 
   return (
-    <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1, border: 1, borderColor: 'divider', p: { xs: 1.5, sm: 2 }, mb: 2 }}>
+    <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider', p: { xs: 1.5, sm: 2 }, mb: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 1.5 }}>
           <Box sx={{ width: 32, height: 32, bgcolor: (theme) => alpha(theme.palette.warning.main, 0.1), borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1493,7 +1493,7 @@ function WalletMonitoringQA() {
   if (!showQuestion) return null;
 
   return (
-    <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1, border: 1, borderColor: 'divider', p: { xs: 1.5, sm: 2 }, mb: 2 }} style={{ minWidth: 0 }}>
+    <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider', p: { xs: 1.5, sm: 2 }, mb: 2 }} style={{ minWidth: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ width: 32, height: 32, bgcolor: (theme) => alpha(theme.palette.success.main, 0.1), borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1611,18 +1611,8 @@ export default function HomePage() {
         <EthereumTransactionQA />
         <BaseRiskAlertsQA />
         <WalletAnalysisQA />
-      </Box>
-
-      {/* Contract Analysis and Sanctioned Entities */}
-      <Box sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, 1fr)' },
-        gap: { xs: 2, md: 3 }
-      }}>
         <ContractAnalysisQA />
-        {/* Sanctioned Entities Q&A */}
         <SanctionedEntitiesQA />
-        {/* Wallet Monitoring Q&A */}
         <WalletMonitoringQA />
       </Box>
     </Box>

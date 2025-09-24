@@ -69,11 +69,12 @@ export interface Chat {
 export interface ChatMessagePageProps {
   title: string;
   input: string;
+  readonly: boolean;
   setInput: (value: string) => void;
   currentChatId: string;
-  handleSendMessage: (message: string) => void;
+  handleSendMessage: (message: string, selectedAgent: string) => void;
   handleFileUpload: (file: File, sessionIdOverride?: string) => Promise<FileUploadResponse>;
-  messages: any[];
+  messages: ChatMessage[];
   isThinking: boolean;
   currentTypingIndex: number;
   displayedText: string;
@@ -81,6 +82,7 @@ export interface ChatMessagePageProps {
   onVizSelect?: (url: string) => void;
   onCloseSplitView?: () => void;
   userClosedSplitView?: boolean;
+  selectedAgent: string;
 }
 
 /**
@@ -104,12 +106,13 @@ export interface ChatMessagesProps {
 export interface MessageContentProps {
   input: string;
   setInput: (value: string) => void;
+  readonly: boolean;
   currentChatId: string;
-  handleSendMessage: (message: string) => void;
+  handleSendMessage: (message: string, selectedAgent: string) => void;
   handleEditClick: () => void;
   handleUpdate: () => void;
   handleCancel: () => void;
-  message: Message;
+  message: ChatMessage;
   isTyping: boolean;
   isEditing: boolean;
   updatedText: string | null;
@@ -119,6 +122,7 @@ export interface MessageContentProps {
   onCommandClick?: (cmd: string) => void;
   onVizSelect?: (url: string) => void;
   onCloseSplitView?: () => void;
+  selectedAgent: string;
 }
 export interface RenderMessageSplitLayoutProps {
   summary: string;
@@ -143,4 +147,16 @@ export interface RenderMessageSplitLayoutProps {
 export interface ChatInterfaceProps {
   /** Optional chat ID to load specific chat */
   params?: { id?: string };
+}
+
+export interface ChatSessions {
+    session_id: string;
+    initial_text: string;
+    is_sharable: boolean;
+}
+
+export interface ChatMessage {
+    author: string;
+    content: string;
+    timestamp: string;
 }

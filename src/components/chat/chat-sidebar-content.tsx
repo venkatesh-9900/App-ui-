@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import { MessageSquare, Plus } from "lucide-react";
 import {archiveChat, fetchUserChatSessions, loadChatMessages, removeChat, updateChatTitle} from "@/hooks";
-import {Chat} from "@/types";
+import {Chat, ChatSessions} from "@/types";
 import {onChatHistoryUpdate} from "@/utils/eventBus.ts";
 import ChatMenuButton from "@/components/chat/tools/chat-menu-button.tsx";
 import {
@@ -16,6 +16,7 @@ import {
     Typography
 } from "@mui/material";
 import { commonButtonStyles } from '@/common/menu-styles';
+import { toast } from 'sonner';
 
 interface ChatCollapsibleItemProps {
     isActive: boolean;
@@ -27,7 +28,7 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
     const location = useLocation();
     const theme = useTheme();
     const navigate = useNavigate();
-    const [chatHistory, setChatHistory] = useState<Chat[]>([]);
+    const [chatHistory, setChatHistory] = useState<ChatSessions[]>([]);
     const [currentChatId, setCurrentChatId] = useState("initial");
     const currentPath = location.pathname;
     const manuallyLoadedRef = useRef(false);
@@ -39,19 +40,45 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
 
     useEffect(() => {
         const loadChats = async () => {
-            try {
-                const sessions = await fetchUserChatSessions();
-                setChatHistory(sessions);
-                if (sessions.length > 0) {
-                    const defaultChatId = sessions[0].id;
-                    setCurrentChatId(defaultChatId);
-                    const { title, messages } = await loadChatMessages(defaultChatId);
-                } else {
-                    resetChat(); // fallback if no prior chats
+            await fetchUserChatSessions({
+                successTask: async (sessions: ChatSessions[]) => {
+                    setChatHistory(sessions);
+                    if (sessions.length > 0) {
+                        const defaultChatId = sessions[0].session_id;
+                        setCurrentChatId(defaultChatId);
+                        const { readonly, conversations } = await loadChatMessages({
+                            sessionId: defaultChatId,
+                            failureTask: () => {
+                                console.error('Failed to load chat messages');
+                            },
+                            errorTask: () => {
+                                console.error('Error loading chat messages');
+                            }
+                        });
+                    } else {
+                        resetChat(); // fallback if no prior chats
+                    }
+                },
+                failureTask: () => {
+                    console.error('Failed to load chats');
+                },
+                errorTask: () => {
+                    console.error('Error loading chats');
                 }
-            } catch (err) {
-                console.error('Failed to load chats:', err);
-            }
+            });
+            // try {
+            //     const sessions = await fetchUserChatSessions();
+            //     setChatHistory(sessions);
+            //     if (sessions.length > 0) {
+            //         const defaultChatId = sessions[0].id;
+            //         setCurrentChatId(defaultChatId);
+            //         const { title, messages } = await loadChatMessages(defaultChatId);
+            //     } else {
+            //         resetChat(); // fallback if no prior chats
+            //     }
+            // } catch (err) {
+            //     console.error('Failed to load chats:', err);
+            // }
         };
 
         void loadChats();
@@ -67,16 +94,31 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
 
     useEffect(() => {
         const loadChats = async () => {
-            try {
-                const updated = await fetchUserChatSessions();
-                setChatHistory(updated);
-                if (updated.length > 0 && location.pathname === '/chat/new'
-                ) {
-                    navigate(`/chat/${updated[0].id}`);
+            // try {
+            //     const updated = await fetchUserChatSessions();
+            //     setChatHistory(updated);
+            //     if (updated.length > 0 && location.pathname === '/chat/new'
+            //     ) {
+            //         navigate(`/chat/${updated[0].id}`);
+            //     }
+            // } catch (err) {
+            //     console.error("Failed to refresh chat history:", err);
+            // }
+            await fetchUserChatSessions({
+                successTask: async (sessions: ChatSessions[]) => {
+                    setChatHistory(sessions);
+                    if (sessions.length > 0 && location.pathname === '/chat/new'
+                    ) {
+                        navigate(`/chat/${sessions[0].session_id}`);
+                    }
+                },
+                failureTask: () => {
+                    console.error('Failed to load chats');
+                },
+                errorTask: () => {
+                    console.error('Error loading chats');
                 }
-            } catch (err) {
-                console.error("Failed to refresh chat history:", err);
-            }
+            });
         };
         const unsubscribe = onChatHistoryUpdate(() => {
             void loadChats();
@@ -108,49 +150,83 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
             closeSidebar();
             return;
         }
-        try {
-            await removeChat(id);
-            const updatedChats = await fetchUserChatSessions();
-            setChatHistory(updatedChats);
-        } catch (err) {
-            console.error(`Failed to remove chat ${id}`, err);
-        }
+        await removeChat({
+            sessionId: id,
+            successTask: async() => {
+                toast('Success', {
+                    description: 'Deleted successfully',
+                });
+                await fetchUserChatSessions({
+                    successTask: async (sessions: ChatSessions[]) => {
+                        setChatHistory(sessions);
+                        if (sessions.length > 0 && location.pathname === '/chat/new'
+                        ) {
+                            navigate(`/chat/${sessions[0].session_id}?sharable=${sessions[0].is_sharable}`);
+                        }
+                    },
+                    failureTask: () => {
+                        console.error('Failed to load chats');
+                    },
+                    errorTask: () => {
+                        console.error('Error loading chats');
+                    }
+                });
+            },
+            failureTask: () => {
+                toast('Failure', {
+                    description: 'Could not delete the chat session. Please try again.',
+                });
+            },
+            errorTask: () => {
+                toast('Error', {
+                    description: 'A unexpected error occurred while deleting the chat session.',
+                });
+            }
+        });
+        
+        // try {
+        //     await removeChat(id);
+        //     const updatedChats = await fetchUserChatSessions();
+        //     setChatHistory(updatedChats);
+        // } catch (err) {
+        //     console.error(`Failed to remove chat ${id}`, err);
+        // }
         closeSidebar();
     };
     const archiveConversation = async (e: React.MouseEvent, id: string) => {
         e.preventDefault();
         e.stopPropagation();
-        if (id === "new") {
-            setCurrentChatId("new");
-            resetChat();
-            closeSidebar();
-            return;
-        }
-        try {
-            await archiveChat(id);
-            const updatedChats = await fetchUserChatSessions();
-            setChatHistory(updatedChats);
-        } catch (err) {
-            console.error(`Failed to remove chat ${id}`, err);
-        }
+        // if (id === "new") {
+        //     setCurrentChatId("new");
+        //     resetChat();
+        //     closeSidebar();
+        //     return;
+        // }
+        // try {
+        //     await archiveChat(id);
+        //     const updatedChats = await fetchUserChatSessions();
+        //     setChatHistory(updatedChats);
+        // } catch (err) {
+        //     console.error(`Failed to remove chat ${id}`, err);
+        // }
         closeSidebar();
     };
 
     const renameConversation = async (e: React.MouseEvent, id: string, newTitle: string) => {
         e.preventDefault();
         e.stopPropagation();
-        if (id === "new") {
-            // Just reset UI state
-            resetChat();
-            return;
-        }
-        try {
-            await updateChatTitle(id, newTitle);
-            const updatedChats = await fetchUserChatSessions();
-            setChatHistory(updatedChats);
-        } catch (err) {
-            console.error(`Failed to remove chat ${id}`, err);
-        }
+        // if (id === "new") {
+        //     // Just reset UI state
+        //     resetChat();
+        //     return;
+        // }
+        // try {
+        //     await updateChatTitle(id, newTitle);
+        //     const updatedChats = await fetchUserChatSessions();
+        //     setChatHistory(updatedChats);
+        // } catch (err) {
+        //     console.error(`Failed to remove chat ${id}`, err);
+        // }
     };
 
     const handleNewChat = (e: React.MouseEvent) => {
@@ -214,7 +290,7 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
                     >
                         {chatHistory.map((conv) => (
                             <Box
-                                key={conv.id}
+                                key={conv.session_id}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -225,21 +301,21 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
                                     cursor: 'pointer',
                                     transition: 'all 0.2s ease-in-out',
                                     '&:hover': { bgcolor: 'action.hover' },
-                                    ...(conv.id === currentChatId && {
+                                    ...(conv.session_id === currentChatId && {
                                         bgcolor: alpha(theme.palette.primary.main, 0.1),
                                         color: 'primary.dark',
                                     }),
                                 }}
-                                onClick={() => onLoadCurrentConversation(conv.id)}
+                                onClick={() => onLoadCurrentConversation(conv.session_id)}
                             >
                                 <MessageSquare size={12} style={{ color: 'var(--mui-palette-text-secondary)', flexShrink: 0 }} />
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Typography variant="caption" sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {conv.title}
+                                        {conv.initial_text}
                                     </Typography>
                                 </Box>
                                 <ChatMenuButton
-                                    chatId={conv.id}
+                                    chatId={conv.session_id}
                                     onRemove={deleteConversation}
                                     onArchive={archiveConversation}
                                     onRename={renameConversation}

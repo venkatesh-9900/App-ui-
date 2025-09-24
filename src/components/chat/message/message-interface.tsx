@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useRef, useState} from 'react';
 import {format, isValid, parseISO} from 'date-fns';
 import {useAppearance} from '@/contexts/AppearanceContext';
-import {Message} from "@/types";
+import {ChatMessage, Message} from "@/types";
 import MessageContentWrapper from "@/components/chat/message/message-content-wrapper.tsx";
 import {RenderMessageContent} from "@/components/chat/message/render-message-content.tsx";
 import {Box} from "@mui/material";
@@ -11,25 +11,29 @@ import '@/styles/components/chat-message/message.css';
 interface MessageProps {
     input: string;
     setInput: (value: string) => void;
+    readonly: boolean;
     currentChatId: string;
-    handleSendMessage: (message: string) => void;
-    message: Message;
+    handleSendMessage: (message: string, selectedAgent: string) => void;
+    message: ChatMessage;
     isTyping: boolean;
     displayedText: string;
     onVizSelect?: (url: string) => void;
     onCloseSplitView?: () => void;
+    selectedAgent: string;
 }
 
 const MessageInterface: React.FC<MessageProps> = memo(({
                                                            input,
                                                            setInput,
+                                                           readonly,
                                                            currentChatId,
                                                            handleSendMessage,
                                                            message,
                                                            isTyping,
                                                            displayedText,
                                                            onVizSelect,
-                                                           onCloseSplitView
+                                                           onCloseSplitView,
+                                                           selectedAgent
                                                         }) => {
     const [showContent, setShowContent] = useState(false);
     const [showAdditionalContent, setShowAdditionalContent] = useState(false);
@@ -46,14 +50,14 @@ const MessageInterface: React.FC<MessageProps> = memo(({
             setTimeout(() => {
                 setShowAdditionalContent(true);
             }, 500);
-        } else if (message.isUser) {
+        } else if (message.author === 'user') {
             setShowContent(true);
             setShowAdditionalContent(true);
         } else {
             setShowContent(false);
             setShowAdditionalContent(false);
         }
-    }, [isTyping, message.isUser]);
+    }, [isTyping, message.author]);
 
     const formatTimestamp = (timestamp?: string) => {
         if (!timestamp) return format(new Date(), 'hh:mm a');
@@ -84,6 +88,7 @@ const MessageInterface: React.FC<MessageProps> = memo(({
             <RenderMessageContent
                 input={input}
                 setInput={setInput}
+                readonly={readonly}
                 currentChatId={currentChatId}
                 handleSendMessage={handleSendMessage}
                 handleEditClick={handleEditClick}
@@ -98,6 +103,7 @@ const MessageInterface: React.FC<MessageProps> = memo(({
                 showAdditionalContent={showAdditionalContent}
                 onVizSelect={onVizSelect}
                 onCloseSplitView={onCloseSplitView}
+                selectedAgent={selectedAgent}
             />
         );
     };
