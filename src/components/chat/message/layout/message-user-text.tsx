@@ -4,19 +4,25 @@ import { Button } from "@/components/ui/button";
 import {Copy, Edit, Check, Send, X } from "lucide-react";
 import {Textarea} from "@/components/ui/textarea.tsx";
 import Box from "@mui/material/Box";
+import { FileDetails } from "@/types";
+import Grid from "@mui/material/Grid";
+import { Paper, Typography } from "@mui/material";
+import {FiFile} from "react-icons/fi";
+import { attachmentStyles } from "@/common/chat-messages";
 
 interface MessageUserPlainTextProps {
     input: string;
     setInput: (value: string) => void;
     readonly: boolean;
     currentChatId: string;
-    handleSendMessage: (message: string, selectedAgent: string) => void;
+    handleSendMessage: (message: string, selectedAgent: string, attachedFiles: FileDetails[]) => void;
     handleEditClick: () => void;
     handleUpdate: () => void;
     handleCancel: () => void;
     displayText: string;
     isEditing: boolean;
     selectedAgent: string;
+    attachments: FileDetails[];
 }
 
 const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
@@ -30,7 +36,8 @@ const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
                                                                        handleCancel,
                                                                        displayText,
                                                                        isEditing,
-                                                                       selectedAgent
+                                                                       selectedAgent,
+                                                                       attachments
                                                                      }) => {
 
     const [editingContent, setEditingContent] = useState<string>("");
@@ -77,7 +84,7 @@ const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
     const handleSendEdit = () => {
         let message =editingContent.trim()
         setInput(message);
-        handleSendMessage(message, selectedAgent);
+        handleSendMessage(message, selectedAgent, []);
         handleUpdate();
     };
 
@@ -169,6 +176,32 @@ const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
                         whiteSpace: "pre-line",
                     }}
                 >
+                    <Grid container spacing={1} sx={{mb: 1}}>
+                        {attachments.map((file_item, idx) => (
+                            <Grid size={{ xs: 12, sm: 5 }} key={idx}>
+                                <Paper
+                                    variant="outlined"
+                                    sx={attachmentStyles}
+                                >
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+                                        {file_item.file_type.startsWith("image/") ? (
+                                            <Box
+                                                component="img"
+                                                src={file_item.public_link}
+                                                alt={file_item.original_file_name}
+                                                sx={{ height: 24, width: 24, objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }}
+                                            />
+                                        ) : (
+                                            <FiFile className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                        )}
+                                        <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
+                                            {file_item.original_file_name} ({(file_item.file_size / 1024).toFixed(1)} KB)
+                                        </Typography>
+                                    </Box>
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
                     {displayText}
                 </Box>
             )}

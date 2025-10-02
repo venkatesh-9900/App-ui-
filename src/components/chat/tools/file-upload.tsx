@@ -17,7 +17,7 @@ export interface FileUploadHandle {
  */
 interface FileUploadProps {
     /** Callback function triggered when an image is selected */
-    onFileUpload: (file: File) => void;
+    onFileUpload: (files: File[]) => void;
     /** Whether the upload functionality is disabled */
     disabled?: boolean;
     showButton?: boolean;
@@ -29,7 +29,7 @@ interface FileUploadProps {
  *
  * @component
  * @param {Object} props - Component props
- * @param {(file: File) => void} props.onFileUpload - Callback triggered when an file is selected
+ * @param {(files: File[]) => void} props.onFileUpload - Callback triggered when an file is selected
  * @param {boolean} [props.disabled=false] - Whether the upload functionality is disabled
  * @param {boolean} [props.showButton=true] - Whether to display the default upload button
  * @param {React.Ref<FileUploadHandle>} ref - Forwarded ref that exposes `triggerFileDialog()` method
@@ -64,9 +64,10 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(
         };
 
         const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-            const file = event.target.files?.[0];
-            if (file) {
-                onFileUpload(file);
+            const files = event.target.files;
+            if (files) {
+                onFileUpload(Array.from(files));
+                console.log("Selected files:", files);
             }
             event.target.value = "";
         };
@@ -90,6 +91,7 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.png,.jpg,.jpeg,.gif"
                     style={{ display: 'none' }}
                     disabled={disabled}
+                    multiple={true}
                 />
             </>
         );

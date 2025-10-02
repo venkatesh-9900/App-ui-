@@ -1,1 +1,0 @@
-export const app_name = "xyz_app";

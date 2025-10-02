@@ -19065,6 +19065,15 @@ h6 {
   font-family: "Outfit", sans-serif;
 }
 
+pre {
+    white-space: pre-wrap;   /* Allows the text to wrap to the next line */
+    word-wrap: break-word;   /* Breaks long words/strings that don't have spaces */
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1em;
+    border-radius: 8px;
+}
+
 /* fotter css end */
 
 /*# sourceMappingURL=main.css.map */

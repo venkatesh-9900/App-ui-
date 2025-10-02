@@ -3,7 +3,7 @@
  * @description Type definitions for chat-related components and functionality.
  */
 
-import {FileUploadResponse} from "@/types/files.ts";
+import {FileDetails, FileUploadResponse} from "@/types/files.ts";
 
 /**
  * Type for complex message content like code or charts
@@ -72,8 +72,8 @@ export interface ChatMessagePageProps {
   readonly: boolean;
   setInput: (value: string) => void;
   currentChatId: string;
-  handleSendMessage: (message: string, selectedAgent: string) => void;
-  handleFileUpload: (file: File, sessionIdOverride?: string) => Promise<FileUploadResponse>;
+  handleSendMessage: (message: string, selectedAgent: string, attachedFiles: FileDetails[]) => void;
+  handleFileUpload: (files: File[], sessionIdOverride?: string) => Promise<FileDetails[]>;
   messages: ChatMessage[];
   isThinking: boolean;
   currentTypingIndex: number;
@@ -108,7 +108,7 @@ export interface MessageContentProps {
   setInput: (value: string) => void;
   readonly: boolean;
   currentChatId: string;
-  handleSendMessage: (message: string, selectedAgent: string) => void;
+  handleSendMessage: (message: string, selectedAgent: string, attachedFiles: FileDetails[]) => void;
   handleEditClick: () => void;
   handleUpdate: () => void;
   handleCancel: () => void;
@@ -159,4 +159,5 @@ export interface ChatMessage {
     author: string;
     content: string;
     timestamp: string;
+    attachments: FileDetails[];
 }

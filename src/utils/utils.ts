@@ -1,4 +1,5 @@
-import {Message } from "@/types";
+import {FileDetails, Message } from "@/types";
+import { file_attachments_delimiter } from "@/constants/constants";
 
 /**
  * verify password at least 8 minimum length, Contains at least 1 number and container one special character
@@ -69,4 +70,28 @@ export const getTextWithoutReasoning = (text: string): string => {
         return "";
     }
     return final_text;
+}
+
+export const addAttachedFilesPublicLinks = (text: string, attachedFiles: FileDetails[]) : string => {
+    if (attachedFiles.length > 0) {
+        const public_url_lists = attachedFiles.map((e) => e.public_link).join(",\n");
+        return `${text}${file_attachments_delimiter}${public_url_lists}`
+    } else {
+        return text;
+    }
+}
+
+export const extractAttachedFilesPublicLinks = (text: string) : { message: string, attachedFiles: string[] } => {
+    const message_body = text.split(file_attachments_delimiter);
+    if (message_body.length > 1) {
+        return {
+            message: message_body[0],
+            attachedFiles: message_body[1].split(",\n")
+        };
+    } else {
+        return {
+            message: message_body[0],
+            attachedFiles: []
+        };
+    }
 }

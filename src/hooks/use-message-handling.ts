@@ -2,7 +2,7 @@ import {handleStreamMessage} from "@/hooks/message-service.ts";
 import {useCallback} from "react";
 import {checkIsSessionNew} from "./chat-service";
 import {triggerChatHistoryUpdate} from "@/utils/eventBus";
-import {ChatMessage, Message, MessageContent} from "@/types";
+import {ChatMessage, FileDetails, Message, MessageContent} from "@/types";
 
 const TYPING_SPEED = 10; // Reduced from 20 to 10 for faster typing animation
 const LOADING_DURATION = 2500; // 2.5 seconds in milliseconds
@@ -19,6 +19,7 @@ interface UseMessageHandlingProps {
     setDisplayedText: React.Dispatch<React.SetStateAction<string>>;
     setSelectedVizUrl: React.Dispatch<React.SetStateAction<string | null>>;
     setIsSplitMode: React.Dispatch<React.SetStateAction<boolean>>;
+    showError: () => void;
 }
 export const useMessageHandling = ({
                                        messages,
@@ -31,7 +32,8 @@ export const useMessageHandling = ({
                                        setCurrentTypingIndex,
                                        setDisplayedText,
                                        setSelectedVizUrl,
-                                       setIsSplitMode
+                                       setIsSplitMode,
+                                       showError
                                    }: UseMessageHandlingProps) => {
 
     const updateTyping = (text: string, index: number) => {
@@ -72,18 +74,19 @@ export const useMessageHandling = ({
         typeWriter();
     }, [setCurrentTypingIndex, setDisplayedText]);
 
-    const handleSendMessage = useCallback( async (text: string, selectedAgent: string, image?: string, sessionIdOverride?: string) => {
+    const handleSendMessage = useCallback( async (text: string, selectedAgent: string, attachedFiles: FileDetails[], image?: string, sessionIdOverride?: string) => {
         const sessionIdRaw = sessionIdOverride || currentChatId;
         const isNewSessionClient  = !sessionIdRaw || sessionIdRaw === '0' || sessionIdRaw.length < 10;
         const sessionId = isNewSessionClient  ? '' : sessionIdRaw;
         if (text.trim() || image) {
             const timestamp = new Date().toISOString();
-            const userMessage: ChatMessage = { author: 'user', content: text, timestamp: timestamp };
+            const userMessage: ChatMessage = { author: 'user', content: text, timestamp: timestamp, attachments: attachedFiles };
             const newMessages = [...messages, userMessage];
             const botMessage: ChatMessage = {
                 author: 'model',
                 content: '',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                attachments: []
             };
 
             const updatedMessages = [...messages, userMessage, botMessage];
@@ -103,7 +106,9 @@ export const useMessageHandling = ({
                 updateTyping,
                 setSelectedVizUrl,
                 setIsSplitMode,
-                selectedAgent
+                selectedAgent,
+                attachedFiles,
+                showError
             });
             if (isNewSessionClient) {
                 // sessionId was empty ⇒ client already knows it’s new, so update history immediately
