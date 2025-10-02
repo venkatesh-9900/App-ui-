@@ -30,33 +30,49 @@ export default function ProfilePage() {
 
   // Fetch current profile
   useEffect(() => {
-    const loadProfile  = async () => {
+    const loadProfile = () => {
       setLoadingProfile(true);
-      try {
-        const data = await getUserProfile();
-        if (data) {
-          const profileData = {
-            displayName: data.displayName || '',
-            bio: data.bio || '',
-            imageUrl: data.imageUrl || '',
-          };
-          setProfile(profileData);
-          setFormData(profileData);
-          setOriginalData(profileData);
-        }
-      } catch (error) {
+      
+      const successTask = (data: AppUserProfile) => {
+        const profileData = {
+          displayName: data.displayName || '',
+          bio: data.bio || '',
+          imageUrl: data.imageUrl || '',
+        };
+        setProfile(data);
+        setFormData(profileData);
+        setOriginalData(profileData);
+        setLoadingProfile(false);
+      };
+
+      const failureTask = () => {
         toast({
           title: "Error",
           description: "Failed to load profile.",
           variant: "destructive",
         });
-      } finally {
         setLoadingProfile(false);
-      }
+      };
+
+      const errorTask = () => {
+        toast({
+          title: "Error",
+          description: "Failed to load profile.",
+          variant: "destructive",
+        });
+        setLoadingProfile(false);
+      };
+
+      getUserProfile({
+        successTask,
+        failureTask,
+        errorTask,
+        retry: false
+      });
     };
 
-    loadProfile ();
-  }, []);
+    loadProfile();
+  }, [toast]);
 
   // Check if form has changes
   const hasChanges = JSON.stringify(formData) !== JSON.stringify(originalData);
