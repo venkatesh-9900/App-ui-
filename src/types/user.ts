@@ -4,6 +4,9 @@ export interface AppUserProfile {
     displayName?: string;
     email?: string;
     organization?: string;
+    bio?: string;
+    imageUrl?: string;
+    updatedAt?: string;
 }
 
 export interface ProfileResponse {
