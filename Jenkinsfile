@@ -1,103 +1,157 @@
+// ===============================
+// Jenkinsfile for app-ui (Using AWS CLI + Credentials Binding)
+// ===============================
+
+@NonCPS
+def getHighestSemanticVersion() {
+    echo "WARNING: Using dummy version. Implement real getHighestSemanticVersion()."
+    return new groovy.json.JsonSlurper().parseText('{"major": 1, "minor": 2, "patch": 3}')
+}
+
+def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
+    def versionIncrement = 'patch'
+    def finalVersion
+    
+    if (baseBranch.startsWith('breaking/') || baseBranch.startsWith('major/')) {
+        versionIncrement = 'major'
+        finalVersion = "${highestVersion.major + 1}.0.0"
+        echo "Base branch indicates MAJOR version increment"
+    } else if (baseBranch.startsWith('feature/') || baseBranch.startsWith('feat/') || baseBranch.startsWith('minor/')) {
+        versionIncrement = 'minor'
+        finalVersion = "${highestVersion.major}.${highestVersion.minor + 1}.0"
+        echo "Base branch indicates MINOR version increment"
+    } else {
+        versionIncrement = 'patch'
+        finalVersion = "${highestVersion.major}.${highestVersion.minor}.${highestVersion.patch + 1}"
+        echo "Base branch '${baseBranch}' - using default PATCH version increment"
+    }
+    
+    return [version: finalVersion, increment: versionIncrement]
+}
+
+def getBranchInfo() {
+    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replace('origin/', '') ?: 'main'
+    def commitSHA = env.GIT_COMMIT ?: 'unknown'
+    def isMaster = (branchName == 'main' || branchName == 'master')
+    
+    return [branchName: branchName, commitSHA: commitSHA, isMaster: isMaster]
+}
+
+// ===============================
+// Pipeline
+// ===============================
 pipeline {
-    agent {
-        kubernetes {
-            yaml """
+    agent any
+
+    environment {
+        AWS_REGION     = "ap-south-1"
+        AWS_ACCOUNT_ID = "210519480143"
+        ECR_REPO       = "argus-prod-cicd-ecr"
+        APP_NAME       = "app-ui"
+    }
+
+    stages {
+        stage('Build & Push Docker Image') {
+            agent {
+                kubernetes {
+                    yaml """
 apiVersion: v1
 kind: Pod
 spec:
   containers:
   - name: docker
     image: docker:24.0.0-dind
-    securityContext:
-      privileged: true
     command:
     - cat
     tty: true
+    securityContext:
+      privileged: true
 """
-        }
-    }
-
-    environment {
-        AWS_REGION     = "ap-south-1"
-        AWS_ACCOUNT_ID = "210519480143"
-        ECR_REGISTRY   = "210519480143.dkr.ecr.ap-south-1.amazonaws.com"
-        ECR_REPO       = "argus-prod-cicd-ecr"
-        APP_NAME       = "app-ui"
-        AWS_CREDS      = credentials('argus-cicd-ecr-fullaccess-iam-user')
-    }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
+                }
             }
-        }
-
-        stage('Determine Version') {
             steps {
-                script {
-                    def highestVersion = getHighestSemanticVersion()
-                    echo "Highest version: ${highestVersion.toString()}"
-                    echo " Git tag: ${highestVersion.findTag().orElse("")}"
+                container('docker') {
+                    script {
+                        def branchInfo = getBranchInfo()
+                        def shortCommit = branchInfo.commitSHA.take(8)
 
-                    def baseBranch = env.BRANCH_NAME ?: "main"
-                    def result = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                        echo "Current branch: ${branchInfo.branchName}"
+                        
+                        def imageTag
+                        if (branchInfo.isMaster) {
+                            echo "=== MASTER BRANCH BUILD ==="
+                            def highestVersion = getHighestSemanticVersion()
+                            def baseBranch = env.CHANGE_TARGET ?: 'main'
+                            def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                            imageTag = versionInfo.version
+                        } else {
+                            echo "=== PR BRANCH BUILD ==="
+                            def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
+                            imageTag = "${cleanBranchName}-${shortCommit}"
+                        }
 
-                    env.APP_VERSION = result.version
-                    echo "Final version for build: ${env.APP_VERSION}"
+                        def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}/${APP_NAME}:${imageTag}"
+                        currentBuild.displayName = imageTag
+
+                        // Use AWS CLI with Jenkins AWS credentials
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+                                          credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                            sh """
+                                echo "Installing AWS CLI..."
+                                apk add --no-cache aws-cli
+
+                                echo "Logging in to ECR..."
+                                aws ecr get-login-password --region ${AWS_REGION} \
+                                  | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                                
+                                echo "Building Docker image: ${fullImageName}"
+                                docker build -t ${fullImageName} .
+                                
+                                echo "Pushing Docker image to ECR..."
+                                docker push ${fullImageName}
+                            """
+                        }
+                    }
                 }
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Tag Release') {
+            when {
+                anyOf { branch 'main'; branch 'master' }
+            }
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: git
+    image: alpine/git:2.43.0
+    command: ['cat']
+    tty: true
+"""
+                }
+            }
             steps {
-                container('docker') {
+                container('git') {
                     script {
-                        sh '''
-                          echo "Installing AWS CLI inside docker:dind..."
-                          apk add --no-cache aws-cli curl
-
-                          echo "Configuring AWS credentials..."
-                          aws configure set aws_access_key_id $AWS_CREDS_USR
-                          aws configure set aws_secret_access_key $AWS_CREDS_PSW
-                          aws configure set region $AWS_REGION
-
-                          echo "Logging in to AWS ECR..."
-                          aws ecr get-login-password --region $AWS_REGION \
-                            | docker login --username AWS --password-stdin $ECR_REGISTRY
-
-                          echo "Building Docker image..."
-                          IMAGE_TAG=$ECR_REGISTRY/$ECR_REPO:$APP_VERSION
-                          docker build -t $IMAGE_TAG .
-
-                          echo "Pushing Docker image..."
-                          docker push $IMAGE_TAG
-                        '''
+                        def finalVersion = currentBuild.displayName
+                        echo "Creating and pushing Git tag: v${finalVersion}"
+                        
+                        // Uncomment when GitHub writer credentials available
+                        // withCredentials([usernamePassword(credentialsId: 'github-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        //     sh """
+                        //         git config user.email "ci-bot@your-fintech.com"
+                        //         git config user.name "Jenkins CI"
+                        //         git tag v${finalVersion} -m "Release version ${finalVersion}"
+                        //         git push https://${GIT_USER}:${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
+                        //     """
+                        // }
                     }
                 }
             }
         }
     }
-}
-
-@NonCPS
-def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
-    def versionIncrement = 'patch'
-    def finalVersion
-
-    if (baseBranch.startsWith('breaking/') || baseBranch.startsWith('major/')) {
-        versionIncrement = 'major'
-        finalVersion = "${highestVersion.getMajor() + 1}.0.0"
-        echo "Base branch indicates MAJOR version increment"
-    } else if (baseBranch.startsWith('feature/') || baseBranch.startsWith('feat/') || baseBranch.startsWith('minor/')) {
-        versionIncrement = 'minor'
-        finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor() + 1}.0"
-        echo "Base branch indicates MINOR version increment"
-    } else {
-        versionIncrement = 'patch'
-        finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch() + 1}"
-        echo "Base branch '${baseBranch}' - using default PATCH version increment"
-    }
-
-    return [version: finalVersion, increment: versionIncrement]
 }
