@@ -48,7 +48,7 @@ def getBranchInfo() {
 }
 
 pipeline {
-    agent none
+    agent kubernetes
     stages {
         stage('Build') {
             agent {
