@@ -107,41 +107,58 @@ pipeline {
 // }
 
         stage('Tag Release') {
-            when {
-                anyOf { branch 'main'; branch 'master' }
-            }
-            steps {
-                script {
-                    // Get highest semantic version from Git tags using GitHub Changelog plugin
-                    def highestVersion = getHighestSemanticVersion()
-                    println "Highest version: " + highestVersion.toString()
-                    println " Major: " + highestVersion.getMajor()
-                    println " Minor: " + highestVersion.getMinor()
-                    println " Patch: " + highestVersion.getPatch()
-                    println " Git tag: " + highestVersion.findTag().orElse("")
-
-                    // Calculate next version
-                    def baseBranch = env.CHANGE_TARGET ?: 'main'
-                    def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
-                    def finalVersion = versionInfo.version
-                    
-                    echo "Creating and pushing Git tag: v${finalVersion}"
-                    
-                    // Configure Git and create the tag
-                    sh """
-                        git config user.email "cicd@argusintelligence.net"
-                        git config user.name "argus-cicd"
-                        git tag -a v${finalVersion} -m "Release version ${finalVersion}"
-                    """
-                    
-                    // Use Git Push plugin to push tags to origin
-                    gitPush(
-                        gitScm: scm,
-                        targetBranch: env.BRANCH_NAME,
-                        targetRepo: 'origin'
-                    )
-                }
-            }
+        when {
+            anyOf { branch 'main'; branch 'master' }
         }
+        steps {
+            script {
+            // Re-checkout with full history + tags
+            checkout([
+                $class: 'GitSCM',
+                branches: scm.branches,
+                doGenerateSubmoduleConfigurations: false,
+                extensions: [
+                    [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                    [$class: 'CheckoutOption', timeout: 15]
+                ],
+                submoduleCfg: [],
+                userRemoteConfigs: scm.userRemoteConfigs
+            ])
+
+            // 🔎 Debug step: list all tags to confirm they are fetched
+            // sh "git tag --list || true"
+
+            // Get highest semantic version from Git tags using GitHub Changelog plugin
+            def highestVersion = getHighestSemanticVersion()
+            echo "Highest version: ${highestVersion.toString()}"
+            echo " Major: ${highestVersion.getMajor()}"
+            echo " Minor: ${highestVersion.getMinor()}"
+            echo " Patch: ${highestVersion.getPatch()}"
+            echo " Git tag: ${highestVersion.findTag().orElse('')}"
+
+            // Calculate next version based on branch
+            def baseBranch = env.CHANGE_TARGET ?: 'main'
+            def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+            def finalVersion = versionInfo.version
+
+            echo "Creating and pushing Git tag: v${finalVersion}"
+
+            // Configure Git and create the tag
+            sh """
+                git config user.email "cicd@argusintelligence.net"
+                git config user.name "argus-cicd"
+                git tag -a v${finalVersion} -m "Release version ${finalVersion}"
+            """
+
+            // Push the new tag
+            gitPush(
+                gitScm: scm,
+                targetBranch: env.BRANCH_NAME,
+                targetRepo: 'origin'
+            )
+        }
+    }
+}
+
     }
 }
