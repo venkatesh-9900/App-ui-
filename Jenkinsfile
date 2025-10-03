@@ -103,5 +103,46 @@ spec:
         }
     }
 }
+
+        stage('Tag Release') {
+            when {
+                anyOf { branch 'main'; branch 'master' }
+            }
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: git
+    image: alpine/git:2.43.0
+    command: ['/bin/sh', '-c', 'sleep 9999999']
+    tty: true
+"""
+                }
+            }
+            steps {
+                container('git') {
+                    script {
+                        def finalVersion = currentBuild.displayName
+                        echo "Creating and pushing Git tag: v${finalVersion}"
+                        
+                        withCredentials([usernamePassword(
+                            credentialsId: 'argus-cicd-writer',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_PASS'
+                        )]) {
+                            sh """
+                                git config user.email "jenkins-ci@argusintelligence.net"
+                                git config user.name "Jenkins CI"
+                                git tag v${finalVersion} -m "Release version ${finalVersion}"
+                                git push https://${GIT_USER}:${GIT_PASS}@github.com/your-org/void-kernel-apps.git v${finalVersion}
+                            """
+                        }
+                    }
+                }
+            }
+        }
     }
 }
