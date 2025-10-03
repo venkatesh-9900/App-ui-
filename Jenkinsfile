@@ -112,7 +112,6 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'git fetch --tags'
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
