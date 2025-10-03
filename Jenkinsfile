@@ -1,5 +1,5 @@
 // ===============================
-// Jenkinsfile for app-ui (Using AWS CLI + Credentials Binding)
+// Jenkinsfile for app-ui (Kaniko Version - No DinD)
 // ===============================
 
 @NonCPS
@@ -59,18 +59,16 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: docker
-    image: docker:24.0.0-dind
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
     command:
     - cat
     tty: true
-    securityContext:
-      privileged: true
 """
                 }
             }
             steps {
-                container('docker') {
+                container('kaniko') {
                     script {
                         def branchInfo = getBranchInfo()
                         def shortCommit = branchInfo.commitSHA.take(8)
@@ -93,22 +91,20 @@ spec:
                         def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}/${APP_NAME}:${imageTag}"
                         currentBuild.displayName = imageTag
 
-                        // Use AWS CLI with Jenkins AWS credentials
                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
                                           credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
                             sh """
-                                echo "Installing AWS CLI..."
-                                apk add --no-cache aws-cli
-
                                 echo "Logging in to ECR..."
                                 aws ecr get-login-password --region ${AWS_REGION} \
                                   | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                                
-                                echo "Building Docker image: ${fullImageName}"
-                                docker build -t ${fullImageName} .
-                                
-                                echo "Pushing Docker image to ECR..."
-                                docker push ${fullImageName}
+
+                                echo "Building and pushing image with Kaniko..."
+                                /kaniko/executor \
+                                  --context `pwd` \
+                                  --dockerfile `pwd`/Dockerfile \
+                                  --destination ${fullImageName} \
+                                  --single-snapshot \
+                                  --verbosity info
                             """
                         }
                     }
