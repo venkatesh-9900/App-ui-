@@ -45,9 +45,13 @@ def getBranchInfo() {
 // Pipeline
 // ===============================
 pipeline {
-    agent {
-        kubernetes {
-            yaml """
+    agent none
+
+    stages {
+        stage('Build Docker Image') {
+            agent {
+                kubernetes {
+                    yaml """
 apiVersion: v1
 kind: Pod
 spec:
@@ -60,11 +64,8 @@ spec:
     securityContext:
       privileged: true
 """
-        }
-    }
-
-    stages {
-        stage('Build Docker Image') {
+                }
+            }
             steps {
                 container('docker') {
                     script {
@@ -129,14 +130,33 @@ spec:
                 }
             }
         }
-    }
-
-    post {
-        success {
-            container('docker') {
-                script {
-                    def branchInfo = getBranchInfo()
-                    if (branchInfo.isMaster) {
+        
+        stage('Tag Release') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                }
+            }
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: git
+    image: alpine/git:latest
+    command:
+    - cat
+    tty: true
+"""
+                }
+            }
+            steps {
+                container('git') {
+                    script {
+                        def branchInfo = getBranchInfo()
                         def finalVersion = currentBuild.displayName.replace('v', '')
                         echo "Creating Git tag for master release: v${finalVersion}"
                         
@@ -150,11 +170,19 @@ spec:
                                 git push https://\${GIT_USER}:\${GIT_PASS}@github.com/void-kernel/app-ui.git v${finalVersion}
                             """
                         }
-                    } else {
-                        echo "PR branch build - skipping Git tag creation"
                     }
                 }
             }
         }
     }
+
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
+    }
 }
+
