@@ -110,11 +110,23 @@ spec:
             }
             steps {
                 checkout scm
-                def finalVersion = currentBuild.displayName
-                echo "Creating and pushing Git tag: v${finalVersion}"
-                sh "git tag v${finalVersion} -m \"Release version ${finalVersion}\""
-                sh "git push origin v${finalVersion}"
-
+                script {
+                    def finalVersion = currentBuild.displayName
+                    echo "Creating and pushing Git tag: v${finalVersion}"
+                    
+                    withCredentials([usernamePassword(
+                        credentialsId: 'argus-cicd-writer',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GITHUB_TOKEN'
+                    )]) {
+                        sh """
+                            git config user.email "jenkins-ci@argusintelligence.net"
+                            git config user.name "Jenkins CI"
+                            git tag v${finalVersion} -m "Release version ${finalVersion}"
+                            git push https://\${GITHUB_TOKEN}@github.com/void-kernel/app-ui.git v${finalVersion}
+                        """
+                    }
+                }
             }
         }
     }
