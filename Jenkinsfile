@@ -110,7 +110,7 @@ pipeline {
             }
             steps {
                 script {
-                    def finalVersion = currentBuild.displayName
+                    def finalVersion = "0.0.1"
                     echo "Creating and pushing Git tag: v${finalVersion}"
                     
                     // Create the tag
@@ -125,8 +125,7 @@ pipeline {
                 gitPush(
                     gitScm: scm,
                     targetBranch: env.BRANCH_NAME,
-                    targetRepo: 'origin',
-                    tags: true
+                    targetRepo: 'origin'
                 )
             }
         }
