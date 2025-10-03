@@ -1,0 +1,129 @@
+// Master Branch Pipeline - Semantic Versioning and Releases
+// This pipeline runs when code is merged into master/main branch
+
+// Function to determine semantic version based on PR base branch
+def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
+    def versionIncrement = 'patch' // default
+    def finalVersion
+    
+    if (baseBranch.startsWith('breaking/') || baseBranch.startsWith('major/')) {
+        versionIncrement = 'major'
+        finalVersion = "${highestVersion.getMajor() + 1}.0.0"
+        echo "Base branch indicates MAJOR version increment"
+    } else if (baseBranch.startsWith('feature/') || baseBranch.startsWith('feat/') || baseBranch.startsWith('minor/')) {
+        versionIncrement = 'minor'
+        finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor() + 1}.0"
+        echo "Base branch indicates MINOR version increment"
+    } else {
+        // Default to PATCH for all other base branches
+        versionIncrement = 'patch'
+        finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch() + 1}"
+        echo "Base branch '${baseBranch}' - using default PATCH version increment"
+    }
+    
+    return [
+        version: finalVersion,
+        increment: versionIncrement
+    ]
+}
+
+pipeline {
+    agent none
+    stages {
+        stage('Release Build') {
+            agent {
+                kubernetes {
+                    yaml """
+                        apiVersion: v1
+                        kind: Pod
+                        spec:
+                          containers:
+                          - name: docker
+                            image: "docker:24.0.0-dind"
+                            command:
+                            - cat
+                            tty: true
+                            securityContext:
+                              privileged: true
+                        """
+                }
+            }
+            steps {
+                container('docker') {
+                    script {
+                        // Get the highest existing version
+                        def highestVersion = getHighestSemanticVersion()
+                        echo "Highest existing version: ${highestVersion.toString()}"
+                        
+                        // Determine the base branch of the merged PR
+                        def baseBranch = env.CHANGE_TARGET ?: 'main' // Default to main if not available
+                        echo "PR base branch: ${baseBranch}"
+                        
+                        // Determine semantic version using the base branch
+                        def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                        def finalVersion = versionInfo.version
+                        def versionIncrement = versionInfo.increment
+                        
+                        echo "=== MASTER BRANCH - SEMANTIC VERSIONING ==="
+                        echo "Version increment type: ${versionIncrement}"
+                        echo "Previous version: ${highestVersion.toString()}"
+                        echo "New version: ${finalVersion}"
+                        
+                        def imageName = "app-ui:${finalVersion}"
+                        def registry = "your-registry.com" // Replace with your actual registry
+                        
+                        // Set build display name and description
+                        currentBuild.displayName = "v${finalVersion}"
+                        currentBuild.description = "Release version ${finalVersion} from master branch"
+                        
+                        sh """
+                            echo "Starting Docker daemon..."
+                            dockerd-entrypoint.sh &
+                            
+                            echo "Waiting for Docker daemon to start..."
+                            sleep 10
+                            
+                            echo "Checking Docker daemon status..."
+                            docker version
+                            
+                            echo "Building Docker image: ${imageName}"
+                            docker build -t ${imageName} .
+                            docker tag ${imageName} ${registry}/${imageName}
+                            
+                            echo "Docker image built successfully. Tag: ${imageName}"
+                            docker images | grep app-ui
+                        """
+                        
+                        // Uncomment the following lines if you want to push to registry
+                        // withCredentials([usernamePassword(credentialsId: 'docker-registry-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        //     sh "echo \$DOCKER_PASSWORD | docker login ${registry} -u \$DOCKER_USERNAME --password-stdin"
+                        //     sh "docker push ${registry}/${imageName}"
+                        // }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                // Create Git tag for master branch releases
+                def finalVersion = currentBuild.displayName.replace('v', '')
+                echo "Creating Git tag for master release: v${finalVersion}"
+                
+                withCredentials([usernamePassword(credentialsId: 'argus-cicd-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh """
+                        git config user.email "cicd@argusintelligence.net"
+                        git config user.name "argus-cicd"
+
+                        # fetch all tags to ensure we have the latest
+                        git fetch --tags
+
+                        git tag v${finalVersion}
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
+                    """
+                }
+            }
+        }
+    }
+}
