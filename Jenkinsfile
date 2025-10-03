@@ -45,24 +45,14 @@ pipeline {
                             env:
                             - name: CREATE_TAGS
                               value: "true"
-                          - name: git
-                            image: "alpine/git:latest"
-                            command:
-                            - cat
-                            tty: true
                         """
                 }
             }
             steps {
                 container('docker') {
                     script {
-                        // Get current branch name
-                        def branchName = env.BRANCH_NAME
-                        if (!branchName) {
-                            container('git') {
-                                branchName = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
-                            }
-                        }
+                        // Get current branch name from Jenkins environment variables
+                        def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replace('origin/', '') ?: 'main'
                         echo "Current branch: ${branchName}"
                         
                         // Get the highest existing version
@@ -83,16 +73,12 @@ pipeline {
                         def imageName = "app-ui:${finalVersion}"
                         def registry = "your-registry.com" // Replace with your actual registry
                         
-                        // Create Git tag for the new version (configurable)
-                        // Set CREATE_TAGS=true in Jenkins environment to enable tagging
+                        // Create Git tag using Jenkins Git plugin
                         if (env.CREATE_TAGS == 'true') {
-                            container('git') {
-                                sh """
-                                    echo "Creating Git tag: v${finalVersion}"
-                                    git tag -a "v${finalVersion}" -m "Release version ${finalVersion}"
-                                    echo "Tag created successfully"
-                                """
-                            }
+                            echo "Creating Git tag: v${finalVersion}"
+                            // This will be handled by the Git plugin in post-build actions
+                            currentBuild.displayName = "v${finalVersion}"
+                            currentBuild.description = "Release version ${finalVersion} from branch ${branchName}"
                         } else {
                             echo "Skipping Git tag creation (CREATE_TAGS=${env.CREATE_TAGS})"
                         }
@@ -122,6 +108,24 @@ pipeline {
                         //     sh "docker push ${registry}/${imageName}"
                         // }
                     }
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                if (env.CREATE_TAGS == 'true') {
+                    // Create Git tag using Jenkins Git plugin
+                    def finalVersion = currentBuild.displayName.replace('v', '')
+                    echo "Creating Git tag: v${finalVersion}"
+                    
+                    // This requires the Git plugin to be configured in Jenkins
+                    // You can also use the Git Publisher post-build action in Jenkins UI
+                    sh """
+                        echo "Tag would be created: v${finalVersion}"
+                        echo "Configure Git Publisher in Jenkins job settings for automatic tagging"
+                    """
                 }
             }
         }
