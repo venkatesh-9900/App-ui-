@@ -2,27 +2,21 @@
 // Jenkinsfile for app-ui (Kaniko Version - No DinD)
 // ===============================
 
-@NonCPS
-def getHighestSemanticVersion() {
-    echo "WARNING: Using dummy version. Implement real getHighestSemanticVersion()."
-    return new groovy.json.JsonSlurper().parseText('{"major": 1, "minor": 2, "patch": 3}')
-}
-
 def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
     def versionIncrement = 'patch'
     def finalVersion
     
     if (baseBranch.startsWith('breaking/') || baseBranch.startsWith('major/')) {
         versionIncrement = 'major'
-        finalVersion = "${highestVersion.major + 1}.0.0"
+        finalVersion = "${highestVersion.getMajor() + 1}.0.0"
         echo "Base branch indicates MAJOR version increment"
     } else if (baseBranch.startsWith('feature/') || baseBranch.startsWith('feat/') || baseBranch.startsWith('minor/')) {
         versionIncrement = 'minor'
-        finalVersion = "${highestVersion.major}.${highestVersion.minor + 1}.0"
+        finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor() + 1}.0"
         echo "Base branch indicates MINOR version increment"
     } else {
         versionIncrement = 'patch'
-        finalVersion = "${highestVersion.major}.${highestVersion.minor}.${highestVersion.patch + 1}"
+        finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch() + 1}"
         echo "Base branch '${baseBranch}' - using default PATCH version increment"
     }
     
@@ -74,7 +68,14 @@ spec:
 
                 def imageTag
                 if (branchInfo.isMaster) {
+                    // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
+                    println "Highest version: " + highestVersion.toString()
+                    println " Major: " + highestVersion.getMajor()
+                    println " Minor: " + highestVersion.getMinor()
+                    println " Patch: " + highestVersion.getPatch()
+                    println " Git tag: " + highestVersion.findTag().orElse("")
+                    
                     def baseBranch = env.CHANGE_TARGET ?: 'main'
                     def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
                     imageTag = versionInfo.version
