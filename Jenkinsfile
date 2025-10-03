@@ -10,7 +10,7 @@ pipeline {
                     def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replace('origin/', '') ?: 'main'
                     def isMaster = (branchName == 'main' || branchName == 'master')
                     
-                    echo "Current branch: ${branchName}"
+                    echo "Current branch v4: ${branchName}"
                     echo "Is master branch: ${isMaster}"
                     
                     if (isMaster) {
