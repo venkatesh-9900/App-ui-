@@ -126,6 +126,19 @@ pipeline {
                         echo "Tag would be created: v${finalVersion}"
                         echo "Configure Git Publisher in Jenkins job settings for automatic tagging"
                     """
+                    withCredentials([usernamePassword(credentialsId: 'argus-cicd-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        sh """
+                            git config user.email "cicd@argusintelligence.net"
+                            git config user.name "argus-cicd"
+
+                            # fetch all tags to ensure we have the latest
+                            git fetch --tags
+
+                            git tag v${finalVersion}
+                            git push https://${GIT_USER}:${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
+                        """
+                    }
+
                 }
             }
         }
