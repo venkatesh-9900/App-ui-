@@ -120,10 +120,21 @@ spec:
                         passwordVariable: 'GITHUB_TOKEN'
                     )]) {
                         sh """
+                            # Configure Git
                             git config user.email "jenkins-ci@argusintelligence.net"
                             git config user.name "Jenkins CI"
+                            
+                            # Create tag
                             git tag v${finalVersion} -m "Release version ${finalVersion}"
-                            git push https://\${GITHUB_TOKEN}@github.com/void-kernel/app-ui.git v${finalVersion}
+                            
+                            # Push using git-credential-store helper
+                            git config credential.helper store
+                            echo "https://\${GITHUB_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
+                            
+                            git push origin v${finalVersion}
+                            
+                            # Clean up
+                            rm -f ~/.git-credentials
                         """
                     }
                 }
