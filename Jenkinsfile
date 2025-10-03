@@ -71,7 +71,7 @@ spec:
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
-                    println " Major: " + highestVersion.getMajor()
+                    println " Major1: " + highestVersion.getMajor()
                     println " Minor: " + highestVersion.getMinor()
                     println " Patch: " + highestVersion.getPatch()
                     println " Git tag: " + highestVersion.findTag().orElse("")
@@ -103,44 +103,5 @@ spec:
         }
     }
 }
-
-
-        stage('Tag Release') {
-            when {
-                anyOf { branch 'main'; branch 'master' }
-            }
-            agent {
-                kubernetes {
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: git
-    image: alpine/git:2.43.0
-    command: ['cat']
-    tty: true
-"""
-                }
-            }
-            steps {
-                container('git') {
-                    script {
-                        def finalVersion = currentBuild.displayName
-                        echo "Creating and pushing Git tag: v${finalVersion}"
-                        
-                        // Uncomment when GitHub writer credentials available
-                        // withCredentials([usernamePassword(credentialsId: 'github-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                        //     sh """
-                        //         git config user.email "ci-bot@your-fintech.com"
-                        //         git config user.name "Jenkins CI"
-                        //         git tag v${finalVersion} -m "Release version ${finalVersion}"
-                        //         git push https://${GIT_USER}:${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
-                        //     """
-                        // }
-                    }
-                }
-            }
-        }
     }
 }
