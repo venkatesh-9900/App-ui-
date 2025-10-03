@@ -108,58 +108,13 @@ spec:
             when {
                 anyOf { branch 'main'; branch 'master' }
             }
-            agent {
-                kubernetes {
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: git
-    image: alpine/git:2.43.0
-    command: ['/bin/sh', '-c', 'sleep 9999999']
-    tty: true
-"""
-                }
-            }
             steps {
-                container('git') {
-                    script {
-                        def finalVersion = currentBuild.displayName
-                        echo "Creating and pushing Git tag: v${finalVersion}"
-                        
-                        withCredentials([usernamePassword(
-                            credentialsId: 'argus-cicd-writer',
-                            usernameVariable: 'GIT_USER',
-                            passwordVariable: 'GITHUB_TOKEN'
-                        )]) {
-                            sh """
-                                # Set up git credential helper with token (password field contains PAT)
-                                git config --global credential.helper store
-                                echo "https://\${GITHUB_TOKEN}@github.com" > ~/.git-credentials
-                                
-                                # Clone the repository with depth 1 (shallow clone)
-                                git clone --depth 1 https://github.com/void-kernel/app-ui.git repo
-                                cd repo
-                                
-                                # Configure git user
-                                git config user.email "jenkins-ci@argusintelligence.net"
-                                git config user.name "Jenkins CI"
-                                
-                                # Checkout the commit that was built
-                                git fetch --depth 1 origin ${env.GIT_COMMIT}
-                                git checkout ${env.GIT_COMMIT}
-                                
-                                # Create and push the tag
-                                git tag v${finalVersion} -m "Release version ${finalVersion}"
-                                git push origin v${finalVersion}
-                                
-                                # Clean up credentials
-                                rm -f ~/.git-credentials
-                            """
-                        }
-                    }
-                }
+                checkout scm
+                def finalVersion = currentBuild.displayName
+                echo "Creating and pushing Git tag: v${finalVersion}"
+                sh "git tag v${finalVersion} -m \"Release version ${finalVersion}\""
+                sh "git push origin v${finalVersion}"
+
             }
         }
     }
