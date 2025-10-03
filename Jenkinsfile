@@ -78,7 +78,7 @@ pipeline {
                         def isMaster = branchInfo.isMaster
                         def registry = "your-registry.com" // Replace with your actual registry
                         
-                        echo "Current branch v4: ${branchName}"
+                        echo "Current branch: ${branchName}"
                         echo "Commit SHA: ${commitSHA}"
                         echo "Is master branch: ${isMaster}"
                         
@@ -170,6 +170,7 @@ pipeline {
                 if (isMaster) {
                     // Only create Git tags for master branch releases
                     def finalVersion = currentBuild.displayName.replace('v', '')
+                    echo "Test line"
                     echo "Creating Git tag for master release: v${finalVersion}"
                     
                     withCredentials([usernamePassword(credentialsId: 'argus-cicd-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
@@ -181,7 +182,7 @@ pipeline {
                             git fetch --tags
 
                             git tag v${finalVersion}
-                            git push https://${GIT_USER}:${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
+                            git push https://\${GIT_USER}:\${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
                         """
                     }
                 } else {
