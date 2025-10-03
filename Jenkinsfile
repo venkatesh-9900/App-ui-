@@ -60,12 +60,9 @@ kind: Pod
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
+    image: gcr.io/kaniko-project/executor:debug
     command:
-    - /busybox/sh
-    args:
-    - -c
-    - sleep 9999999
+    - /busybox/cat
     tty: true
 """
         }
