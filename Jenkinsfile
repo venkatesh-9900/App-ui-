@@ -1,9 +1,12 @@
 pipeline {
-    agent any
+    agent none
     stages {
-        stage('Build') { 
+        stage('app-ui') {
+            agent {
+                docker { image 'node:22.20.0-alpine3.22' }
+            }
             steps {
-                sh 'npm install' 
+                sh 'node --version'
             }
         }
     }
