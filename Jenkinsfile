@@ -52,9 +52,9 @@ pipeline {
 
     stages {
         stage('Build & Push Docker Image') {
-            agent {
-                kubernetes {
-                    yaml """
+    agent {
+        kubernetes {
+            yaml """
 apiVersion: v1
 kind: Pod
 spec:
@@ -65,52 +65,53 @@ spec:
     - cat
     tty: true
 """
+        }
+    }
+    steps {
+        container('kaniko') {
+            script {
+                def branchInfo = getBranchInfo()
+                def shortCommit = branchInfo.commitSHA.take(8)
+
+                def imageTag
+                if (branchInfo.isMaster) {
+                    def highestVersion = getHighestSemanticVersion()
+                    def baseBranch = env.CHANGE_TARGET ?: 'main'
+                    def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                    imageTag = versionInfo.version
+                } else {
+                    def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
+                    imageTag = "${cleanBranchName}-${shortCommit}"
                 }
-            }
-            steps {
-                container('kaniko') {
-                    script {
-                        def branchInfo = getBranchInfo()
-                        def shortCommit = branchInfo.commitSHA.take(8)
 
-                        echo "Current branch: ${branchInfo.branchName}"
-                        
-                        def imageTag
-                        if (branchInfo.isMaster) {
-                            echo "=== MASTER BRANCH BUILD ==="
-                            def highestVersion = getHighestSemanticVersion()
-                            def baseBranch = env.CHANGE_TARGET ?: 'main'
-                            def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
-                            imageTag = versionInfo.version
-                        } else {
-                            echo "=== PR BRANCH BUILD ==="
-                            def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
-                            imageTag = "${cleanBranchName}-${shortCommit}"
-                        }
+                def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}/${APP_NAME}:${imageTag}"
+                currentBuild.displayName = imageTag
 
-                        def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}/${APP_NAME}:${imageTag}"
-                        currentBuild.displayName = imageTag
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                    sh """
+                        echo "Setting up Kaniko auth..."
+                        mkdir -p /kaniko/.docker
+                        aws ecr get-login-password --region ${AWS_REGION} \
+                          | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
-                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-                                          credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                            sh """
-                                echo "Logging in to ECR..."
-                                aws ecr get-login-password --region ${AWS_REGION} \
-                                  | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                        # Export Docker config for Kaniko
+                        cp /root/.docker/config.json /kaniko/.docker/config.json
 
-                                echo "Building and pushing image with Kaniko..."
-                                /kaniko/executor \
-                                  --context `pwd` \
-                                  --dockerfile `pwd`/Dockerfile \
-                                  --destination ${fullImageName} \
-                                  --single-snapshot \
-                                  --verbosity info
-                            """
-                        }
-                    }
+                        echo "Building and pushing with Kaniko..."
+                        /kaniko/executor \
+                          --context `pwd` \
+                          --dockerfile `pwd`/Dockerfile \
+                          --destination ${fullImageName} \
+                          --cleanup \
+                          --verbosity info
+                    """
                 }
             }
         }
+    }
+}
+
 
         stage('Tag Release') {
             when {
