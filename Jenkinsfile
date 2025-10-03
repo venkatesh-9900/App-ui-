@@ -160,16 +160,16 @@ spec:
                         def finalVersion = currentBuild.displayName.replace('v', '')
                         echo "Creating Git tag for master release: v${finalVersion}"
                         
-                        withCredentials([usernamePassword(credentialsId: 'argus-cicd-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                            sh """
-                                git config user.email "cicd@argusintelligence.net"
-                                git config user.name "argus-cicd"
+                        // withCredentials([usernamePassword(credentialsId: 'argus-cicd-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        //     sh """
+                        //         git config user.email "cicd@argusintelligence.net"
+                        //         git config user.name "argus-cicd"
                                 
-                                git fetch --tags
-                                git tag v${finalVersion}
-                                git push https://\${GIT_USER}:\${GIT_PASS}@github.com/void-kernel/app-ui.git v${finalVersion}
-                            """
-                        }
+                        //         git fetch --tags
+                        //         git tag v${finalVersion}
+                        //         git push https://\${GIT_USER}:\${GIT_PASS}@github.com/void-kernel/app-ui.git v${finalVersion}
+                        //     """
+                        // }
                     }
                 }
             }
