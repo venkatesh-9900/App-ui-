@@ -51,7 +51,7 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                        echo "Job auto test v2"
+                        echo "Job auto test v3"
                         // Get the highest existing version
                         def highestVersion = getHighestSemanticVersion()
                         echo "Highest existing version: ${highestVersion.toString()}"
