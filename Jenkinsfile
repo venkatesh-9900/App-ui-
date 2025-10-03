@@ -112,34 +112,35 @@ pipeline {
             }
             steps {
                 script {
-                    sh """
-                        git config --global user.email "cicd@argusintelligence.net"
-                        git config --global user.name "argus-cicd"
-                        git fetch --tags
-                    """
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
-                    println " Major1: " + highestVersion.getMajor()
+                    println " Major: " + highestVersion.getMajor()
                     println " Minor: " + highestVersion.getMinor()
                     println " Patch: " + highestVersion.getPatch()
                     println " Git tag: " + highestVersion.findTag().orElse("")
 
-                    def finalVersion = "0.0.1"
+                    // Calculate next version
+                    def baseBranch = env.CHANGE_TARGET ?: 'main'
+                    def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                    def finalVersion = versionInfo.version
+                    
                     echo "Creating and pushing Git tag: v${finalVersion}"
                     
-                    // Create the tag
+                    // Configure Git and create the tag
                     sh """
+                        git config user.email "cicd@argusintelligence.net"
+                        git config user.name "argus-cicd"
                         git tag -a v${finalVersion} -m "Release version ${finalVersion}"
                     """
+                    
+                    // Use Git Push plugin to push tags to origin
+                    gitPush(
+                        gitScm: scm,
+                        targetBranch: env.BRANCH_NAME,
+                        targetRepo: 'origin'
+                    )
                 }
-                
-                // Use Git Push plugin to push tags to origin
-                gitPush(
-                    gitScm: scm,
-                    targetBranch: env.BRANCH_NAME,
-                    targetRepo: 'origin'
-                )
             }
         }
     }
