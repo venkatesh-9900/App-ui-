@@ -93,6 +93,8 @@ spec:
                     def baseBranch = env.CHANGE_TARGET ?: 'main'
                     def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
                     imageTag = versionInfo.version
+                    println "Image tag: " + imageTag
+                    println "Base branch: " + baseBranch
                 } else {
                     def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
                     imageTag = "${cleanBranchName}-${shortCommit}"
@@ -101,18 +103,18 @@ spec:
                 def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
                 currentBuild.displayName = imageTag
 
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                    sh """
-                        echo "Building and pushing with Kaniko..."
-                        /kaniko/executor \
-                          --context dir://\$(pwd) \
-                          --dockerfile \$(pwd)/Dockerfile \
-                          --destination ${fullImageName} \
-                          --cleanup \
-                          --verbosity info
-                    """
-                }
+                // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                //                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                //     sh """
+                //         echo "Building and pushing with Kaniko..."
+                //         /kaniko/executor \
+                //           --context dir://\$(pwd) \
+                //           --dockerfile \$(pwd)/Dockerfile \
+                //           --destination ${fullImageName} \
+                //           --cleanup \
+                //           --verbosity info
+                //     """
+                // }
             }
         }
     }
@@ -159,12 +161,12 @@ spec:
                 git tag -a v${finalVersion} -m "Release version ${finalVersion}"
             """
 
-            // Push the new tag
-            gitPush(
-                gitScm: scm,
-                targetBranch: env.BRANCH_NAME,
-                targetRepo: 'origin'
-            )
+            // // Push the new tag
+            // gitPush(
+            //     gitScm: scm,
+            //     targetBranch: env.BRANCH_NAME,
+            //     targetRepo: 'origin'
+            // )
         }
     }
 }
