@@ -22,7 +22,8 @@ spec:
         AWS_ACCOUNT_ID = "210519480143"
         ECR_REGISTRY   = "210519480143.dkr.ecr.ap-south-1.amazonaws.com"
         ECR_REPO       = "argus-prod-cicd-ecr"
-        APP_NAME       = "app-ui" // Added for clarity
+        APP_NAME       = "app-ui"
+        AWS_CREDS      = credentials('argus-cicd-ecr-fullaccess-iam-user')
     }
 
     stages {
@@ -37,9 +38,6 @@ spec:
                 script {
                     def highestVersion = getHighestSemanticVersion()
                     echo "Highest version: ${highestVersion.toString()}"
-                    echo " Major: ${highestVersion.getMajor()}"
-                    echo " Minor: ${highestVersion.getMinor()}"
-                    echo " Patch: ${highestVersion.getPatch()}"
                     echo " Git tag: ${highestVersion.findTag().orElse("")}"
 
                     def baseBranch = env.BRANCH_NAME ?: "main"
@@ -56,15 +54,24 @@ spec:
                 container('docker') {
                     script {
                         sh '''
+                          echo "Installing AWS CLI inside docker:dind..."
+                          apk add --no-cache aws-cli curl
+
+                          echo "Configuring AWS credentials..."
+                          aws configure set aws_access_key_id $AWS_CREDS_USR
+                          aws configure set aws_secret_access_key $AWS_CREDS_PSW
+                          aws configure set region $AWS_REGION
+
                           echo "Logging in to AWS ECR..."
-                          aws ecr get-login-password --region $AWS_DEFAULT_REGION \
-                            | docker login --username AWS --password-stdin $ECR_REPO
+                          aws ecr get-login-password --region $AWS_REGION \
+                            | docker login --username AWS --password-stdin $ECR_REGISTRY
 
                           echo "Building Docker image..."
-                          docker build -t $ECR_REPO:$APP_VERSION .
+                          IMAGE_TAG=$ECR_REGISTRY/$ECR_REPO:$APP_VERSION
+                          docker build -t $IMAGE_TAG .
 
                           echo "Pushing Docker image..."
-                          docker push $ECR_REPO:$APP_VERSION
+                          docker push $IMAGE_TAG
                         '''
                     }
                 }
