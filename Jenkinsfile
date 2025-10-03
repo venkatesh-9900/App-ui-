@@ -48,18 +48,18 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-                apiVersion: v1
-                kind: Pod
-                spec:
-                containers:
-                - name: docker
-                    image: docker:24.0.0-dind
-                    command:
-                    - cat
-                    tty: true
-                    securityContext:
-                    privileged: true
-                """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: docker:24.0.0-dind
+    command:
+    - cat
+    tty: true
+    securityContext:
+      privileged: true
+"""
         }
     }
 
@@ -147,7 +147,7 @@ pipeline {
                                 
                                 git fetch --tags
                                 git tag v${finalVersion}
-                                git push https://\${GIT_USER}:\${GIT_PASS}@github.com/void-kernel/app-ui.git v${finalVersion}
+                                git push https://\${GIT_USER}:\${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
                             """
                         }
                     } else {
