@@ -13,7 +13,7 @@ def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
     } else if (baseBranch.startsWith('feature/') || baseBranch.startsWith('feat/') || baseBranch.startsWith('minor/')) {
         versionIncrement = 'minor'
         finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor() + 1}.0"
-        echo "Base branch indicates MINOR version increment"
+        echo "Base branch indicates MINOR version increment test"
     } else {
         versionIncrement = 'patch'
         finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch() + 1}"
