@@ -44,7 +44,12 @@ pipeline {
                               privileged: true
                             env:
                             - name: CREATE_TAGS
-                            value: "true"
+                              value: "true"
+                          - name: git
+                            image: "alpine/git:latest"
+                            command:
+                            - cat
+                            tty: true
                         """
                 }
             }
@@ -52,7 +57,12 @@ pipeline {
                 container('docker') {
                     script {
                         // Get current branch name
-                        def branchName = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                        def branchName = env.BRANCH_NAME
+                        if (!branchName) {
+                            container('git') {
+                                branchName = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                            }
+                        }
                         echo "Current branch: ${branchName}"
                         
                         // Get the highest existing version
@@ -76,11 +86,13 @@ pipeline {
                         // Create Git tag for the new version (configurable)
                         // Set CREATE_TAGS=true in Jenkins environment to enable tagging
                         if (env.CREATE_TAGS == 'true') {
-                            sh """
-                                echo "Creating Git tag: v${finalVersion}"
-                                // git tag -a "v${finalVersion}" -m "Release version ${finalVersion}"
-                                echo "Tag created successfully"
-                            """
+                            container('git') {
+                                sh """
+                                    echo "Creating Git tag: v${finalVersion}"
+                                    git tag -a "v${finalVersion}" -m "Release version ${finalVersion}"
+                                    echo "Tag created successfully"
+                                """
+                            }
                         } else {
                             echo "Skipping Git tag creation (CREATE_TAGS=${env.CREATE_TAGS})"
                         }
