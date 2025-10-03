@@ -93,8 +93,10 @@ spec:
                     def baseBranch = env.CHANGE_TARGET ?: 'main'
                     def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
                     imageTag = versionInfo.version
+                    def targetBranch = env.BRANCH_NAME
                     println "Image tag: " + imageTag
                     println "Base branch: " + baseBranch
+                    println "Target branch: " + targetBranch
                 } else {
                     def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
                     imageTag = "${cleanBranchName}-${shortCommit}"
