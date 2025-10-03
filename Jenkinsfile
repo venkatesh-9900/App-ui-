@@ -134,10 +134,21 @@ spec:
                             passwordVariable: 'GIT_PASS'
                         )]) {
                             sh """
+                                # Clone the repository with depth 1 (shallow clone)
+                                git clone --depth 1 https://${GIT_USER}:${GIT_PASS}@github.com/void-kernel/app-ui.git repo
+                                cd repo
+                                
+                                # Configure git user
                                 git config user.email "jenkins-ci@argusintelligence.net"
                                 git config user.name "Jenkins CI"
+                                
+                                # Checkout the commit that was built
+                                git fetch --depth 1 origin ${env.GIT_COMMIT}
+                                git checkout ${env.GIT_COMMIT}
+                                
+                                # Create and push the tag
                                 git tag v${finalVersion} -m "Release version ${finalVersion}"
-                                git push https://${GIT_USER}:${GIT_PASS}@github.com/your-org/void-kernel-apps.git v${finalVersion}
+                                git push origin v${finalVersion}
                             """
                         }
                     }
