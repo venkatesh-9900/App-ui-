@@ -147,7 +147,7 @@ spec:
                                 
                                 git fetch --tags
                                 git tag v${finalVersion}
-                                git push https://\${GIT_USER}:\${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
+                                git push https://\${GIT_USER}:\${GIT_PASS}@github.com/void-kernel/app-ui.git v${finalVersion}
                             """
                         }
                     } else {
