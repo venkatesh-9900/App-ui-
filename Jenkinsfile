@@ -90,18 +90,10 @@ spec:
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
                                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
                     sh """
-                        echo "Setting up Kaniko auth..."
-                        mkdir -p /kaniko/.docker
-                        aws ecr get-login-password --region ${AWS_REGION} \
-                          | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-
-                        # Export Docker config for Kaniko
-                        cp /root/.docker/config.json /kaniko/.docker/config.json
-
                         echo "Building and pushing with Kaniko..."
                         /kaniko/executor \
-                          --context `pwd` \
-                          --dockerfile `pwd`/Dockerfile \
+                          --context dir://\$(pwd) \
+                          --dockerfile \$(pwd)/Dockerfile \
                           --destination ${fullImageName} \
                           --cleanup \
                           --verbosity info
