@@ -78,7 +78,7 @@ pipeline {
                         def isMaster = branchInfo.isMaster
                         def registry = "your-registry.com" // Replace with your actual registry
                         
-                        echo "Current branch v4: ${branchName}"
+                        echo "Current branch: ${branchName}"
                         echo "Commit SHA: ${commitSHA}"
                         echo "Is master branch: ${isMaster}"
                         
