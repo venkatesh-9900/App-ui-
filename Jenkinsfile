@@ -112,21 +112,24 @@ pipeline {
             }
             steps {
                 script {
+                    sh """
+                        git config --global user.email "cicd@argusintelligence.net"
+                        git config --global user.name "argus-cicd"
+                        git fetch --tags
+                    """
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
-                    // def highestVersion = getHighestSemanticVersion()
-                    // println "Highest version: " + highestVersion.toString()
-                    // println " Major1: " + highestVersion.getMajor()
-                    // println " Minor: " + highestVersion.getMinor()
-                    // println " Patch: " + highestVersion.getPatch()
-                    // println " Git tag: " + highestVersion.findTag().orElse("")
+                    def highestVersion = getHighestSemanticVersion()
+                    println "Highest version: " + highestVersion.toString()
+                    println " Major1: " + highestVersion.getMajor()
+                    println " Minor: " + highestVersion.getMinor()
+                    println " Patch: " + highestVersion.getPatch()
+                    println " Git tag: " + highestVersion.findTag().orElse("")
 
                     def finalVersion = "0.0.1"
                     echo "Creating and pushing Git tag: v${finalVersion}"
                     
                     // Create the tag
                     sh """
-                        git config --global user.email "cicd@argusintelligence.net"
-                        git config --global user.name "argus-cicd"
                         git tag -a v${finalVersion} -m "Release version ${finalVersion}"
                     """
                 }
