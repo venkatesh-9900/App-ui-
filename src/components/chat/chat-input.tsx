@@ -1,21 +1,24 @@
 import {useEffect, useRef, useState} from "react";
 import {ChatToolbar} from "@/components/chat/chat-toolbar.tsx";
-import {AttachedFile, FileUploadResponse} from "@/types";
-import {deleteFileFromServer} from "@/hooks/upload-file.ts";
+import {AttachedFile, FileDetails, FileUploadResponse} from "@/types";
+import {deleteFileFromServer, removeAttachedFile} from "@/hooks/upload-file.ts";
 import {FileUpload, FileUploadHandle} from "@/components/chat/tools/file-upload.tsx";
 import {Cross2Icon} from "@radix-ui/react-icons";
 import {FiFile} from "react-icons/fi";
 import {TextareaAutosize} from "@/components/chat/message/textarea-autosize.tsx";
-import {Box, Container, Grid, IconButton, Paper, TextareaAutosize as MuiTextareaAutosize, Typography} from "@mui/material";
+import {Box, Container, Grid, IconButton, Paper, TextareaAutosize as MuiTextareaAutosize, Typography, CircularProgress} from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import CloseIcon from '@mui/icons-material/Close';
+import { toast } from "sonner";
+import { attachmentStyles } from "@/common/chat-messages";
+import LoadingDots from "@/utils/loading-dots";
 
 interface ChatInputProps {
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
     currentChatId: string;
-    handleSendMessage: (message: string, selectedAgent: string) => void;
-    handleFileUpload: (file: File, sessionIdOverride?: string) => Promise<FileUploadResponse>;
+    handleSendMessage: (message: string, selectedAgent: string, attachedFiles: FileDetails[]) => void;
+    handleFileUpload: (files: File[], sessionIdOverride?: string) => Promise<FileDetails[]>;
     isLoading?: boolean;
     selectedAgent: string;
 }
@@ -31,8 +34,11 @@ export function ChatInput({
                           }: ChatInputProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileUploadRef = useRef<FileUploadHandle>(null);
-    const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+    const [attachedFiles, setAttachedFiles] = useState<FileDetails[]>([]);
     const [isTyping, setIsTyping] = useState<boolean>(false)
+    const [isFileUploading, setIsFileUploading] = useState<boolean>(false);
+    const [isRemoveAttachmentLoading, setIsRemoveAttachmentLoading] = useState<boolean>(false);
+    const [attachmentSelectedForRemoval, setAttachmentSelectedForRemoval] = useState<number | null>(null);
 
     // Auto-resize textarea height based on content
     useEffect(() => {
@@ -46,19 +52,16 @@ export function ChatInput({
 
     const isEmpty = input.trim() === '';
 
-    const onFileSelectedAndUpload = async (file: File) => {
+    const onFileSelectedAndUpload = async (files: File[]) => {
         try {
+            setIsFileUploading(true);
             // 1) upload immediately, get back an uploadId
-            const {
-                uploadId,
-                status,
-                sessionId: returnedSessionId,
-                messageId,
-            }  = await handleFileUpload(file);
+            const uploadedFileList  = await handleFileUpload(files);
             // 2) store { file, uploadId } in state so we can preview the name locally
             setAttachedFiles(prev => [
                 ...prev,
-                { file, uploadId, sessionId: returnedSessionId, messageId }]);
+                ...uploadedFileList]);
+            setIsFileUploading(false);
         } catch (err) {
             // If upload fails, you could show an error toast here
             console.error("Error uploading file:", err);
@@ -71,13 +74,36 @@ export function ChatInput({
         }
     };
     const removeAttachmentAt = async (index: number) => {
+        setAttachmentSelectedForRemoval(index);
+        setIsRemoveAttachmentLoading(true);
         // 1) Find the uploadId we need to delete
-        const { messageId } = attachedFiles[index];
+        const removingFileObj = attachedFiles[index];
         try {
-            await deleteFileFromServer(messageId);
-            setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+            // await deleteFileFromServer(removingFileObj.file_id);
+            // setAttachedFiles(prev => prev.filter((e, i) => e.file_id !== removingFileObj.file_id));
+            const isNewSession = !currentChatId || currentChatId === '0' || currentChatId.length < 10;
+            const sessionId = isNewSession ? '' : currentChatId;
+            await removeAttachedFile({
+                fileId: removingFileObj.file_id,
+                currentChatId: sessionId,
+                successTask: () => {
+                    setAttachedFiles(prev => prev.filter((e, i) => e.file_id !== removingFileObj.file_id));
+                },
+                failureTask: () => {
+                    toast('Failure', {
+                        description: 'Could not remove file attachment'
+                    });
+                },
+                errorTask: () => {
+                    toast('Error', {
+                        description: 'An unexpected error occurred while removing file attachment'
+                    });
+                }
+            });
+            setIsRemoveAttachmentLoading(false);
+            setAttachmentSelectedForRemoval(null); 
         } catch (err) {
-            console.error("Error deleting file messageId:", messageId, err);
+            console.error("Error deleting file:", err);
         }
     };
     const handleKeyDown = (e: React.KeyboardEvent<Element>): void => {
@@ -92,7 +118,7 @@ export function ChatInput({
     };
     const handleMessageSubmit = () => {
         if (!isLoading && input.trim()) {
-            handleSendMessage(input, selectedAgent);
+            handleSendMessage(input, selectedAgent, attachedFiles);
             setInput("");
             setAttachedFiles([]);
         }
@@ -148,52 +174,46 @@ export function ChatInput({
                         border: 'none'
                     }}
                 >
-                    {attachedFiles.length > 0 && (
+                    {(attachedFiles.length > 0 || isFileUploading) && (
                         <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
-                            <Grid container spacing={1}>
-                                {attachedFiles.map(({ file }, idx) => (
+                            <Grid container spacing={1} sx={{alignItems: 'center'}}>
+                                {attachedFiles.map((file_item, idx) => (
                                     <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
                                         <Paper
                                             variant="outlined"
-                                            sx={{
-                                                position: 'relative',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                bgcolor: 'grey.100',
-                                                p: 1,
-                                                overflow: 'hidden',
-                                            }}
+                                            sx={attachmentStyles}
                                         >
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
-                                                {file.type.startsWith("image/") ? (
+                                                {file_item.file_type.startsWith("image/") ? (
                                                     <Box
                                                         component="img"
-                                                        src={URL.createObjectURL(file)}
-                                                        alt={file.name}
+                                                        src={file_item.public_link}
+                                                        alt={file_item.original_file_name}
                                                         sx={{ height: 24, width: 24, objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }}
                                                     />
                                                 ) : (
                                                     <FiFile className="h-4 w-4 text-blue-500 flex-shrink-0" />
                                                 )}
                                                 <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
-                                                    {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                                                    {file_item.original_file_name} ({(file_item.file_size / 1024).toFixed(1)} KB)
                                                 </Typography>
                                             </Box>
                                             <IconButton
                                                 size="small"
-                                                onClick={() => removeAttachmentAt(idx)}
+                                                onClick={(attachmentSelectedForRemoval === idx && isRemoveAttachmentLoading) ? undefined : () => removeAttachmentAt(idx)}
                                                 sx={{
-                                                    position: 'absolute', top: 2, right: 2,
                                                     bgcolor: 'rgba(255,255,255,0.7)',
                                                     '&:hover': { bgcolor: 'rgba(255,255,255,1)' }
                                                 }}
                                             >
-                                                <CloseIcon sx={{ fontSize: 16 }} />
+                                                {(attachmentSelectedForRemoval === idx && isRemoveAttachmentLoading) ? <CircularProgress size={16} /> : <CloseIcon sx={{ fontSize: 16 }} /> }
                                             </IconButton>
                                         </Paper>
                                     </Grid>
                                 ))}
+                                {isFileUploading && <Box sx={{ p: 1.5, borderRadius: '8px', bgcolor: 'action.hover' }}>
+                                    <LoadingDots />
+                                </Box>}
                             </Grid>
                         </Box>
                     )}

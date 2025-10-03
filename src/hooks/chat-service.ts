@@ -1,12 +1,12 @@
 
 import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios.ts";
 import {ENDPOINTS} from "@/config/config.ts";
-import {Chat, ChatMessage, ChatSessions, Message, MessageContent } from "@/types";
-import {extractRenderVizUrls, getTextWithoutReasoning} from "@/utils/utils.ts";
+import {Chat, ChatMessage, ChatSessions, FileDetails, Message, MessageContent } from "@/types";
+import {extractAttachedFilesPublicLinks, extractRenderVizUrls, getTextWithoutReasoning} from "@/utils/utils.ts";
 import {refreshAccessToken} from "@/hooks/auth-service.ts";
 import {iam_login_url} from "@/constants/iam-uri.tsx";
 import {buildHeaderJSON} from "@/utils/axios/auth-axios.ts";
-import { app_name } from "@/constants/app-name";
+import { app_name } from "@/constants/constants";
 
 interface ApiParams {
     retry?: boolean;
@@ -188,7 +188,33 @@ export async function loadChatMessages({sessionId, userid, failureTask, errorTas
         const apiData = (userid == null || userid == undefined) ? await fetchChatMessages({sessionId, failureTask, errorTask}) : await fetchSharedUserInteraction({sessionId, userid, failureTask, errorTask});
         const { readonly, conversations: rawConversations } = apiData;
 
-        const mappedMessages: ChatMessage[] = rawConversations.map((msg: ChatMessage) => {
+        const mappedMessages: ChatMessage[] = await Promise.all(rawConversations.map(async (msg: ChatMessage) => {
+            if (msg.author == "user") {
+                const { message: message, attachedFiles: attachmentsPublicURL } = extractAttachedFilesPublicLinks(msg.content);
+                if (attachmentsPublicURL.length > 0) {
+                    const attachmentDetails = await getFileDetailsFromURL(attachmentsPublicURL, sessionId, userid, retry);
+                    return {
+                        author: msg.author,
+                        content: message,
+                        timestamp: msg.timestamp,
+                        attachments: attachmentDetails
+                    };
+                } else {
+                    return {
+                        author: msg.author,
+                        content: message,
+                        timestamp: msg.timestamp,
+                        attachments: []
+                    };
+                }
+            } else {
+                return {
+                    author: msg.author,
+                    content: msg.content,
+                    timestamp: msg.timestamp,
+                    attachments: []
+                }
+            }
             // let message_content: string = msg.content;
             // if (msg.author == "user") {
             //     message_content = msg.content;
@@ -252,12 +278,12 @@ export async function loadChatMessages({sessionId, userid, failureTask, errorTas
             //     timestamp: msg.createdAt,
             //     botIcon: isUser ? undefined : 'default-bot',
             // };
-            return {
-                author: msg.author,
-                content: msg.content,
-                timestamp: msg.timestamp
-            }
-        });
+            // return {
+            //     author: msg.author,
+            //     content: msg.content,
+            //     timestamp: msg.timestamp
+            // }
+        }));
         console.log(mappedMessages);
         const finalChatList = mappedMessages.filter((msg) => msg.author == "user" || msg.content.length > 0);
         return { readonly, conversations: finalChatList };
@@ -433,6 +459,60 @@ export async function toggleChatSharability({sessionId, isSharable, successTask,
     } catch (error) {
         console.error(`Failed to toggle chat sharability for chatId=${sessionId}`, error);
         errorTask();
+    }
+}
+
+export async function getFileDetailsFromURL(urls: string[], session_id: string, user_id?: string | null, retry = false) : Promise<FileDetails[]> {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({
+                failureTask: () => {
+                    console.log("Failed to refresh token")
+                }, 
+                errorTask: () => {
+                    console.log("Error encountered while refreshing token")
+                }
+            });
+        }
+        const access_token = localStorage.getItem('access_token');
+        const payload = { 
+            public_links: urls,
+            session_id: session_id,
+            ...(user_id ? { user_id: user_id } : {})
+        };
+        const response = await fetch(ENDPOINTS.GET_FILE_DETAILS_FROM_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                console.log("Redirecting to login page");
+                window.location.replace(iam_login_url);
+                return [];
+            } else {
+                return await getFileDetailsFromURL(urls, session_id, user_id, true);
+            }
+        } else if (response.status == 200) {
+            const response_data = await response.json();
+            const { file_details: file_details, errors: response_errors } = response_data;
+            if (response_errors && response_errors.length > 0) {
+                throw new Error(`Failed to get file details due to these error(s): ${response_errors.join(', ')}`); 
+            }
+            return file_details;
+        } else {
+            console.error("Failed to get file details with status code:", response.status);
+            return [];
+        }
+    } catch (error) {
+        console.error(`Failed to get file details`, error);
+        return [];
     }
 }
 

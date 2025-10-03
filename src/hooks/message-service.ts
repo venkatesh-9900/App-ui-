@@ -1,6 +1,7 @@
-import {SELECTED_ENDPOINT} from "@/config/config.ts";
-import { app_name } from "@/constants/app-name";
-import {ChatMessage, Message, MessageContent} from "@/types";
+import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config.ts";
+import { app_name } from "@/constants/constants";
+import {ChatMessage, FileDetails, Message, MessageContent} from "@/types";
+import { addAttachedFilesPublicLinks } from "@/utils/utils";
 
 export async function handleStreamMessage({
                                               text,
@@ -14,11 +15,17 @@ export async function handleStreamMessage({
                                               updateTyping,
                                               setSelectedVizUrl,
                                               setIsSplitMode,
-                                              selectedAgent
+                                              selectedAgent,
+                                              attachedFiles,
+                                              showError
                                           }: any) {
     const interactionMode = SELECTED_ENDPOINT;
     console.log('selectedAgent:', selectedAgent);
-    const payload = { query: text, agent: selectedAgent };
+    let messageText = text;
+    if (attachedFiles.length > 0) {
+        messageText = addAttachedFilesPublicLinks(text, attachedFiles);
+    }
+    const payload = { query: messageText, agent: selectedAgent };
     const newChatId: string = window.crypto.randomUUID() + '-' + new Date().toISOString();
     setIsThinking(true);
     try {
@@ -39,6 +46,9 @@ export async function handleStreamMessage({
         //const sessionId = content.replace('__SESSION_ID__:', '');
         if (!currentChatId || currentChatId === 0 || currentChatId === 'new') {
             setCurrentChatId(newChatId);
+            if (attachedFiles.length > 0) {
+                updateSessionIdForAttachedFilesInNewChat(attachedFiles, newChatId);
+            }
         }
 
         const reader = response.body.getReader();
@@ -48,6 +58,7 @@ export async function handleStreamMessage({
             author: 'model',
             content: '',
             timestamp: new Date().toISOString(),
+            attachments: []
         };
         const updatedMessages = [...newMessages, botMessage];
         setMessages(updatedMessages);
@@ -63,11 +74,11 @@ export async function handleStreamMessage({
             if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
-            console.log('chunk:', chunk.replace(' ', '_').replace('\n', '$'));
-            const lines = chunk.split('\n');
-
+            //console.log('chunk: ', [chunk]);
+            const lines = chunk.split('\r\n\r\n');
+            console.log('lines:', lines);
             lines.forEach((line) => {
-                line = line.trim();
+                //line = line.trim();
                 if (!line) return;
 
                 if (line.startsWith('event:')) {
@@ -75,8 +86,9 @@ export async function handleStreamMessage({
                     return;
                 }
 
-                if (line.startsWith('data:')) {
-                    const content = line.replace(/^data:\s*/, '').trim();
+                if (line.startsWith('data: ')) {
+                    const content = line.replace(/data: /g, '').replace(/\r\n/g, '\n');
+                    console.log('content:', content);
                     if (!content) return;
                     if (processMarkdownVizChunk(content, pendingMarkdownUrl, vizUrls, setSelectedVizUrl, setIsSplitMode)) {
                         return;
@@ -105,6 +117,9 @@ export async function handleStreamMessage({
                             vizUrls.push(cleanedUrl);
                             pendingVizLine = '';
                             console.log('vizUrls:', cleanedUrl);
+                            result += `\nRENDER-VIZ-ON-UI:${cleanedUrl}\n`;
+                            updatedMessages[index].content = result;
+                            setMessages([...updatedMessages]);
                             return;
                         }
                         // otherwise, wait for next line to complete it
@@ -122,7 +137,8 @@ export async function handleStreamMessage({
                     }
 
                     // Append chat data
-                    result += content + '\n';
+                    // result += content + '\n';
+                    result += content;
                     updatedMessages[index].content = result;
                     setMessages([...updatedMessages]);
                     lastEventType = null;
@@ -184,4 +200,28 @@ function processMarkdownVizChunk(
     }
 
     return false;
+}
+
+async function updateSessionIdForAttachedFilesInNewChat(attachedFiles: FileDetails[], sessionId: string) {
+    const file_id_list = attachedFiles.map(file => file.file_id);
+    const payload = { file_ids: file_id_list };
+    try {
+        const response = await fetch(ENDPOINTS.UPDATE_SESSION_ID_TO_ATTACHED_FILES, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                'x-app-name': app_name,
+                'x-session-id': sessionId
+            },
+            body: JSON.stringify(payload)
+        });
+        if (response.status == 200) {
+            console.log('Session ID updated successfully for attached files.');
+        } else {
+            console.error("Failed to update session ID for attached files with status code:", response.status);
+        }
+    } catch (error: any) {
+        console.error('Error in updateSessionIdForAttachedFilesInNewChat:', error);
+    }
 }

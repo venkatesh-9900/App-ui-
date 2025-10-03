@@ -89,9 +89,11 @@ export const ENDPOINTS = {
     IS_NEW_SESSION: `${API_BASE_URL}/api/ai/session/{sessionId}/isNew`,
     ARCHIVE_SESSION: `${API_BASE_URL}/api/ai/sessions/{sessionId}/archive`,
     UPDATE_SESSION_TITLE: `${API_BASE_URL}/api/ai/sessions/{sessionId}/title`,
-    UPLOAD_FILE: `${API_BASE_URL}/api/ai/upload`,
-    REMOVE_FILE: `${API_BASE_URL}/api/ai/message/{messageId}/attachment`,
+    UPLOAD_FILE: `/api/interaction/upload-files`,
+    REMOVE_FILE: `/api/interaction/remove-file-attachment`,
     TOGGLE_CHAT_SHARABILITY: `/api/interaction/toggle-session-sharability`,
+    UPDATE_SESSION_ID_TO_ATTACHED_FILES: `/api/interaction/update-session-id-to-uploaded-files`,
+    GET_FILE_DETAILS_FROM_URL: `/api/interaction/get-file-objects-from-public-links`
 };
 export const SELECTED_ENDPOINT =
     ENDPOINTS.INTERACTIONS.STREAM_STANDARD;

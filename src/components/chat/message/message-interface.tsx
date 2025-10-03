@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useRef, useState} from 'react';
 import {format, isValid, parseISO} from 'date-fns';
 import {useAppearance} from '@/contexts/AppearanceContext';
-import {ChatMessage, Message} from "@/types";
+import {ChatMessage, FileDetails, Message} from "@/types";
 import MessageContentWrapper from "@/components/chat/message/message-content-wrapper.tsx";
 import {RenderMessageContent} from "@/components/chat/message/render-message-content.tsx";
 import {Box} from "@mui/material";
@@ -13,7 +13,7 @@ interface MessageProps {
     setInput: (value: string) => void;
     readonly: boolean;
     currentChatId: string;
-    handleSendMessage: (message: string, selectedAgent: string) => void;
+    handleSendMessage: (message: string, selectedAgent: string, attachedFiles: FileDetails[]) => void;
     message: ChatMessage;
     isTyping: boolean;
     displayedText: string;

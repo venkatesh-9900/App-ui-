@@ -1,10 +1,10 @@
 import {memo, useCallback, useEffect, useRef, useState} from "react";
 import {ChatMessages} from "@/components/chat/chat-messages.tsx";
-import {ChatInterfaceProps, ChatMessage, FileUploadResponse, Message} from "@/types";
+import {ChatInterfaceProps, ChatMessage, FileDetails, FileUploadResponse, Message} from "@/types";
 import {useLocation, useNavigate} from 'react-router-dom';
 import {ChatInput} from "@/components/chat/chat-input.tsx";
 import {fetchSessionDetails, hasAnyVisualization, loadChatMessages, toggleChatSharability} from "@/hooks";
-import {uploadFileToServer} from "@/hooks/upload-file.ts";
+import {uploadFilesToServer, uploadFileToServer} from "@/hooks/upload-file.ts";
 import {useMessageHandling} from "@/hooks/use-message-handling.ts";
 import {Box} from "@mui/material";
 import {toast} from "sonner";
@@ -155,6 +155,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
         }
     }, [selectedVizUrl, userClosedSplitView, messages]);
 
+    const showError = () => {
+        toast('Error', {
+            description: 'An unexpected error occurred. Please reload the page and try again.'
+        });
+    }
+
     const { handleSendMessage } = useMessageHandling({
         messages,
         setMessages,
@@ -166,7 +172,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
         setCurrentTypingIndex,
         setDisplayedText,
         setSelectedVizUrl,
-        setIsSplitMode
+        setIsSplitMode,
+        showError
     });
 
     const resetChat = useCallback(() => {
@@ -182,14 +189,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
     }, [setMessages, setTitle, setCurrentChatId, setInput, setIsThinking, setCurrentTypingIndex, setDisplayedText]);
 
     const handleFileUpload = useCallback(
-        async (file: File, sessionIdOverride?: string): Promise<FileUploadResponse> => {
+        async (files: File[], sessionIdOverride?: string): Promise<FileDetails[]> => {
             const sessionIdRaw = sessionIdOverride || currentChatId;
             const isNewSession = !sessionIdRaw || sessionIdRaw === '0' || sessionIdRaw.length < 10;
             const sessionId = isNewSession ? '' : sessionIdRaw;
 
             try {
-                const result = await uploadFileToServer(file, sessionId);
-                setCurrentChatId(result.sessionId);
+                const result = await uploadFilesToServer({
+                    files: files, 
+                    currentChatId: sessionId,
+                    fileFailureTask: (file_error) => {
+                        toast('Failure', {
+                            description: 'One or more files could not be uploaded'
+                        });
+                    },
+                    failureTask: () => {
+                        toast('Failure', {
+                            description: 'Could not upload files'
+                        });
+                    },
+                    errorTask: () => {
+                        toast(
+                            'Error', {
+                                description: 'An unexpected error occurred while uploading files'
+                            }
+                        )
+                    }
+                });
+                // setCurrentChatId(result.sessionId);
                 return result;
             } catch (err) {
                 console.error("File upload error:", err);
@@ -346,7 +373,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
                    setInput={setInput}
                    currentChatId={String(currentChatId)}
                    handleSendMessage={handleSendMessage}
-                   handleFileUpload={(file: File) => handleFileUpload(file)}
+                   handleFileUpload={(files: File[]) => handleFileUpload(files)}
                    messages={messages}
                    isThinking={isThinking}
                    currentTypingIndex={currentTypingIndex}

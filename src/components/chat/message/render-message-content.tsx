@@ -48,6 +48,7 @@ export const RenderMessageContent: React.FC<MessageContentProps> = (props) => {
                 displayText={displayText}
                 isEditing={isEditing}
                 selectedAgent={selectedAgent}
+                attachments={message.attachments}
             />
         );
     }
