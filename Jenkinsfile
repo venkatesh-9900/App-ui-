@@ -81,11 +81,11 @@ spec:
                         submoduleCfg: [],
                         userRemoteConfigs: scm.userRemoteConfigs
                     ])
-                    
+
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
-                    println " Major1: " + highestVersion.getMajor()
+                    println " Major: " + highestVersion.getMajor()
                     println " Minor: " + highestVersion.getMinor()
                     println " Patch: " + highestVersion.getPatch()
                     println " Git tag: " + highestVersion.findTag().orElse("")
