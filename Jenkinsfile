@@ -162,32 +162,31 @@ pipeline {
     }
     post {
         success {
-            node {
-                script {
-                    def branchInfo = getBranchInfo()
-                    def branchName = branchInfo.branchName
-                    def isMaster = branchInfo.isMaster
+            script {
+                def branchInfo = getBranchInfo()
+                def branchName = branchInfo.branchName
+                def isMaster = branchInfo.isMaster
+                
+                if (isMaster) {
+                    // Only create Git tags for master branch releases
+                    def finalVersion = currentBuild.displayName.replace('v', '')
+                    echo "Test line"
+                    echo "Creating Git tag for master release: v${finalVersion}"
                     
-                    if (isMaster) {
-                        // Only create Git tags for master branch releases
-                        def finalVersion = currentBuild.displayName.replace('v', '')
-                        echo "Creating Git tag for master release: v${finalVersion}"
-                        
-                        withCredentials([usernamePassword(credentialsId: 'argus-cicd-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                            sh """
-                                git config user.email "cicd@argusintelligence.net"
-                                git config user.name "argus-cicd"
+                    withCredentials([usernamePassword(credentialsId: 'argus-cicd-writer', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        sh """
+                            git config user.email "cicd@argusintelligence.net"
+                            git config user.name "argus-cicd"
 
-                                # fetch all tags to ensure we have the latest
-                                git fetch --tags
+                            # fetch all tags to ensure we have the latest
+                            git fetch --tags
 
-                                git tag v${finalVersion}
-                                git push https://\${GIT_USER}:\${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
-                            """
-                        }
-                    } else {
-                        echo "PR branch build - skipping Git tag creation"
+                            git tag v${finalVersion}
+                            git push https://\${GIT_USER}:\${GIT_PASS}@github.com/your-org/app-ui.git v${finalVersion}
+                        """
                     }
+                } else {
+                    echo "PR branch build - skipping Git tag creation"
                 }
             }
         }
