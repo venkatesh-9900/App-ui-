@@ -68,6 +68,8 @@ spec:
 
                 def imageTag
                 if (branchInfo.isMaster) {
+                    // Ensure tags are present
+                    sh 'git fetch --tags --unshallow || git fetch --tags'
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
