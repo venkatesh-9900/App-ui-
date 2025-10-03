@@ -131,11 +131,15 @@ spec:
                         withCredentials([usernamePassword(
                             credentialsId: 'argus-cicd-writer',
                             usernameVariable: 'GIT_USER',
-                            passwordVariable: 'GIT_PASS'
+                            passwordVariable: 'GITHUB_TOKEN'
                         )]) {
                             sh """
+                                # Set up git credential helper with token (password field contains PAT)
+                                git config --global credential.helper store
+                                echo "https://\${GITHUB_TOKEN}@github.com" > ~/.git-credentials
+                                
                                 # Clone the repository with depth 1 (shallow clone)
-                                git clone --depth 1 https://${GIT_USER}:${GIT_PASS}@github.com/void-kernel/app-ui.git repo
+                                git clone --depth 1 https://github.com/void-kernel/app-ui.git repo
                                 cd repo
                                 
                                 # Configure git user
@@ -149,6 +153,9 @@ spec:
                                 # Create and push the tag
                                 git tag v${finalVersion} -m "Release version ${finalVersion}"
                                 git push origin v${finalVersion}
+                                
+                                # Clean up credentials
+                                rm -f ~/.git-credentials
                             """
                         }
                     }
