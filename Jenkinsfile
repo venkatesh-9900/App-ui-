@@ -112,7 +112,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'git fetch --tags --unshallow || git fetch --tags'
+                    sh 'git fetch --tags'
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
@@ -126,8 +126,6 @@ pipeline {
                     
                     // Create the tag
                     sh """
-                        git config --global user.email "cicd@argusintelligence.net"
-                        git config --global user.name "argus-cicd"
                         git tag -a v${finalVersion} -m "Release version ${finalVersion}"
                     """
                 }
