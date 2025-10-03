@@ -26,6 +26,15 @@ pipeline {
                         def registry = "your-registry.com" // Replace with your actual registry
                         
                         sh """
+                            echo "Starting Docker daemon..."
+                            dockerd-entrypoint.sh &
+                            
+                            echo "Waiting for Docker daemon to start..."
+                            sleep 10
+                            
+                            echo "Checking Docker daemon status..."
+                            docker version
+                            
                             echo "Building Docker image: ${imageName}"
                             docker build -t ${imageName} .
                             docker tag ${imageName} ${registry}/${imageName}
