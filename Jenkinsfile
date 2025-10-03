@@ -3,10 +3,24 @@ pipeline {
     stages {
         stage('app-ui') {
             agent {
-                docker { image 'node:22.20.0-alpine3.22' }
+                kubernetes {
+                    yaml """
+                        apiVersion: v1
+                        kind: Pod
+                        spec:
+                        containers:
+                        - name: node
+                            image: node:22.20.0-alpine3.22
+                            command:
+                            - cat
+                            tty: true
+                        """
+                }
             }
             steps {
-                sh 'node --version'
+                container('node') {
+                    sh 'node --version'
+                }
             }
         }
     }
