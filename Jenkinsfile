@@ -44,65 +44,65 @@ pipeline {
     }
 
     stages {
-        // stage('Build & Push Docker Image') {
-//     agent {
-//         kubernetes {
-//             yaml """
-// apiVersion: v1
-// kind: Pod
-// spec:
-//   containers:
-//   - name: kaniko
-//     image: gcr.io/kaniko-project/executor:debug
-//     command:
-//     - /busybox/cat
-//     tty: true
-// """
-//         }
-//     }
-    // steps {
-    //     container('kaniko') {
-    //         script {
-    //             def branchInfo = getBranchInfo()
-    //             def shortCommit = branchInfo.commitSHA.take(8)
+        stage('Build & Push Docker Image') {
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/cat
+    tty: true
+"""
+        }
+    }
+    steps {
+        container('kaniko') {
+            script {
+                def branchInfo = getBranchInfo()
+                def shortCommit = branchInfo.commitSHA.take(8)
 
-    //             def imageTag
-    //             if (branchInfo.isMaster) {
-    //                 // Get highest semantic version from Git tags using GitHub Changelog plugin
-    //                 def highestVersion = getHighestSemanticVersion()
-    //                 println "Highest version: " + highestVersion.toString()
-    //                 println " Major1: " + highestVersion.getMajor()
-    //                 println " Minor: " + highestVersion.getMinor()
-    //                 println " Patch: " + highestVersion.getPatch()
-    //                 println " Git tag: " + highestVersion.findTag().orElse("")
+                def imageTag
+                if (branchInfo.isMaster) {
+                    // Get highest semantic version from Git tags using GitHub Changelog plugin
+                    def highestVersion = getHighestSemanticVersion()
+                    println "Highest version: " + highestVersion.toString()
+                    println " Major1: " + highestVersion.getMajor()
+                    println " Minor: " + highestVersion.getMinor()
+                    println " Patch: " + highestVersion.getPatch()
+                    println " Git tag: " + highestVersion.findTag().orElse("")
                     
-    //                 def baseBranch = env.CHANGE_TARGET ?: 'main'
-    //                 def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
-    //                 imageTag = versionInfo.version
-    //             } else {
-    //                 def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
-    //                 imageTag = "${cleanBranchName}-${shortCommit}"
-    //             }
+                    def baseBranch = env.CHANGE_TARGET ?: 'main'
+                    def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                    imageTag = versionInfo.version
+                } else {
+                    def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
+                    imageTag = "${cleanBranchName}-${shortCommit}"
+                }
 
-    //             def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
-    //             currentBuild.displayName = imageTag
+                def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
+                currentBuild.displayName = imageTag
 
-    //             withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-    //                               credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-    //                 sh """
-    //                     echo "Building and pushing with Kaniko..."
-    //                     /kaniko/executor \
-    //                       --context dir://\$(pwd) \
-    //                       --dockerfile \$(pwd)/Dockerfile \
-    //                       --destination ${fullImageName} \
-    //                       --cleanup \
-    //                       --verbosity info
-    //                 """
-    //             }
-    //         }
-    //     }
-    // }
-// }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                    sh """
+                        echo "Building and pushing with Kaniko..."
+                        /kaniko/executor \
+                          --context dir://\$(pwd) \
+                          --dockerfile \$(pwd)/Dockerfile \
+                          --destination ${fullImageName} \
+                          --cleanup \
+                          --verbosity info
+                    """
+                }
+            }
+        }
+    }
+}
 
         stage('Tag Release') {
             when {
@@ -110,13 +110,11 @@ pipeline {
             }
             steps {
                 script {
-                    def finalVersion = "0.0.1"
+                    def finalVersion = currentBuild.displayName
                     echo "Creating and pushing Git tag: v${finalVersion}"
                     
                     // Create the tag
                     sh """
-                        git config user.email "jenkins-ci@argusintelligence.net"
-                        git config user.name "Jenkins CI"
                         git tag -a v${finalVersion} -m "Release version ${finalVersion}"
                     """
                 }
