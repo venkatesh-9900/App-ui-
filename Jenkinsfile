@@ -125,6 +125,8 @@ pipeline {
                     
                     // Create the tag
                     sh """
+                        git config --global user.email "cicd@argusintelligence.net"
+                        git config --global user.name "argus-cicd"
                         git tag -a v${finalVersion} -m "Release version ${finalVersion}"
                     """
                 }
