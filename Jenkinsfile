@@ -46,8 +46,7 @@ pipeline {
     environment {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
-        ECR_REPO       = "argus-prod-cicd-ecr"
-        APP_NAME       = "app-ui"
+        ECR_REPO       = "app-ui"
     }
 
     stages {
@@ -84,7 +83,7 @@ spec:
                     imageTag = "${cleanBranchName}-${shortCommit}"
                 }
 
-                def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}/${APP_NAME}:${imageTag}"
+                def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
                 currentBuild.displayName = imageTag
 
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
