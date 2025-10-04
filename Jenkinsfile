@@ -156,16 +156,10 @@ spec:
                         git config user.email "cicd@argusintelligence.net"  
                         git add ${CHART_PATH}/Chart.yaml
                         git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                        git push origin ${newBranch}
                     """
 
                     echo "Commit created: ${env.IMAGE_TAG}"
-                    // Push new branch using Git Publisher
-                    gitPublisher(branches: [[targetRepoName: 'origin', branchName: newBranch, mergeTarget: 'main']],
-                                 forcePush: false,
-                                 pushOnlyIfSuccess: true,
-                                 tagsToPush: [],
-                                 notesToPush: [])
-
                     // Create PR automatically (via GitHub Branch Source plugin)
                     echo "Branch pushed: ${newBranch}"
 
