@@ -40,7 +40,9 @@ pipeline {
     environment {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
-        ECR_REPO       = "app-ui"
+        ECR_REPO       = "docker/app-ui"
+        ECR_HELM_REPO  = "helm/app-ui"
+        CHART_PATH     = "helm"
     }
 
     stages {
@@ -65,13 +67,6 @@ spec:
             script {
                 def branchInfo = getBranchInfo()
                 def shortCommit = branchInfo.commitSHA.take(8)
-                println "PR Created 1"
-                baseBranch = env.CHANGE_TARGET
-                println "Base branch: " + baseBranch
-                println "Target branch: " + targetBranch
-                targetBranch = env.CHANGE_BRANCH    
-                echo "Running in PR #${env.CHANGE_ID}, base branch = ${baseBranch}"
-
                 def imageTag
                 if (branchInfo.isMaster) {
                     // Ensure tags are present
@@ -101,32 +96,89 @@ spec:
                     def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
                     imageTag = versionInfo.version
                     println "Image tag: " + imageTag
-                    println "Base branch: " + baseBranch
-                    println "Target branch: " + targetBranch
+                    env.IMAGE_TAG = imageTag
                 } else {
                     def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
                     imageTag = "${cleanBranchName}-${shortCommit}"
+                    env.IMAGE_TAG = imageTag
                 }
 
                 def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
                 currentBuild.displayName = imageTag
 
-                // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                //                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                //     sh """
-                //         echo "Building and pushing with Kaniko..."
-                //         /kaniko/executor \
-                //           --context dir://\$(pwd) \
-                //           --dockerfile \$(pwd)/Dockerfile \
-                //           --destination ${fullImageName} \
-                //           --cleanup \
-                //           --verbosity info
-                //     """
-                // }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                    sh """
+                        echo "Building and pushing with Kaniko..."
+                        /kaniko/executor \
+                          --context dir://\$(pwd) \
+                          --dockerfile \$(pwd)/Dockerfile \
+                          --destination ${fullImageName} \
+                          --cleanup \
+                          --verbosity info
+                    """
+                }
             }
         }
     }
 }
+
+        // -----------------------------------------
+        // STAGE 2: Update Helm Chart + Push via Git Plugin
+        // -----------------------------------------
+        stage('Update Helm Chart Version & Push Branch') {
+            when { expression { env.IMAGE_TAG } }
+            steps {
+                script {
+                    echo "Updating Helm chart version to ${env.IMAGE_TAG}"
+
+                    // Checkout current repo
+                    checkout scm
+
+                    // Update Chart.yaml version and appVersion
+                    def chartFile = readFile("${CHART_PATH}/Chart.yaml")
+                    chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
+                    chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
+                    writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+
+                    def newBranch = "bump/helm-version"
+
+                    // Use GitSCM step to create a new branch
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${newBranch}"]],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [
+                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0],
+                            [$class: 'LocalBranch', localBranch: newBranch]
+                        ],
+                        userRemoteConfigs: scm.userRemoteConfigs
+                    ])
+
+                    // Commit change using Jenkins’ Git API
+                    sh """
+                        git add ${CHART_PATH}/Chart.yaml
+                        git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                    """
+
+                    // Push new branch using Git Publisher
+                    gitPublisher(branches: [[targetRepoName: 'origin', branchName: newBranch, mergeTarget: 'main']],
+                                 forcePush: false,
+                                 pushOnlyIfSuccess: true,
+                                 tagsToPush: [],
+                                 notesToPush: [])
+
+                    // Create PR automatically (via GitHub Branch Source plugin)
+                    echo "Creating PR using GitHub plugin..."
+                    step([$class: 'GitHubPRBuilderPublisher', 
+                          targetBranch: 'main',
+                          title: "Helm Chart: v${env.IMAGE_TAG}",
+                          description: "Auto bump chart version to match Docker image ${env.IMAGE_TAG}",
+                          headBranch: newBranch])
+                }
+            }
+        }
+
 
         stage('Tag Release') {
         when {
@@ -169,12 +221,12 @@ spec:
                 git tag -a v${finalVersion} -m "Release version ${finalVersion}"
             """
 
-            // // Push the new tag
-            // gitPush(
-            //     gitScm: scm,
-            //     targetBranch: env.BRANCH_NAME,
-            //     targetRepo: 'origin'
-            // )
+            // Push the new tag
+            gitPush(
+                gitScm: scm,
+                targetBranch: env.BRANCH_NAME,
+                targetRepo: 'origin'
+            )
         }
     }
 }
