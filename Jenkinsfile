@@ -67,7 +67,7 @@ spec:
                 def shortCommit = branchInfo.commitSHA.take(8)
                 if (env.CHANGE_ID) {
                     // PR build
-                    println "PR Created"
+                    println "PR Created 1"
                     baseBranch = env.CHANGE_TARGET
                     println "Base branch: " + baseBranch
                     println "Target branch: " + targetBranch
