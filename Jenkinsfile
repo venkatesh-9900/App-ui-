@@ -65,6 +65,15 @@ spec:
             script {
                 def branchInfo = getBranchInfo()
                 def shortCommit = branchInfo.commitSHA.take(8)
+                if (env.CHANGE_ID) {
+                    // PR build
+                    println "PR Created"
+                    baseBranch = env.CHANGE_TARGET
+                    println "Base branch: " + baseBranch
+                    println "Target branch: " + targetBranch
+                    targetBranch = env.CHANGE_BRANCH    
+                    echo "Running in PR #${env.CHANGE_ID}, base branch = ${baseBranch}"
+                }
 
                 def imageTag
                 if (branchInfo.isMaster) {
@@ -85,15 +94,15 @@ spec:
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
-                    println " Major: " + highestVersion.getMajor()
+                    println " Major 1: " + highestVersion.getMajor()
                     println " Minor: " + highestVersion.getMinor()
                     println " Patch: " + highestVersion.getPatch()
                     println " Git tag: " + highestVersion.findTag().orElse("")
                     
                     def baseBranch = env.CHANGE_TARGET ?: 'main'
+                    def targetBranch = env.CHANGE_BRANCH
                     def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
                     imageTag = versionInfo.version
-                    def targetBranch = env.BRANCH_NAME
                     println "Image tag: " + imageTag
                     println "Base branch: " + baseBranch
                     println "Target branch: " + targetBranch
