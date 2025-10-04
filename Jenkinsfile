@@ -65,15 +65,12 @@ spec:
             script {
                 def branchInfo = getBranchInfo()
                 def shortCommit = branchInfo.commitSHA.take(8)
-                if (env.CHANGE_ID) {
-                    // PR build
-                    println "PR Created"
-                    baseBranch = env.CHANGE_TARGET
-                    println "Base branch: " + baseBranch
-                    println "Target branch: " + targetBranch
-                    targetBranch = env.CHANGE_BRANCH    
-                    echo "Running in PR #${env.CHANGE_ID}, base branch = ${baseBranch}"
-                }
+                println "PR Created 1"
+                baseBranch = env.CHANGE_TARGET
+                println "Base branch: " + baseBranch
+                println "Target branch: " + targetBranch
+                targetBranch = env.CHANGE_BRANCH    
+                echo "Running in PR #${env.CHANGE_ID}, base branch = ${baseBranch}"
 
                 def imageTag
                 if (branchInfo.isMaster) {
