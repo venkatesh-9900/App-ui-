@@ -152,6 +152,8 @@ spec:
 
                     // Commit change using Jenkins’ Git API
                     sh """
+                        git config user.name "argus-cicd"
+                        git config user.email "cicd@argusintelligence.net"  
                         git add ${CHART_PATH}/Chart.yaml
                         git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
                     """
