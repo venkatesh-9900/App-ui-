@@ -106,18 +106,18 @@ spec:
                 def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
                 currentBuild.displayName = imageTag
 
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                    sh """
-                        echo "Building and pushing with Kaniko..."
-                        /kaniko/executor \
-                          --context dir://\$(pwd) \
-                          --dockerfile \$(pwd)/Dockerfile \
-                          --destination ${fullImageName} \
-                          --cleanup \
-                          --verbosity info
-                    """
-                }
+                // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                //                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                //     sh """
+                //         echo "Building and pushing with Kaniko..."
+                //         /kaniko/executor \
+                //           --context dir://\$(pwd) \
+                //           --dockerfile \$(pwd)/Dockerfile \
+                //           --destination ${fullImageName} \
+                //           --cleanup \
+                //           --verbosity info
+                //     """
+                // }
             }
         }
     }
@@ -141,6 +141,8 @@ spec:
                     chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
                     writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
 
+                    echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
+
                     def newBranch = "bump/helm-version"
 
                     // Use GitSCM step to create a new branch
@@ -155,12 +157,15 @@ spec:
                         userRemoteConfigs: scm.userRemoteConfigs
                     ])
 
+                    echo "Branch created: ${newBranch}"
+
                     // Commit change using Jenkins’ Git API
                     sh """
                         git add ${CHART_PATH}/Chart.yaml
                         git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
                     """
 
+                    echo "Commit created: ${env.IMAGE_TAG}"
                     // Push new branch using Git Publisher
                     gitPublisher(branches: [[targetRepoName: 'origin', branchName: newBranch, mergeTarget: 'main']],
                                  forcePush: false,
@@ -169,12 +174,16 @@ spec:
                                  notesToPush: [])
 
                     // Create PR automatically (via GitHub Branch Source plugin)
+                    echo "Branch pushed: ${newBranch}"
+
                     echo "Creating PR using GitHub plugin..."
                     step([$class: 'GitHubPRBuilderPublisher', 
                           targetBranch: 'main',
                           title: "Helm Chart: v${env.IMAGE_TAG}",
                           description: "Auto bump chart version to match Docker image ${env.IMAGE_TAG}",
                           headBranch: newBranch])
+
+                    echo "PR created: ${newBranch}"
                 }
             }
         }
