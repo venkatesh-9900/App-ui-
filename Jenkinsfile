@@ -135,6 +135,12 @@ spec:
                     // Checkout current repo
                     checkout scm
 
+                    def newBranch = "bump/helm-version"
+
+                    sh """
+                         git checkout -b ${newBranch}
+                    """
+
                     // Update Chart.yaml version and appVersion
                     def chartFile = readFile("${CHART_PATH}/Chart.yaml")
                     chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
@@ -142,21 +148,6 @@ spec:
                     writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
 
                     echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
-
-                    def newBranch = "bump/helm-version"
-
-                    // Use GitSCM step to create a new branch
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${newBranch}"]],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [
-                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0],
-                            [$class: 'LocalBranch', localBranch: newBranch]
-                        ],
-                        userRemoteConfigs: scm.userRemoteConfigs
-                    ])
-
                     echo "Branch created: ${newBranch}"
 
                     // Commit change using Jenkins’ Git API
