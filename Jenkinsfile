@@ -140,6 +140,13 @@ spec:
     - sleep
     args:
     - 99d
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
 """
                 }
             }
