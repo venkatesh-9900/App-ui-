@@ -169,9 +169,9 @@ spec:
                     echo "Creating PR using GitHub plugin..."
                     
                     echo "Creating Pull Request..."
-                    withCredentials([string(credentialsId: 'argus-cicd-pat', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
-                            gh auth login --with-token <<< "$GITHUB_TOKEN"
+                            gh auth login --with-token <<< "$GIT_PASSWORD"
                             gh pr create \\
                                 --base "main" \\
                                 --head "${newBranch}" \\
