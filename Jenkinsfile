@@ -156,12 +156,12 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
-                            git config --global pull.rebase true
-                            git config --global pull.ff only
+                            git config pull.rebase true
+                            git config pull.ff false
                             git add ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
                             echo "Pulling main branch..."
-                            git pull origin main
+                            git pull origin main --rebase
                             echo "Pushing branch ${newBranch}..."
                             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
