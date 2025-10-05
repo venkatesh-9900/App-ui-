@@ -2,5 +2,5 @@ apiVersion: v2
 name: react-ui
 description: A Helm chart for deploying React UI with AWS ALB + ACM integration
 type: application
-version: 0.0.5-feat-test-1a57f0d7
-appVersion: feat-test-1a57f0d7
+version: 0.0.5-feat-test-21a23ec4
+appVersion: feat-test-21a23ec4
