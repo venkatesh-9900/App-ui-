@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: <your-ecr-repo-url>/react-ui
+  repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
   tag: "latest"
   pullPolicy: IfNotPresent
 
@@ -18,8 +18,6 @@ ingress:
   certificateArn: arn:aws:acm:ap-south-1:210519480143:certificate/xxxxxxxxxxxx
   scheme: internet-facing
   targetType: ip
-  group:
-    name: frontend-ingress-group
   annotations:
     # Required for AWS Load Balancer Controller
     kubernetes.io/ingress.class: alb
