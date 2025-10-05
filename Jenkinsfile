@@ -179,10 +179,6 @@ spec:
                         // Write back
                         writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
                         echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
-
-                        //Update Values.yaml image.repository with ECR_BASE_URL+ECR_REPO
-                        valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
-                        writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
                         echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
 
                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
