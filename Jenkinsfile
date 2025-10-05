@@ -255,7 +255,12 @@ spec:
                     writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
                     echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
                     echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
-
+                    
+                    //cat values.yaml and chart.yaml
+                    sh """
+                        cat ${CHART_PATH}/values.yaml
+                        cat ${CHART_PATH}/Chart.yaml
+                    """
 
                     echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
                     echo "Branch created: ${newBranch}"
@@ -266,7 +271,7 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
-                            git add ${CHART_PATH}/Chart.yaml ${CHART_PATH}/values.yaml
+                            git add ${CHART_PATH}/values.yaml ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: bump Helm chart version to ${chartVersion}"
                             echo "Pushing branch ${newBranch}..."
                             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
