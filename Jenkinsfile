@@ -170,18 +170,19 @@ spec:
                     
                     echo "Creating Pull Request..."
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
-                        sh '''#!/bin/sh
-                            curl -X POST \
-                            -H "Authorization: token $GIT_PASSWORD" \
-                            -H "Content-Type: application/json" \
-                            -d '{
+                        sh """#!/bin/sh
+                        curl -X POST \
+                        -H "Authorization: token $GIT_PASSWORD" \
+                        -H "Content-Type: application/json" \
+                        -d '{
                             "title": "Helm Chart: v${IMAGE_TAG}",
                             "head": "${newBranch}",
                             "base": "main",
                             "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
-                            }' \
-                            https://api.github.com/repos/void-kernel/app-ui/pulls
-                        '''
+                        }' \
+                        https://api.github.com/repos/void-kernel/app-ui/pulls
+                        """
+
                     }
                     echo "PR created: ${newBranch}"
                 }
