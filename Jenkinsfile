@@ -86,7 +86,7 @@ spec:
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
-                    println " Major 1: " + highestVersion.getMajor()
+                    println " Major: " + highestVersion.getMajor()
                     println " Minor: " + highestVersion.getMinor()
                     println " Patch: " + highestVersion.getPatch()
                     println " Git tag: " + highestVersion.findTag().orElse("")
@@ -106,18 +106,18 @@ spec:
                 def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
                 currentBuild.displayName = imageTag
 
-                // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                //                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                //     sh """
-                //         echo "Building and pushing with Kaniko..."
-                //         /kaniko/executor \
-                //           --context dir://\$(pwd) \
-                //           --dockerfile \$(pwd)/Dockerfile \
-                //           --destination ${fullImageName} \
-                //           --cleanup \
-                //           --verbosity info
-                //     """
-                // }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                    sh """
+                        echo "Building and pushing with Kaniko..."
+                        /kaniko/executor \
+                          --context dir://\$(pwd) \
+                          --dockerfile \$(pwd)/Dockerfile \
+                          --destination ${fullImageName} \
+                          --cleanup \
+                          --verbosity info
+                    """
+                }
             }
         }
     }
