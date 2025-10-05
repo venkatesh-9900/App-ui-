@@ -34,6 +34,8 @@ def getBranchInfo() {
 // Pipeline
 // ===============================
 pipeline {
+    agent any
+
     environment {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
@@ -45,128 +47,83 @@ pipeline {
 
     stages {
         stage('Build & Push Docker Image') {
-            agent {
-                kubernetes {
-                yaml """
+    agent {
+        kubernetes {
+            yaml """
 apiVersion: v1
 kind: Pod
 spec:
   containers:
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:debug
-      command:
-        - /busybox/cat
-      tty: true
-"""
-            }
-            steps {
-                container('kaniko') {
-                    script {
-                        def branchInfo = getBranchInfo()
-                        def shortCommit = branchInfo.commitSHA.take(8)
-                        def imageTag
-                        if (branchInfo.isMaster) {
-                            // Ensure tags are present
-                            // Re-checkout with full history + tags
-                            checkout([
-                                $class: 'GitSCM',
-                                branches: scm.branches,
-                                doGenerateSubmoduleConfigurations: false,
-                                extensions: [
-                                    [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-                                    [$class: 'CheckoutOption', timeout: 15]
-                                ],
-                                submoduleCfg: [],
-                                userRemoteConfigs: scm.userRemoteConfigs
-                            ])
-
-                            // Get highest semantic version from Git tags using GitHub Changelog plugin
-                            def highestVersion = getHighestSemanticVersion()
-                            println "Highest version: " + highestVersion.toString()
-                            println " Major: " + highestVersion.getMajor()
-                            println " Minor: " + highestVersion.getMinor()
-                            println " Patch: " + highestVersion.getPatch()
-                            println " Git tag: " + highestVersion.findTag().orElse("")
-                            
-                            def baseBranch = env.CHANGE_TARGET ?: 'main'
-                            def targetBranch = env.CHANGE_BRANCH
-                            def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
-                            imageTag = versionInfo.version
-                            println "Image tag: " + imageTag
-                            env.IMAGE_TAG = imageTag
-                        } else {
-                            def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
-                            imageTag = "${cleanBranchName}-${shortCommit}"
-                            env.IMAGE_TAG = imageTag
-                        }
-
-                        def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
-                        currentBuild.displayName = imageTag
-
-                        // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                        //                 credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                        //     sh """
-                        //         echo "Building and pushing with Kaniko..."
-                        //         /kaniko/executor \
-                        //         --context dir://\$(pwd) \
-                        //         --dockerfile \$(pwd)/Dockerfile \
-                        //         --destination ${fullImageName} \
-                        //         --cleanup \
-                        //         --verbosity info
-                        //     """
-                        // }
-                    }
-                }
-            }
-        }
-    
-
-        stage('Package & Push Helm Chart to ECR') {
-            when { expression { env.IMAGE_TAG } }
-            agent {
-                kubernetes {
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: helm
-    image: alpine/helm:3.9.0
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
     command:
-      - cat
+    - /busybox/cat
     tty: true
 """
+        }
+    }
+    steps {
+        container('kaniko') {
+            script {
+                def branchInfo = getBranchInfo()
+                def shortCommit = branchInfo.commitSHA.take(8)
+                def imageTag
+                if (branchInfo.isMaster) {
+                    // Ensure tags are present
+                    // Re-checkout with full history + tags
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: scm.branches,
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [
+                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                            [$class: 'CheckoutOption', timeout: 15]
+                        ],
+                        submoduleCfg: [],
+                        userRemoteConfigs: scm.userRemoteConfigs
+                    ])
+
+                    // Get highest semantic version from Git tags using GitHub Changelog plugin
+                    def highestVersion = getHighestSemanticVersion()
+                    println "Highest version: " + highestVersion.toString()
+                    println " Major: " + highestVersion.getMajor()
+                    println " Minor: " + highestVersion.getMinor()
+                    println " Patch: " + highestVersion.getPatch()
+                    println " Git tag: " + highestVersion.findTag().orElse("")
+                    
+                    def baseBranch = env.CHANGE_TARGET ?: 'main'
+                    def targetBranch = env.CHANGE_BRANCH
+                    def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                    imageTag = versionInfo.version
+                    println "Image tag: " + imageTag
+                    env.IMAGE_TAG = imageTag
+                } else {
+                    def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
+                    imageTag = "${cleanBranchName}-${shortCommit}"
+                    env.IMAGE_TAG = imageTag
                 }
-            }
-            steps {
-                container('helm') {
-                    script {
-                        // Install AWS CLI
-                        sh 'apk add --no-cache aws-cli'
 
-                        // Update Chart.yaml version and appVersion before packaging
-                        def chartFile = readFile("${CHART_PATH}/Chart.yaml")
-                        chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
-                        chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
-                        writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
-                        echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
+                def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
+                currentBuild.displayName = imageTag
 
-                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                            sh """
-                                echo "Logging into ECR..."
-                                aws ecr get-login-password --region ${AWS_REGION} | helm registry login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-
-                                echo "Packaging and pushing Helm chart..."
-                                helm package ${CHART_PATH}
-                                
-                                helm push ${CHART_PATH}-${env.IMAGE_TAG}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
-                            """
-                        }
-                    }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                    sh """
+                        echo "Building and pushing with Kaniko..."
+                        /kaniko/executor \
+                          --context dir://\$(pwd) \
+                          --dockerfile \$(pwd)/Dockerfile \
+                          --destination ${fullImageName} \
+                          --cleanup \
+                          --verbosity info
+                    """
                 }
             }
         }
-
+    }
+}
+    
+    
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
@@ -325,5 +282,4 @@ spec:
 }
 
     }
-}
 }
