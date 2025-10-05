@@ -172,7 +172,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh '''#!/bin/sh
                             curl -X POST \
-                            -H "Authorization: token $GITHUB_TOKEN" \
+                            -H "Authorization: token $GIT_PASSWORD" \
                             -H "Content-Type: application/json" \
                             -d '{
                             "title": "Helm Chart: v${IMAGE_TAG}",
