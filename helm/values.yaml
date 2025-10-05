@@ -1,25 +1,20 @@
 replicaCount: 2
-
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: "latest"
+  tag: feat-test-15e51a97
   pullPolicy: IfNotPresent
-
 containerPort: 3000
-
 service:
   type: ClusterIP
   port: 3000
-
 ingress:
   enabled: true
   className: alb
-  host: ui.example.com  # <-- replace with your domain
+  host: ui.example.com
   certificateArn: arn:aws:acm:ap-south-1:210519480143:certificate/xxxxxxxxxxxx
   scheme: internet-facing
   targetType: ip
   annotations:
-    # Required for AWS Load Balancer Controller
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
@@ -27,7 +22,6 @@ ingress:
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/xxxxxxxxxxxx
-
 resources:
   requests:
     cpu: 100m
@@ -35,9 +29,6 @@ resources:
   limits:
     cpu: 300m
     memory: 256Mi
-
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}
