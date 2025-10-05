@@ -161,13 +161,13 @@ spec:
                         //Update Values.yaml image.tag with env.IMAGE_TAG
                         def valuesFile = readFile("${CHART_PATH}/Values.yaml")
                         valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
-                        writeFile file: "${CHART_PATH}/Values.yaml", text: valuesFile
-                        echo "Updated ${CHART_PATH}/Values.yaml with tag ${env.IMAGE_TAG}"
+                        writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                        echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
 
                         //Update Values.yaml image.repository with ECR_BASE_URL+ECR_REPO
                         valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
-                        writeFile file: "${CHART_PATH}/Values.yaml", text: valuesFile
-                        echo "Updated ${CHART_PATH}/Values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
+                        writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                        echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
 
                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
                             sh """
