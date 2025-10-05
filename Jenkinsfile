@@ -135,11 +135,23 @@ spec:
                     // Checkout current repo
                     checkout scm
 
-                    def newBranch = "bump/helm-${env.IMAGE_TAG}"
+                    def newBranch = "bump/helm-version"
 
                     sh """
                          git checkout -b ${newBranch}
                     """
+
+                    // Pull main branch
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        sh """
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git config pull.rebase true
+                            git config pull.ff false
+                            echo "Pulling main branch..."
+                            git pull origin main --rebase
+                        """
+                    }
 
                     // Update Chart.yaml version and appVersion
                     def chartFile = readFile("${CHART_PATH}/Chart.yaml")
