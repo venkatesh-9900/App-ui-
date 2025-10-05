@@ -183,7 +183,7 @@ spec:
                     echo "Creating Pull Request..."
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """#!/bin/sh
-                        curl -X POST \
+                        curl -s -o /dev/null -w "%{http_code}" -X POST \
                         -H "Authorization: token $GIT_PASSWORD" \
                         -H "Content-Type: application/json" \
                         -d '{
