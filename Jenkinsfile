@@ -193,28 +193,67 @@ spec:
                                 helm push ${CHART_NAME}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
                             """
                         }
+                    }
+                }
+            }
+        }
+    
+        // -----------------------------------------
+        // STAGE 2: Update Helm Chart + Push via Git Plugin
+        // -----------------------------------------
+        stage('Update Repo Helm Chart Version & Push Branch') {
+            when { expression { env.IMAGE_TAG } }
+            steps {
+                script {
+                    // Checkout current repo
+                    checkout scm
 
+                    def newBranch = "bump/helm-version"
 
-                        //Now create a new branch and PR to update the helm chart version in the github repo
-                        def newBranch = "bump/helm-version"
+                    sh """
+                         git checkout -b ${newBranch} origin/${newBranch}
+                    """
 
+                    // Pull main branch
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
-                            git checkout -b ${newBranch} origin/${newBranch}
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git config pull.rebase true
+                            git config pull.ff false
+                            echo "Fetching branch ${newBranch}..."
+                            git fetch origin ${newBranch}
                         """
+                    }
 
-                        // Pull main branch
-                        withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
-                            sh """
-                                git config user.name "argus-cicd"
-                                git config user.email "cicd@argusintelligence.net"
-                                git config pull.rebase true
-                                git config pull.ff false
-                                echo "Fetching branch ${newBranch}..."
-                                git fetch origin ${newBranch}
-                            """
-                        }
+                    def highestVersion = getHighestSemanticVersion()
+                    echo "Highest version: " + highestVersion.toString()
+                    def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
+                    echo "Chart version: " + chartVersion
 
-                                            // Commit and push using credentials
+                    // Update Chart.yaml version and appVersion before packaging
+                    def chartFile = readFile("${CHART_PATH}/Chart.yaml")
+                    chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
+                    chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
+                    writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+                    echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
+
+                    //Update Values.yaml image.tag with env.IMAGE_TAG
+                    def valuesFile = readFile("${CHART_PATH}/values.yaml")
+                    valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
+                    writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                    echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
+
+                    //Update Values.yaml image.repository with ECR_BASE_URL+ECR_REPO
+                    valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
+                    writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                    echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
+
+
+                    echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
+                    echo "Branch created: ${newBranch}"
+
+                    // Commit and push using credentials
                     // Commit, push, and create PR using credentials
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
@@ -249,88 +288,9 @@ spec:
 
                     }
                     echo "PR created: ${newBranch}"
-                    }
                 }
             }
         }
-    
-        // // -----------------------------------------
-        // // STAGE 2: Update Helm Chart + Push via Git Plugin
-        // // -----------------------------------------
-        // stage('Update Repo Helm Chart Version & Push Branch') {
-        //     when { expression { env.IMAGE_TAG } }
-        //     steps {
-        //         script {
-        //             echo "Updating Helm chart version to ${env.IMAGE_TAG}"
-
-        //             // Checkout current repo
-        //             checkout scm
-
-        //             def newBranch = "bump/helm-version"
-
-        //             sh """
-        //                  git checkout -b ${newBranch} origin/${newBranch}
-        //             """
-
-        //             // Pull main branch
-        //             withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
-        //                 sh """
-        //                     git config user.name "argus-cicd"
-        //                     git config user.email "cicd@argusintelligence.net"
-        //                     git config pull.rebase true
-        //                     git config pull.ff false
-        //                     echo "Fetching branch ${newBranch}..."
-        //                     git fetch origin ${newBranch}
-        //                 """
-        //             }
-
-        //             // Update Chart.yaml version and appVersion
-        //             def chartFile = readFile("${CHART_PATH}/Chart.yaml")
-        //             chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
-        //             chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
-        //             writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
-
-        //             echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
-        //             echo "Branch created: ${newBranch}"
-
-        //             // Commit and push using credentials
-        //             // Commit, push, and create PR using credentials
-        //             withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
-        //                 sh """
-        //                     git config user.name "argus-cicd"
-        //                     git config user.email "cicd@argusintelligence.net"
-        //                     git add ${CHART_PATH}/Chart.yaml
-        //                     git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
-        //                     echo "Pushing branch ${newBranch}..."
-        //                     git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
-        //                 """
-        //             }
-
-        //             echo "Commit created: ${env.IMAGE_TAG}"
-        //             echo "Branch pushed: ${newBranch}"
-
-        //             echo "Creating PR using GitHub plugin..."
-                    
-        //             echo "Creating Pull Request..."
-        //             withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
-        //                 sh """#!/bin/sh
-        //                 curl -s -o /dev/null -w "%{http_code}" -X POST \
-        //                 -H "Authorization: token $GIT_PASSWORD" \
-        //                 -H "Content-Type: application/json" \
-        //                 -d '{
-        //                     "title": "Helm Chart: v${IMAGE_TAG}",
-        //                     "head": "${newBranch}",
-        //                     "base": "main",
-        //                     "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
-        //                 }' \
-        //                 https://api.github.com/repos/void-kernel/app-ui/pulls
-        //                 """
-
-        //             }
-        //             echo "PR created: ${newBranch}"
-        //         }
-        //     }
-        // }
 
         // stage('Update Parent Helm Chart Version') {
         //     when {
