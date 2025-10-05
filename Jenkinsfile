@@ -42,6 +42,7 @@ pipeline {
         ECR_REPO       = "docker/app-ui"
         ECR_HELM_REPO  = "helm/app-ui"
         PARENT_HELM_REPO = "https://github.com/void-kernel/application-helm.git"
+        ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         CHART_PATH     = "helm"
     }
 
@@ -143,15 +144,30 @@ spec:
             steps {
                 container('helm') {
                     script {
+
+                        def highestVersion = getHighestSemanticVersion()
+                        println "Highest version: " + highestVersion.toString()
+                        def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
                         // Install AWS CLI
                         sh 'apk add --no-cache aws-cli'
 
                         // Update Chart.yaml version and appVersion before packaging
                         def chartFile = readFile("${CHART_PATH}/Chart.yaml")
-                        chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
+                        chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
                         chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
                         writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
-                        echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
+                        echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
+
+                        //Update Values.yaml image.tag with env.IMAGE_TAG
+                        def valuesFile = readFile("${CHART_PATH}/Values.yaml")
+                        valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
+                        writeFile file: "${CHART_PATH}/Values.yaml", text: valuesFile
+                        echo "Updated ${CHART_PATH}/Values.yaml with tag ${env.IMAGE_TAG}"
+
+                        //Update Values.yaml image.repository with ECR_BASE_URL+ECR_REPO
+                        valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
+                        writeFile file: "${CHART_PATH}/Values.yaml", text: valuesFile
+                        echo "Updated ${CHART_PATH}/Values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
 
                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
                             sh """
@@ -161,7 +177,7 @@ spec:
                                 echo "Packaging and pushing Helm chart..."
                                 helm package ${CHART_PATH}
                                 
-                                helm push ${CHART_PATH}-${env.IMAGE_TAG}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
+                                helm push ${CHART_PATH}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
                             """
                         }
                     }
