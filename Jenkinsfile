@@ -50,17 +50,16 @@ pipeline {
             agent {
                 kubernetes {
                 yaml """
-                    apiVersion: v1
-                    kind: Pod
-                    spec:
-                    containers:
-                    - name: kaniko
-                        image: gcr.io/kaniko-project/executor:debug
-                        command:
-                        - /busybox/cat
-                        tty: true
-                    """
-                }
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      command:
+        - /busybox/cat
+      tty: true
+"""
             }
             steps {
                 container('kaniko') {
@@ -129,16 +128,16 @@ pipeline {
             agent {
                 kubernetes {
                     yaml """
-                        apiVersion: v1
-                        kind: Pod
-                        spec:
-                        containers:
-                        - name: helm
-                            image: alpine/helm:3.9.0
-                            command:
-                            - cat
-                            tty: true
-                        """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: helm
+    image: alpine/helm:3.9.0
+    command:
+      - cat
+    tty: true
+"""
                 }
             }
             steps {
