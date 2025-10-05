@@ -206,7 +206,17 @@ spec:
             steps {
                 script {
                     // Checkout current repo
-                    checkout scm
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: scm.branches,
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [
+                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                            [$class: 'CheckoutOption', timeout: 15]
+                        ],
+                        submoduleCfg: [],
+                        userRemoteConfigs: scm.userRemoteConfigs
+                    ])
 
                     def newBranch = "bump/helm-version"
 
