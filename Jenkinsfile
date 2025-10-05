@@ -151,7 +151,7 @@ spec:
                     echo "Branch created: ${newBranch}"
 
                     // Commit and push using credentials
-                    withCredentials([gitUsernamePassword(credentialsId: 'github-credentials-id', gitToolName: 'Default')]) {
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
