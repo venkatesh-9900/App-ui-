@@ -171,20 +171,16 @@ spec:
                     echo "Creating Pull Request..."
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh '''#!/bin/sh
-                            echo "Installing GitHub CLI..."
-                            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
-                            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-                            apt-get update -y && apt-get install gh -y
-
-                            echo "Authenticating GitHub CLI..."
-                            echo "$GIT_PASSWORD" | gh auth login --with-token
-
-                            echo "Creating Pull Request..."
-                            gh pr create \
-                                --base main \
-                                --head '"'"${newBranch}"'"' \
-                                --title "Helm Chart: v${IMAGE_TAG}" \
-                                --body "Auto bump chart version to match Docker image ${IMAGE_TAG}"
+                            curl -X POST \
+                            -H "Authorization: token $GITHUB_TOKEN" \
+                            -H "Content-Type: application/json" \
+                            -d '{
+                            "title": "Helm Chart: v${IMAGE_TAG}",
+                            "head": "${newBranch}",
+                            "base": "main",
+                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
+                            }' \
+                            https://api.github.com/repos/void-kernel/app-ui/pulls
                         '''
                     }
                     echo "PR created: ${newBranch}"
