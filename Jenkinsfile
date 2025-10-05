@@ -127,6 +127,22 @@ spec:
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
         stage('Update Helm Chart Version & Push Branch') {
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: jnlp
+    image: ghcr.io/catthehacker/ubuntu:act-latest
+    command:
+    - sleep
+    args:
+    - 99d
+"""
+                }
+            }
             when { expression { env.IMAGE_TAG } }
             steps {
                 script {
@@ -151,12 +167,14 @@ spec:
                     echo "Branch created: ${newBranch}"
 
                     // Commit and push using credentials
+                    // Commit, push, and create PR using credentials
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
                             git add ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            echo "Pushing branch ${newBranch}..."
                             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
@@ -165,12 +183,19 @@ spec:
                     echo "Branch pushed: ${newBranch}"
 
                     echo "Creating PR using GitHub plugin..."
-                    step([$class: 'GitHubPRBuilderPublisher', 
-                          targetBranch: 'main',
-                          title: "Helm Chart: v${env.IMAGE_TAG}",
-                          description: "Auto bump chart version to match Docker image ${env.IMAGE_TAG}",
-                          headBranch: newBranch])
-
+                    
+                    echo "Creating Pull Request..."
+                    withCredentials([string(credentialsId: 'argus-cicd-pat', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            gh auth login --with-token <<< "$GITHUB_TOKEN"
+                            gh pr create \\
+                                --base "main" \\
+                                --head "${newBranch}" \\
+                                --title "Helm Chart: v${env.IMAGE_TAG}" \\
+                                --title "chore(helm): Bump chart to ${env.IMAGE_TAG}" \\
+                                --body "Auto bump chart version to match Docker image ${env.IMAGE_TAG}"
+                        """
+                    }
                     echo "PR created: ${newBranch}"
                 }
             }
