@@ -40,10 +40,10 @@ pipeline {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
         ECR_REPO       = "docker/app-ui"
-        ECR_HELM_REPO  = "helm/app-ui"
+        ECR_HELM_REPO  = "helm" //not helm/app-ui because Helm appends the chart name to that repository path when pushing, so it attempts to push to the registry path helm/app-ui/
         PARENT_HELM_REPO = "https://github.com/void-kernel/application-helm.git"
         ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-        CHART_PATH     = "helm"
+        CHART_PATH     = "helm" //chart path in the github repo
         CHART_NAME     = "app-ui"
     }
 
