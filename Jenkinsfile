@@ -19,7 +19,6 @@ def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
         finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch() + 1}"
         echo "Base branch '${baseBranch}' - using default PATCH version increment"
     }
-    
     return [version: finalVersion, increment: versionIncrement]
 }
 
@@ -42,6 +41,8 @@ pipeline {
         AWS_ACCOUNT_ID = "210519480143"
         ECR_REPO       = "docker/app-ui"
         ECR_HELM_REPO  = "helm/app-ui"
+        PARENT_HELM_REPO = "https://github.com/void-kernel/application-helm.git"
+        ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         CHART_PATH     = "helm"
     }
 
@@ -86,7 +87,7 @@ spec:
                     // Get highest semantic version from Git tags using GitHub Changelog plugin
                     def highestVersion = getHighestSemanticVersion()
                     println "Highest version: " + highestVersion.toString()
-                    println " Major 1: " + highestVersion.getMajor()
+                    println " Major: " + highestVersion.getMajor()
                     println " Minor: " + highestVersion.getMinor()
                     println " Patch: " + highestVersion.getPatch()
                     println " Git tag: " + highestVersion.findTag().orElse("")
@@ -122,11 +123,72 @@ spec:
         }
     }
 }
+    
+                stage('Package & Push Helm Chart to ECR') {
+            when { expression { env.IMAGE_TAG } }
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: helm
+    image: alpine/helm:3.9.0
+    command:
+      - cat
+    tty: true
+"""
+                }
+            }
+            steps {
+                container('helm') {
+                    script {
 
+                        def highestVersion = getHighestSemanticVersion()
+                        println "Highest version: " + highestVersion.toString()
+                        def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
+                        // Install AWS CLI
+                        sh 'apk add --no-cache aws-cli'
+
+                        // Update Chart.yaml version and appVersion before packaging
+                        def chartFile = readFile("${CHART_PATH}/Chart.yaml")
+                        chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
+                        chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
+                        writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+                        echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
+
+                        //Update Values.yaml image.tag with env.IMAGE_TAG
+                        def valuesFile = readFile("${CHART_PATH}/values.yaml")
+                        valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
+                        writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                        echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
+
+                        //Update Values.yaml image.repository with ECR_BASE_URL+ECR_REPO
+                        valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
+                        writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                        echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
+
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                            sh """
+                                echo "Logging into ECR..."
+                                aws ecr get-login-password --region ${AWS_REGION} | helm registry login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+                                echo "Packaging and pushing Helm chart..."
+                                helm package ${CHART_PATH}
+                                
+                                helm push ${CHART_PATH}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
-        stage('Update Helm Chart Version & Push Branch') {
+        stage('Update Repo Helm Chart Version & Push Branch') {
             when { expression { env.IMAGE_TAG } }
             steps {
                 script {
@@ -138,7 +200,7 @@ spec:
                     def newBranch = "bump/helm-version"
 
                     sh """
-                         git checkout -b ${newBranch}
+                         git checkout -b ${newBranch} origin/${newBranch}
                     """
 
                     // Pull main branch
@@ -148,8 +210,8 @@ spec:
                             git config user.email "cicd@argusintelligence.net"
                             git config pull.rebase true
                             git config pull.ff false
-                            echo "Pulling main branch..."
-                            git pull origin main --rebase
+                            echo "Fetching branch ${newBranch}..."
+                            git fetch origin ${newBranch}
                         """
                     }
 
@@ -183,7 +245,7 @@ spec:
                     echo "Creating Pull Request..."
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """#!/bin/sh
-                        curl -X POST \
+                        curl -s -o /dev/null -w "%{http_code}" -X POST \
                         -H "Authorization: token $GIT_PASSWORD" \
                         -H "Content-Type: application/json" \
                         -d '{
@@ -201,6 +263,33 @@ spec:
             }
         }
 
+        // stage('Update Parent Helm Chart Version') {
+        //     when {
+        //         anyOf { branch 'main'; branch 'master' }
+        //     }
+        //     steps {
+        //         script {
+                    
+        //             //if current branch is master or main, then stage 3 will create a pr to update the helm version in parent heml chart prod-values file repo [application-helm] in bump/helm-version branch
+        //             echo "Updating Parent Helm Chart Version"
+                                
+        //         }
+        //     }
+        //     // To add an else condition to the 'when' block, you can use 'not' to specify the opposite branches.
+        //     // For example, to run the stage when NOT on 'main' or 'master', use:
+        //     when {
+        //         not {
+        //             anyOf { branch 'main'; branch 'master' }
+        //         }
+        //         //will directly update the helm version in parent heml chart repo qa-values file [application-helm] in main branch
+        //     }
+        //     steps {
+        //         script {
+        //             echo "Updating Parent Helm Chart Version"
+
+        //         }
+        //     }
+        // }
 
         stage('Tag Release') {
         when {
