@@ -249,14 +249,14 @@ spec:
                     def chartFile = readFile("${CHART_PATH}/Chart.yaml")
                     chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
                     chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
-                    writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+                    writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile,
                     echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
 
                     //Update Values.yaml image.tag with env.IMAGE_TAG
                     def valuesFile = readFile("${CHART_PATH}/values.yaml")
                     valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
                     valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
-                    writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                    writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile, overwrite: true
                     echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
                     echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
                     
