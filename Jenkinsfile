@@ -159,7 +159,7 @@ spec:
                         echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
 
                         //Update Values.yaml image.tag with env.IMAGE_TAG
-                        def valuesFile = readFile("${CHART_PATH}/Values.yaml")
+                        def valuesFile = readFile("${CHART_PATH}/values.yaml")
                         valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
                         writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
                         echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
