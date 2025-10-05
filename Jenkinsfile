@@ -150,17 +150,18 @@ spec:
                     echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
                     echo "Branch created: ${newBranch}"
 
-                    // Commit change using Jenkins’ Git API
-                    sh """
-                        git config user.name "argus-cicd"
-                        git config user.email "cicd@argusintelligence.net"  
-                        git add ${CHART_PATH}/Chart.yaml
-                        git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
-                        git push origin ${newBranch}
-                    """
+                    // Commit and push using credentials
+                    withCredentials([gitUsernamePassword(credentialsId: 'github-credentials-id', gitToolName: 'Default')]) {
+                        sh """
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git add ${CHART_PATH}/Chart.yaml
+                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
+                        """
+                    }
 
                     echo "Commit created: ${env.IMAGE_TAG}"
-                    // Create PR automatically (via GitHub Branch Source plugin)
                     echo "Branch pushed: ${newBranch}"
 
                     echo "Creating PR using GitHub plugin..."
