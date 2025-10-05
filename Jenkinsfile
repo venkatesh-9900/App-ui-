@@ -19,7 +19,6 @@ def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
         finalVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch() + 1}"
         echo "Base branch '${baseBranch}' - using default PATCH version increment"
     }
-    
     return [version: finalVersion, increment: versionIncrement]
 }
 
