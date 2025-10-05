@@ -176,9 +176,8 @@ spec:
                         // Dot notation (Groovy-native map access)
                         values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                         values.image.tag = env.IMAGE_TAG
-
                         // Write back
-                        writeYaml file: "${CHART_PATH}/values.yaml", data: values
+                        writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
                         echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
 
                         //Update Values.yaml image.repository with ECR_BASE_URL+ECR_REPO
@@ -249,16 +248,17 @@ spec:
                     def chartFile = readFile("${CHART_PATH}/Chart.yaml")
                     chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
                     chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
-                    writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile,
+                    writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
                     echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
 
                     //Update Values.yaml image.tag with env.IMAGE_TAG
-                    def valuesFile = readFile("${CHART_PATH}/values.yaml")
-                    valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
-                    valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
-                    writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile, overwrite: true
+                    def values = readYaml file: "${CHART_PATH}/values.yaml"
+                    // Dot notation (Groovy-native map access)
+                    values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
+                    values.image.tag = env.IMAGE_TAG
+                    // Write back
+                    writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
                     echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
-                    echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
                     
                     //cat values.yaml and chart.yaml
                     sh """
