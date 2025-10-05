@@ -135,7 +135,7 @@ spec:
                     // Checkout current repo
                     checkout scm
 
-                    def newBranch = "bump/helm-${env.IMAGE_TAG}"
+                    def newBranch = "bump/helm-version"
 
                     sh """
                          git checkout -b ${newBranch}
@@ -156,8 +156,12 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
+                            git config --global pull.rebase true
+                            git config --global pull.ff only
                             git add ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            echo "Pulling main branch..."
+                            git pull origin main
                             echo "Pushing branch ${newBranch}..."
                             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
