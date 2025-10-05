@@ -49,7 +49,7 @@ pipeline {
         stage('Build & Push Docker Image') {
             agent {
                 kubernetes {
-                    yaml """
+                yaml """
                     apiVersion: v1
                     kind: Pod
                     spec:
