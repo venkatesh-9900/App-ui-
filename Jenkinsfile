@@ -44,6 +44,7 @@ pipeline {
         PARENT_HELM_REPO = "https://github.com/void-kernel/application-helm.git"
         ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         CHART_PATH     = "helm"
+        CHART_NAME     = "app-ui"
     }
 
     stages {
@@ -145,6 +146,18 @@ spec:
                 container('helm') {
                     script {
 
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: scm.branches,
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions: [
+                                [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                                [$class: 'CheckoutOption', timeout: 15]
+                            ],
+                            submoduleCfg: [],
+                            userRemoteConfigs: scm.userRemoteConfigs
+                        ])
+
                         def highestVersion = getHighestSemanticVersion()
                         println "Highest version: " + highestVersion.toString()
                         def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
@@ -177,7 +190,7 @@ spec:
                                 echo "Packaging and pushing Helm chart..."
                                 helm package ${CHART_PATH}
                                 
-                                helm push ${CHART_PATH}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
+                                helm push ${CHART_NAME}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
                             """
                         }
                     }
