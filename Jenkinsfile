@@ -138,7 +138,7 @@ spec:
                     def newBranch = "bump/helm-version"
 
                     sh """
-                         git checkout -b ${newBranch}
+                         git checkout -b ${newBranch} origin/${newBranch}
                     """
 
                     // Pull main branch
@@ -148,8 +148,8 @@ spec:
                             git config user.email "cicd@argusintelligence.net"
                             git config pull.rebase true
                             git config pull.ff false
-                            echo "Pulling main branch..."
-                            git pull origin main --rebase
+                            echo "Fetching branch ${newBranch}..."
+                            git fetch origin ${newBranch}
                         """
                     }
 
