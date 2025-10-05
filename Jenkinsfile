@@ -221,13 +221,13 @@ spec:
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
                             git add ${CHART_PATH}/Chart.yaml ${CHART_PATH}/values.yaml
-                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            git commit -m "chore: bump Helm chart version to ${chartVersion}"
                             echo "Pushing branch ${newBranch}..."
                             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
 
-                    echo "Commit created: ${env.IMAGE_TAG}"
+                    echo "Commit created: ${chartVersion}"
                     echo "Branch pushed: ${newBranch}"
 
                     echo "Creating PR using GitHub plugin..."
@@ -239,10 +239,10 @@ spec:
                         -H "Authorization: token $GIT_PASSWORD" \
                         -H "Content-Type: application/json" \
                         -d '{
-                            "title": "Helm Chart: v${IMAGE_TAG}",
+                            "title": "Helm Chart: v${chartVersion}",
                             "head": "${newBranch}",
                             "base": "main",
-                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
+                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${chartVersion}"
                         }' \
                         https://api.github.com/repos/void-kernel/app-ui/pulls
                         """
