@@ -127,22 +127,6 @@ spec:
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
         stage('Update Helm Chart Version & Push Branch') {
-            agent {
-                kubernetes {
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: jnlp
-    image: ghcr.io/catthehacker/ubuntu:act-latest
-    command:
-    - sleep
-    args:
-    - 99d
-"""
-                }
-            }
             when { expression { env.IMAGE_TAG } }
             steps {
                 script {
@@ -151,7 +135,7 @@ spec:
                     // Checkout current repo
                     checkout scm
 
-                    def newBranch = "bump/helm-version"
+                    def newBranch = "bump/helm-${env.IMAGE_TAG}"
 
                     sh """
                          git checkout -b ${newBranch}
@@ -185,9 +169,9 @@ spec:
                     echo "Creating PR using GitHub plugin..."
                     
                     echo "Creating Pull Request..."
-                    withCredentials([string(credentialsId: 'argus-cicd-pat', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
-                            gh auth login --with-token <<< "$GITHUB_TOKEN"
+                            gh auth login --with-token <<< "$GIT_PASSWORD"
                             gh pr create \\
                                 --base "main" \\
                                 --head "${newBranch}" \\
