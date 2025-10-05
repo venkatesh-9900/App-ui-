@@ -40,7 +40,9 @@ pipeline {
     environment {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
-        ECR_REPO       = "app-ui"
+        ECR_REPO       = "docker/app-ui"
+        ECR_HELM_REPO  = "helm/app-ui"
+        CHART_PATH     = "helm"
     }
 
     stages {
@@ -65,13 +67,6 @@ spec:
             script {
                 def branchInfo = getBranchInfo()
                 def shortCommit = branchInfo.commitSHA.take(8)
-                println "PR Created 1"
-                baseBranch = env.CHANGE_TARGET
-                println "Base branch: " + baseBranch
-                println "Target branch: " + targetBranch
-                targetBranch = env.CHANGE_BRANCH    
-                echo "Running in PR #${env.CHANGE_ID}, base branch = ${baseBranch}"
-
                 def imageTag
                 if (branchInfo.isMaster) {
                     // Ensure tags are present
@@ -101,11 +96,11 @@ spec:
                     def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
                     imageTag = versionInfo.version
                     println "Image tag: " + imageTag
-                    println "Base branch: " + baseBranch
-                    println "Target branch: " + targetBranch
+                    env.IMAGE_TAG = imageTag
                 } else {
                     def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
                     imageTag = "${cleanBranchName}-${shortCommit}"
+                    env.IMAGE_TAG = imageTag
                 }
 
                 def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
@@ -127,6 +122,85 @@ spec:
         }
     }
 }
+
+        // -----------------------------------------
+        // STAGE 2: Update Helm Chart + Push via Git Plugin
+        // -----------------------------------------
+        stage('Update Helm Chart Version & Push Branch') {
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: jnlp
+    image: ghcr.io/catthehacker/ubuntu:act-latest
+    command:
+    - sleep
+    args:
+    - 99d
+"""
+                }
+            }
+            when { expression { env.IMAGE_TAG } }
+            steps {
+                script {
+                    echo "Updating Helm chart version to ${env.IMAGE_TAG}"
+
+                    // Checkout current repo
+                    checkout scm
+
+                    def newBranch = "bump/helm-version"
+
+                    sh """
+                         git checkout -b ${newBranch}
+                    """
+
+                    // Update Chart.yaml version and appVersion
+                    def chartFile = readFile("${CHART_PATH}/Chart.yaml")
+                    chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
+                    chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
+                    writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+
+                    echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
+                    echo "Branch created: ${newBranch}"
+
+                    // Commit and push using credentials
+                    // Commit, push, and create PR using credentials
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        sh """
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git add ${CHART_PATH}/Chart.yaml
+                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            echo "Pushing branch ${newBranch}..."
+                            git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
+                        """
+                    }
+
+                    echo "Commit created: ${env.IMAGE_TAG}"
+                    echo "Branch pushed: ${newBranch}"
+
+                    echo "Creating PR using GitHub plugin..."
+                    
+                    echo "Creating Pull Request..."
+                    withCredentials([string(credentialsId: 'argus-cicd-pat', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            gh auth login --with-token <<< "$GITHUB_TOKEN"
+                            gh pr create \\
+                                --base "main" \\
+                                --head "${newBranch}" \\
+                                --title "Helm Chart: v${env.IMAGE_TAG}" \\
+                                --title "chore(helm): Bump chart to ${env.IMAGE_TAG}" \\
+                                --body "Auto bump chart version to match Docker image ${env.IMAGE_TAG}"
+                        """
+                    }
+                    echo "PR created: ${newBranch}"
+                }
+            }
+        }
+
 
         stage('Tag Release') {
         when {
@@ -169,12 +243,12 @@ spec:
                 git tag -a v${finalVersion} -m "Release version ${finalVersion}"
             """
 
-            // // Push the new tag
-            // gitPush(
-            //     gitScm: scm,
-            //     targetBranch: env.BRANCH_NAME,
-            //     targetRepo: 'origin'
-            // )
+            // Push the new tag
+            gitPush(
+                gitScm: scm,
+                targetBranch: env.BRANCH_NAME,
+                targetRepo: 'origin'
+            )
         }
     }
 }
