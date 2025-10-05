@@ -35,7 +35,25 @@ def getBranchInfo() {
 // Pipeline
 // ===============================
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: jnlp
+    image: ghcr.io/catthehacker/ubuntu:act-latest
+    command: ['sleep']
+    args: ['99d']
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command: ['/busybox/cat']
+    tty: true
+"""
+            defaultContainer 'jnlp'
+        }
+    }
 
     environment {
         AWS_REGION     = "ap-south-1"
@@ -47,112 +65,66 @@ pipeline {
 
     stages {
         stage('Build & Push Docker Image') {
-    agent {
-        kubernetes {
-            yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
-    command:
-    - /busybox/cat
-    tty: true
-"""
-        }
-    }
-    steps {
-        container('kaniko') {
-            script {
-                def branchInfo = getBranchInfo()
-                def shortCommit = branchInfo.commitSHA.take(8)
-                def imageTag
-                if (branchInfo.isMaster) {
-                    // Ensure tags are present
-                    // Re-checkout with full history + tags
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: scm.branches,
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [
-                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-                            [$class: 'CheckoutOption', timeout: 15]
-                        ],
-                        submoduleCfg: [],
-                        userRemoteConfigs: scm.userRemoteConfigs
-                    ])
+            steps {
+                container('kaniko') {
+                    script {
+                        def branchInfo = getBranchInfo()
+                        def shortCommit = branchInfo.commitSHA.take(8)
+                        def imageTag
+                        if (branchInfo.isMaster) {
+                            // This logic runs for 'main' branch builds, typically after a PR is merged.
+                            // It requires a full git history to calculate the next semantic version.
+                            checkout([
+                                $class: 'GitSCM',
+                                branches: scm.branches,
+                                doGenerateSubmoduleConfigurations: false,
+                                extensions: [
+                                    [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                                    [$class: 'CheckoutOption', timeout: 15]
+                                ],
+                                submoduleCfg: [],
+                                userRemoteConfigs: scm.userRemoteConfigs
+                            ])
 
-                    // Get highest semantic version from Git tags using GitHub Changelog plugin
-                    def highestVersion = getHighestSemanticVersion()
-                    println "Highest version: " + highestVersion.toString()
-                    println " Major 1: " + highestVersion.getMajor()
-                    println " Minor: " + highestVersion.getMinor()
-                    println " Patch: " + highestVersion.getPatch()
-                    println " Git tag: " + highestVersion.findTag().orElse("")
-                    
-                    def baseBranch = env.CHANGE_TARGET ?: 'main'
-                    def targetBranch = env.CHANGE_BRANCH
-                    def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
-                    imageTag = versionInfo.version
-                    println "Image tag: " + imageTag
-                    env.IMAGE_TAG = imageTag
-                } else {
-                    def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
-                    imageTag = "${cleanBranchName}-${shortCommit}"
-                    env.IMAGE_TAG = imageTag
+                            def highestVersion = getHighestSemanticVersion()
+                            def baseBranch = env.CHANGE_TARGET ?: 'main'
+                            def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                            imageTag = versionInfo.version
+                        } else {
+                            // This logic runs for feature branches / pull requests.
+                            def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
+                            imageTag = "${cleanBranchName}-${shortCommit}"
+                        }
+                        env.IMAGE_TAG = imageTag
+                        currentBuild.displayName = imageTag
+                        def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
+
+                        // Securely build and push the image with Kaniko
+                        /*
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                            sh """
+                                echo "Building and pushing image: ${fullImageName}"
+                                /kaniko/executor \\
+                                  --context dir://\$(pwd) \\
+                                  --dockerfile \$(pwd)/Dockerfile \\
+                                  --destination ${fullImageName} \\
+                                  --cleanup \\
+                                  --verbosity info
+                            """
+                        }
+                        */
+                    }
                 }
-
-                def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
-                currentBuild.displayName = imageTag
-
-                // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                //                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                //     sh """
-                //         echo "Building and pushing with Kaniko..."
-                //         /kaniko/executor \
-                //           --context dir://\$(pwd) \
-                //           --dockerfile \$(pwd)/Dockerfile \
-                //           --destination ${fullImageName} \
-                //           --cleanup \
-                //           --verbosity info
-                //     """
-                // }
             }
         }
-    }
-}
 
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
         stage('Update Helm Chart Version & Push Branch') {
-            agent {
-                kubernetes {
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: jnlp
-    image: ghcr.io/catthehacker/ubuntu:act-latest
-    command:
-    - sleep
-    args:
-    - 99d
-    resources:
-      requests:
-        memory: "512Mi"
-        cpu: "250m"
-      limits:
-        memory: "1Gi"
-        cpu: "500m"
-"""
-                }
-            }
             when { expression { env.IMAGE_TAG } }
             steps {
-                script {
+                script { 
                     echo "Updating Helm chart version to ${env.IMAGE_TAG}"
 
                     // Checkout current repo
@@ -160,7 +132,7 @@ spec:
 
                     def newBranch = "bump/helm-version"
 
-                    sh """
+                    sh """#!/bin/bash
                          git checkout -b ${newBranch}
                     """
 
@@ -174,9 +146,8 @@ spec:
                     echo "Branch created: ${newBranch}"
 
                     // Commit and push using credentials
-                    // Commit, push, and create PR using credentials
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
-                        sh """
+                        sh """#!/bin/bash
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
                             git add ${CHART_PATH}/Chart.yaml
@@ -189,16 +160,13 @@ spec:
                     echo "Commit created: ${env.IMAGE_TAG}"
                     echo "Branch pushed: ${newBranch}"
 
-                    echo "Creating PR using GitHub plugin..."
-                    
                     echo "Creating Pull Request..."
                     withCredentials([string(credentialsId: 'argus-cicd-pat', variable: 'GITHUB_TOKEN')]) {
-                        sh """
+                        sh """#!/bin/bash
                             gh auth login --with-token <<< "$GITHUB_TOKEN"
                             gh pr create \\
                                 --base "main" \\
                                 --head "${newBranch}" \\
-                                --title "Helm Chart: v${env.IMAGE_TAG}" \\
                                 --title "chore(helm): Bump chart to ${env.IMAGE_TAG}" \\
                                 --body "Auto bump chart version to match Docker image ${env.IMAGE_TAG}"
                         """
@@ -244,7 +212,7 @@ spec:
             echo "Creating and pushing Git tag: v${finalVersion}"
 
             // Configure Git and create the tag
-            sh """
+            sh """#!/bin/bash
                 git config user.email "cicd@argusintelligence.net"
                 git config user.name "argus-cicd"
                 git tag -a v${finalVersion} -m "Release version ${finalVersion}"
