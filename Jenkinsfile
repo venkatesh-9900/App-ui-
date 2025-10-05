@@ -106,23 +106,68 @@ spec:
                 def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
                 currentBuild.displayName = imageTag
 
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                    sh """
-                        echo "Building and pushing with Kaniko..."
-                        /kaniko/executor \
-                          --context dir://\$(pwd) \
-                          --dockerfile \$(pwd)/Dockerfile \
-                          --destination ${fullImageName} \
-                          --cleanup \
-                          --verbosity info
-                    """
-                }
+                // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                //                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                //     sh """
+                //         echo "Building and pushing with Kaniko..."
+                //         /kaniko/executor \
+                //           --context dir://\$(pwd) \
+                //           --dockerfile \$(pwd)/Dockerfile \
+                //           --destination ${fullImageName} \
+                //           --cleanup \
+                //           --verbosity info
+                //     """
+                // }
             }
         }
     }
 }
     
+                stage('Package & Push Helm Chart to ECR') {
+            when { expression { env.IMAGE_TAG } }
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: helm
+    image: alpine/helm:3.9.0
+    command:
+      - cat
+    tty: true
+"""
+                }
+            }
+            steps {
+                container('helm') {
+                    script {
+                        // Install AWS CLI
+                        sh 'apk add --no-cache aws-cli'
+
+                        // Update Chart.yaml version and appVersion before packaging
+                        def chartFile = readFile("${CHART_PATH}/Chart.yaml")
+                        chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
+                        chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
+                        writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+                        echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
+
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                            sh """
+                                echo "Logging into ECR..."
+                                aws ecr get-login-password --region ${AWS_REGION} | helm registry login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+                                echo "Packaging and pushing Helm chart..."
+                                helm package ${CHART_PATH}
+                                
+                                helm push ${CHART_PATH}-${env.IMAGE_TAG}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
+                            """
+                        }
+                    }
+                }
+            }
+        }
     
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
