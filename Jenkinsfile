@@ -266,7 +266,7 @@ spec:
                             git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
                             echo "Pushing branch ${newBranch}..."
-                            git push --force-with-lease "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
+                            git push --force "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
 
