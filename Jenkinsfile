@@ -207,20 +207,26 @@ spec:
                     
                     def newBranch = "bump/helm-version"
 
-                    sh """
-                         git checkout -b ${newBranch}
-                    """
-
-                    // Pull main branch
+                    // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
                             git config pull.rebase true
                             git config pull.ff false
-                            echo "Fetching branch ${newBranch}..."
-                            git fetch origin ${newBranch}
-                            echo "Pulling main branch..."
+                            echo "Fetching all branches..."
+                            git fetch origin
+                            
+                            # Check if remote branch exists
+                            if git ls-remote --exit-code --heads origin ${newBranch}; then
+                                echo "Remote branch ${newBranch} exists, checking it out..."
+                                git checkout -B ${newBranch} origin/${newBranch}
+                            else
+                                echo "Remote branch ${newBranch} does not exist, creating new branch..."
+                                git checkout -b ${newBranch}
+                            fi
+                            
+                            echo "Pulling latest changes from main..."
                             git pull origin main
                             echo "Pulled main branch"
                         """
@@ -260,7 +266,7 @@ spec:
                             git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
                             echo "Pushing branch ${newBranch}..."
-                            git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
+                            git push --force-with-lease "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
 
