@@ -3,16 +3,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "app-ui.fullname" . }}
-{{- if .Values.ingress.annotations }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-{{- range $key, $value := .Values.ingress.annotations }}
-    {{ $key }}: "{{ $value }}"
-{{- end }}
-{{- end }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className | quote }}
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ .Values.ingress.host | quote }}
       http:
         paths:
           - path: /
@@ -24,6 +22,6 @@ spec:
                   number: {{ .Values.service.port }}
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}
+        - {{ .Values.ingress.host | quote }}
       secretName: {{ include "app-ui.fullname" . }}-tls
 {{- end }}
