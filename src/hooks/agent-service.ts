@@ -1,5 +1,5 @@
 import {ENDPOINTS} from "@/config/config.ts";
-import { refreshAccessToken } from "@/hooks/auth-service";
+import { fetchLoginURL, refreshAccessToken } from "@/hooks/auth-service";
 import {iam_login_url} from "@/constants/iam-uri.tsx";
 import { buildHeaderJSON } from "@/utils/axios/auth-axios";
 const API_ENDPOINT = ENDPOINTS.FETCH_AGENTS_LIST;
@@ -29,7 +29,15 @@ export const getAgentsList = async ({successTask, failureTask, errorTask, retry 
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: errorTask
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    errorTask();
+                }
+                // window.location.replace(iam_login_url);
             } else {
                 await getAgentsList({
                     retry: true, 

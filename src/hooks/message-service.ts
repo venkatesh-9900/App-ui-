@@ -161,7 +161,7 @@ export async function handleStreamMessage({
         setMessages([...updatedMessages]);
     } catch (error: any) {
         console.error('Error in handleStreamMessage:', error);
-        alert(error.message || 'Stream failed.');
+        // alert(error.message || 'Stream failed.');
     } finally {
         setIsThinking(false);
     }

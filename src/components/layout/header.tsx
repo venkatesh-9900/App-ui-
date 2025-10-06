@@ -22,7 +22,7 @@ import {useEffect, useState} from "react";
 import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import ProfileDetailsLayout from "@/components/templates/profile-details.tsx";
-import { logoutUser } from "@/hooks/auth-service.ts";
+import { fetchLogoutURL, logoutUser } from "@/hooks/auth-service.ts";
 import { iam_logout_url } from "@/constants/iam-uri.tsx";
 
 
@@ -54,23 +54,35 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
     toast('Logging out', {
       description: 'Please wait while we log you out',
     });
-    logoutUser({
-      successTask: (idToken: String) => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("isAuthenticated");
-        window.location.replace(iam_logout_url(idToken));
-      },
-      failureTask: () => {
-        toast('Failure', {
-          description: 'Logout failed unexpectedly. Please try again.',
-        });
-      },
+    const logoutURL = await fetchLogoutURL({
       errorTask: () => {
         toast('Error', {
-          description: 'Logout failed due to error',
+          description: 'An unexpected error occurred while logging out',
         });
-      },
+      }
     });
+    if (logoutURL) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("isAuthenticated");
+          window.location.replace(logoutURL);
+    }
+    // logoutUser({
+    //   successTask: (idToken: String) => {
+    //     localStorage.removeItem("access_token");
+    //     localStorage.removeItem("isAuthenticated");
+    //     window.location.replace(iam_logout_url(idToken));
+    //   },
+    //   failureTask: () => {
+    //     toast('Failure', {
+    //       description: 'Logout failed unexpectedly. Please try again.',
+    //     });
+    //   },
+    //   errorTask: () => {
+    //     toast('Error', {
+    //       description: 'Logout failed due to error',
+    //     });
+    //   },
+    // });
     // try {
       
     //   const accessToken = localStorage.getItem('access_token');

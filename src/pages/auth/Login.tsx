@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {iam_login_url} from "@/constants/iam-uri.tsx";
+import { fetchLoginURL } from "@/hooks/auth-service";
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -26,13 +27,24 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
 
-    const handleSSOLogin = () => {
+    const handleSSOLogin = async () => {
         setIsLoading(true);
         toast({
             title: `SSO Login`,
             description: `Redirecting to SSO authentication...`,
         });
-        window.location.replace(iam_login_url)
+        const login_url = await fetchLoginURL({
+            errorTask: () => {
+                toast({
+                    title: `Error`,
+                    description: `Some unexpected issue occurred. Please try again later.`,
+                });
+            }
+        });
+        console.log(login_url);
+        if (login_url) {
+            window.location.replace(login_url);
+        }
         // navigate(`/auth/callback`);
     };
 
