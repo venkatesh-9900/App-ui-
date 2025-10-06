@@ -69,6 +69,7 @@ spec:
             script {
                 def branchInfo = getBranchInfo()
                 def shortCommit = branchInfo.commitSHA.take(8)
+                env.IS_MASTER = branchInfo.isMaster
                 def imageTag
                 // Re-checkout with full history + tags
                 checkout([
@@ -219,6 +220,7 @@ spec:
                             git config pull.ff false
                             echo "Fetching branch ${newBranch}..."
                             git fetch origin ${newBranch}
+                            git pull origin main
                         """
                     }
 
