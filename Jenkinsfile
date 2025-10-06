@@ -70,29 +70,25 @@ spec:
                 def branchInfo = getBranchInfo()
                 def shortCommit = branchInfo.commitSHA.take(8)
                 def imageTag
-                if (branchInfo.isMaster) {
-                    // Ensure tags are present
-                    // Re-checkout with full history + tags
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: scm.branches,
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [
-                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-                            [$class: 'CheckoutOption', timeout: 15]
-                        ],
-                        submoduleCfg: [],
-                        userRemoteConfigs: scm.userRemoteConfigs
-                    ])
+                // Re-checkout with full history + tags
+                checkout([
+                    $class: 'GitSCM',
+                    branches: scm.branches,
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [
+                        [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                        [$class: 'CheckoutOption', timeout: 15]
+                    ],
+                    submoduleCfg: [],
+                    userRemoteConfigs: scm.userRemoteConfigs
+                ])
 
-                    // Get highest semantic version from Git tags using GitHub Changelog plugin
-                    def highestVersion = getHighestSemanticVersion()
-                    println "Highest version: " + highestVersion.toString()
-                    println " Major: " + highestVersion.getMajor()
-                    println " Minor: " + highestVersion.getMinor()
-                    println " Patch: " + highestVersion.getPatch()
-                    println " Git tag: " + highestVersion.findTag().orElse("")
-                    
+                // Get highest semantic version from Git tags using GitHub Changelog plugin
+                def highestVersion = getHighestSemanticVersion()
+                println "Highest version: " + highestVersion.toString() //eg: 1.0.0
+
+                if (branchInfo.isMaster) {
+                    // Ensure tags are present                    
                     def baseBranch = env.CHANGE_TARGET ?: 'main'
                     def targetBranch = env.CHANGE_BRANCH
                     def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
@@ -100,8 +96,10 @@ spec:
                     println "Image tag: " + imageTag
                     env.IMAGE_TAG = imageTag
                 } else {
-                    def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
-                    imageTag = "${cleanBranchName}-${shortCommit}"
+                    def highestVersionString = highestVersion.toString()
+                    def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '.').toLowerCase()
+                    imageTag = "${highestVersionString}-${cleanBranchName}.${shortCommit}"
+                    println "Image tag: " + imageTag
                     env.IMAGE_TAG = imageTag
                 }
 
@@ -125,77 +123,77 @@ spec:
     }
 }
     
-                stage('Package & Push Helm Chart to ECR') {
-            when { expression { env.IMAGE_TAG } }
-            agent {
-                kubernetes {
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: helm
-    image: alpine/helm:3.9.0
-    command:
-      - cat
-    tty: true
-"""
-                }
-            }
-            steps {
-                container('helm') {
-                    script {
+//                 stage('Package & Push Helm Chart to ECR') {
+//             when { expression { env.IMAGE_TAG } }
+//             agent {
+//                 kubernetes {
+//                     yaml """
+// apiVersion: v1
+// kind: Pod
+// spec:
+//   containers:
+//   - name: helm
+//     image: alpine/helm:3.9.0
+//     command:
+//       - cat
+//     tty: true
+// """
+//                 }
+//             }
+//             steps {
+//                 container('helm') {
+//                     script {
 
-                        checkout([
-                            $class: 'GitSCM',
-                            branches: scm.branches,
-                            doGenerateSubmoduleConfigurations: false,
-                            extensions: [
-                                [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-                                [$class: 'CheckoutOption', timeout: 15]
-                            ],
-                            submoduleCfg: [],
-                            userRemoteConfigs: scm.userRemoteConfigs
-                        ])
+//                         checkout([
+//                             $class: 'GitSCM',
+//                             branches: scm.branches,
+//                             doGenerateSubmoduleConfigurations: false,
+//                             extensions: [
+//                                 [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+//                                 [$class: 'CheckoutOption', timeout: 15]
+//                             ],
+//                             submoduleCfg: [],
+//                             userRemoteConfigs: scm.userRemoteConfigs
+//                         ])
 
-                        def highestVersion = getHighestSemanticVersion()
-                        println "Highest version: " + highestVersion.toString()
-                        def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
-                        // Install AWS CLI
-                        sh 'apk add --no-cache aws-cli'
+//                         def highestVersion = getHighestSemanticVersion()
+//                         println "Highest version: " + highestVersion.toString()
+//                         def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
+//                         // Install AWS CLI
+//                         sh 'apk add --no-cache aws-cli'
 
-                        // Update Chart.yaml version and appVersion before packaging
-                        def chartFile = readFile("${CHART_PATH}/Chart.yaml")
-                        chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
-                        chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
-                        writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
-                        echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
+//                         // Update Chart.yaml version and appVersion before packaging
+//                         def chartFile = readFile("${CHART_PATH}/Chart.yaml")
+//                         chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
+//                         chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
+//                         writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+//                         echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
 
-                        //Update Values.yaml image.tag with env.IMAGE_TAG
-                        def values = readYaml file: "${CHART_PATH}/values.yaml"
-                        // Dot notation (Groovy-native map access)
-                        values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
-                        values.image.tag = env.IMAGE_TAG
-                        // Write back
-                        writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
-                        echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
-                        echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
+//                         //Update Values.yaml image.tag with env.IMAGE_TAG
+//                         def values = readYaml file: "${CHART_PATH}/values.yaml"
+//                         // Dot notation (Groovy-native map access)
+//                         values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
+//                         values.image.tag = env.IMAGE_TAG
+//                         // Write back
+//                         writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
+//                         echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
+//                         echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
 
-                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                            sh """
-                                echo "Logging into ECR..."
-                                aws ecr get-login-password --region ${AWS_REGION} | helm registry login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+//                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+//                             sh """
+//                                 echo "Logging into ECR..."
+//                                 aws ecr get-login-password --region ${AWS_REGION} | helm registry login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
-                                echo "Packaging and pushing Helm chart..."
-                                helm package ${CHART_PATH}
+//                                 echo "Packaging and pushing Helm chart..."
+//                                 helm package ${CHART_PATH}
                                 
-                                helm push ${CHART_NAME}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
-                            """
-                        }
-                    }
-                }
-            }
-        }
+//                                 helm push ${CHART_NAME}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
+//                             """
+//                         }
+//                     }
+//                 }
+//             }
+//         }
     
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
@@ -204,23 +202,12 @@ spec:
             when { expression { env.IMAGE_TAG } }
             steps {
                 script {
-                    // Checkout current repo
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: scm.branches,
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [
-                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-                            [$class: 'CheckoutOption', timeout: 15]
-                        ],
-                        submoduleCfg: [],
-                        userRemoteConfigs: scm.userRemoteConfigs
-                    ])
-
+                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    
                     def newBranch = "bump/helm-version"
 
                     sh """
-                         git checkout -b ${newBranch} origin/${newBranch}
+                         git checkout -b ${newBranch}
                     """
 
                     // Pull main branch
@@ -235,30 +222,25 @@ spec:
                         """
                     }
 
-                    def highestVersion = getHighestSemanticVersion()
-                    echo "Highest version: " + highestVersion.toString()
-                    def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
-                    echo "Chart version: " + chartVersion
-
                     // Update Chart.yaml version and appVersion before packaging
                     def chartFile = readFile("${CHART_PATH}/Chart.yaml")
-                    chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
+                    chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
                     chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
                     writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
-                    echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
+                    echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
 
                     //Update Values.yaml image.tag with env.IMAGE_TAG
-                    def values = readYaml file: "${CHART_PATH}/values.yaml"
+                    def values = readYaml file: "${CHART_PATH}/values-qa.yaml"
                     // Dot notation (Groovy-native map access)
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
                     // Write back
-                    writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
-                    echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
+                    writeYaml file: "${CHART_PATH}/values-qa.yaml", data: values, overwrite: true
+                    echo "Updated ${CHART_PATH}/values-qa.yaml with tag ${env.IMAGE_TAG}"
                     
                     //cat values.yaml and chart.yaml
                     sh """
-                        cat ${CHART_PATH}/values.yaml
+                        cat ${CHART_PATH}/values-qa.yaml
                         cat ${CHART_PATH}/Chart.yaml
                     """
 
@@ -271,14 +253,14 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
-                            git add ${CHART_PATH}/values.yaml ${CHART_PATH}/Chart.yaml
-                            git commit -m "chore: bump Helm chart version to ${chartVersion}"
+                            git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
+                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
                             echo "Pushing branch ${newBranch}..."
                             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
 
-                    echo "Commit created: ${chartVersion}"
+                    echo "Commit created: ${env.IMAGE_TAG}"
                     echo "Branch pushed: ${newBranch}"
 
                     echo "Creating PR using GitHub plugin..."
@@ -290,10 +272,10 @@ spec:
                         -H "Authorization: token $GIT_PASSWORD" \
                         -H "Content-Type: application/json" \
                         -d '{
-                            "title": "Helm Chart: v${chartVersion}",
+                            "title": "Helm Chart: v${env.IMAGE_TAG}",
                             "head": "${newBranch}",
                             "base": "main",
-                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${chartVersion}"
+                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
                         }' \
                         https://api.github.com/repos/void-kernel/app-ui/pulls
                         """
@@ -304,38 +286,10 @@ spec:
             }
         }
 
-        // stage('Update Parent Helm Chart Version') {
-        //     when {
-        //         anyOf { branch 'main'; branch 'master' }
-        //     }
-        //     steps {
-        //         script {
-                    
-        //             //if current branch is master or main, then stage 3 will create a pr to update the helm version in parent heml chart prod-values file repo [application-helm] in bump/helm-version branch
-        //             echo "Updating Parent Helm Chart Version"
-                                
-        //         }
-        //     }
-        //     // To add an else condition to the 'when' block, you can use 'not' to specify the opposite branches.
-        //     // For example, to run the stage when NOT on 'main' or 'master', use:
-        //     when {
-        //         not {
-        //             anyOf { branch 'main'; branch 'master' }
-        //         }
-        //         //will directly update the helm version in parent heml chart repo qa-values file [application-helm] in main branch
-        //     }
-        //     steps {
-        //         script {
-        //             echo "Updating Parent Helm Chart Version"
-
-        //         }
-        //     }
-        // }
-
         stage('Tag Release') {
-        when {
-            anyOf { branch 'main'; branch 'master' }
-        }
+        // when {
+        //     anyOf { branch 'main'; branch 'master' }
+        // }
         steps {
             script {
             // Re-checkout with full history + tags
