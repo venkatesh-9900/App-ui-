@@ -20,8 +20,4 @@ spec:
                 name: {{ include "app-ui.fullname" . }}
                 port:
                   number: {{ .Values.service.port }}
-  tls:
-    - hosts:
-        - {{ .Values.ingress.host | quote }}
-      secretName: {{ include "app-ui.fullname" . }}-tls
 {{- end }}
