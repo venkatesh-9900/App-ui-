@@ -220,7 +220,9 @@ spec:
                             git config pull.ff false
                             echo "Fetching branch ${newBranch}..."
                             git fetch origin ${newBranch}
+                            echo "Pulling main branch..."
                             git pull origin main
+                            echo "Pulled main branch"
                         """
                     }
 
