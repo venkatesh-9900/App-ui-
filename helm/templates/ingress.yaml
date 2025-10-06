@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "react-ui.fullname" . }}
+  name: {{ include "app-ui.fullname" . }}
   annotations:
     {{- range $key, $value := .Values.ingress.annotations }}
     {{ $key }}: "{{ $value }}"
@@ -17,11 +17,11 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "react-ui.fullname" . }}
+                name: {{ include "app-ui.fullname" . }}
                 port:
                   number: {{ .Values.service.port }}
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
-      secretName: {{ include "react-ui.fullname" . }}-tls
+      secretName: {{ include "app-ui.fullname" . }}-tls
 {{- end }}

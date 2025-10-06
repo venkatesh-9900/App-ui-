@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "react-ui.fullname" . }}
+  name: {{ include "app-ui.fullname" . }}
   labels:
-    app: {{ include "react-ui.name" . }}
+    app: {{ include "app-ui.name" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "react-ui.name" . }}
+      app: {{ include "app-ui.name" . }}
   template:
     metadata:
       labels:
-        app: {{ include "react-ui.name" . }}
+        app: {{ include "app-ui.name" . }}
     spec:
       containers:
-        - name: react-ui
+        - name: app-ui
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:

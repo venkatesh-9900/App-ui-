@@ -1,7 +1,7 @@
-{{- define "react-ui.name" -}}
+{{- define "app-ui.name" -}}
 {{ .Chart.Name }}
 {{- end }}
 
-{{- define "react-ui.fullname" -}}
+{{- define "app-ui.fullname" -}}
 {{ printf "%s-%s" .Release.Name .Chart.Name }}
 {{- end }}
