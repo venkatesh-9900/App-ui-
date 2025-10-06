@@ -1,7 +1,7 @@
 replicaCount: 2
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: feat-test-15e51a97
+  tag: feat-test-1a01ebbe
   pullPolicy: IfNotPresent
 containerPort: 3000
 service:
