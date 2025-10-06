@@ -40,10 +40,11 @@ pipeline {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
         ECR_REPO       = "docker/app-ui"
-        ECR_HELM_REPO  = "helm/app-ui"
+        ECR_HELM_REPO  = "helm" //not helm/app-ui because Helm appends the chart name to that repository path when pushing, so it attempts to push to the registry path helm/app-ui/
         PARENT_HELM_REPO = "https://github.com/void-kernel/application-helm.git"
         ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-        CHART_PATH     = "helm"
+        CHART_PATH     = "helm" //chart path in the github repo
+        CHART_NAME     = "app-ui"
     }
 
     stages {
@@ -107,18 +108,18 @@ spec:
                 def fullImageName = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${imageTag}"
                 currentBuild.displayName = imageTag
 
-                // withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                //                   credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
-                //     sh """
-                //         echo "Building and pushing with Kaniko..."
-                //         /kaniko/executor \
-                //           --context dir://\$(pwd) \
-                //           --dockerfile \$(pwd)/Dockerfile \
-                //           --destination ${fullImageName} \
-                //           --cleanup \
-                //           --verbosity info
-                //     """
-                // }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
+                    sh """
+                        echo "Building and pushing with Kaniko..."
+                        /kaniko/executor \
+                          --context dir://\$(pwd) \
+                          --dockerfile \$(pwd)/Dockerfile \
+                          --destination ${fullImageName} \
+                          --cleanup \
+                          --verbosity info
+                    """
+                }
             }
         }
     }
@@ -145,6 +146,18 @@ spec:
                 container('helm') {
                     script {
 
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: scm.branches,
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions: [
+                                [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                                [$class: 'CheckoutOption', timeout: 15]
+                            ],
+                            submoduleCfg: [],
+                            userRemoteConfigs: scm.userRemoteConfigs
+                        ])
+
                         def highestVersion = getHighestSemanticVersion()
                         println "Highest version: " + highestVersion.toString()
                         def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
@@ -159,14 +172,13 @@ spec:
                         echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
 
                         //Update Values.yaml image.tag with env.IMAGE_TAG
-                        def valuesFile = readFile("${CHART_PATH}/values.yaml")
-                        valuesFile = valuesFile.replaceAll(/(?m)^tag: .*/, "tag: ${env.IMAGE_TAG}")
-                        writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
+                        def values = readYaml file: "${CHART_PATH}/values.yaml"
+                        // Dot notation (Groovy-native map access)
+                        values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
+                        values.image.tag = env.IMAGE_TAG
+                        // Write back
+                        writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
                         echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
-
-                        //Update Values.yaml image.repository with ECR_BASE_URL+ECR_REPO
-                        valuesFile = valuesFile.replaceAll(/(?m)^repository: .*/, "repository: ${ECR_BASE_URL}/${ECR_REPO}")
-                        writeFile file: "${CHART_PATH}/values.yaml", text: valuesFile
                         echo "Updated ${CHART_PATH}/values.yaml with repository ${ECR_BASE_URL}/${ECR_REPO}"
 
                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'argus-cicd-ecr-fullaccess-iam-user']]) {
@@ -177,7 +189,7 @@ spec:
                                 echo "Packaging and pushing Helm chart..."
                                 helm package ${CHART_PATH}
                                 
-                                helm push ${CHART_PATH}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
+                                helm push ${CHART_NAME}-${chartVersion}.tgz oci://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_HELM_REPO}
                             """
                         }
                     }
@@ -192,10 +204,18 @@ spec:
             when { expression { env.IMAGE_TAG } }
             steps {
                 script {
-                    echo "Updating Helm chart version to ${env.IMAGE_TAG}"
-
                     // Checkout current repo
-                    checkout scm
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: scm.branches,
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [
+                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                            [$class: 'CheckoutOption', timeout: 15]
+                        ],
+                        submoduleCfg: [],
+                        userRemoteConfigs: scm.userRemoteConfigs
+                    ])
 
                     def newBranch = "bump/helm-version"
 
@@ -215,11 +235,32 @@ spec:
                         """
                     }
 
-                    // Update Chart.yaml version and appVersion
+                    def highestVersion = getHighestSemanticVersion()
+                    echo "Highest version: " + highestVersion.toString()
+                    def chartVersion = "${highestVersion.getMajor()}.${highestVersion.getMinor()}.${highestVersion.getPatch()}-${env.IMAGE_TAG}"
+                    echo "Chart version: " + chartVersion
+
+                    // Update Chart.yaml version and appVersion before packaging
                     def chartFile = readFile("${CHART_PATH}/Chart.yaml")
-                    chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${env.IMAGE_TAG}")
+                    chartFile = chartFile.replaceAll(/(?m)^version: .*/, "version: ${chartVersion}")
                     chartFile = chartFile.replaceAll(/(?m)^appVersion: .*/, "appVersion: ${env.IMAGE_TAG}")
                     writeFile file: "${CHART_PATH}/Chart.yaml", text: chartFile
+                    echo "Updated ${CHART_PATH}/Chart.yaml with version ${chartVersion}"
+
+                    //Update Values.yaml image.tag with env.IMAGE_TAG
+                    def values = readYaml file: "${CHART_PATH}/values.yaml"
+                    // Dot notation (Groovy-native map access)
+                    values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
+                    values.image.tag = env.IMAGE_TAG
+                    // Write back
+                    writeYaml file: "${CHART_PATH}/values.yaml", data: values, overwrite: true
+                    echo "Updated ${CHART_PATH}/values.yaml with tag ${env.IMAGE_TAG}"
+                    
+                    //cat values.yaml and chart.yaml
+                    sh """
+                        cat ${CHART_PATH}/values.yaml
+                        cat ${CHART_PATH}/Chart.yaml
+                    """
 
                     echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
                     echo "Branch created: ${newBranch}"
@@ -230,14 +271,14 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
-                            git add ${CHART_PATH}/Chart.yaml
-                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            git add ${CHART_PATH}/values.yaml ${CHART_PATH}/Chart.yaml
+                            git commit -m "chore: bump Helm chart version to ${chartVersion}"
                             echo "Pushing branch ${newBranch}..."
                             git push "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
 
-                    echo "Commit created: ${env.IMAGE_TAG}"
+                    echo "Commit created: ${chartVersion}"
                     echo "Branch pushed: ${newBranch}"
 
                     echo "Creating PR using GitHub plugin..."
@@ -249,10 +290,10 @@ spec:
                         -H "Authorization: token $GIT_PASSWORD" \
                         -H "Content-Type: application/json" \
                         -d '{
-                            "title": "Helm Chart: v${IMAGE_TAG}",
+                            "title": "Helm Chart: v${chartVersion}",
                             "head": "${newBranch}",
                             "base": "main",
-                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
+                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${chartVersion}"
                         }' \
                         https://api.github.com/repos/void-kernel/app-ui/pulls
                         """

@@ -8,14 +8,12 @@ service:
   type: ClusterIP
   port: 3000
 ingress:
-  enabled: true
+  enabled: false
   className: alb
   host: ui.example.com
   certificateArn: arn:aws:acm:ap-south-1:210519480143:certificate/xxxxxxxxxxxx
   scheme: internet-facing
   targetType: ip
-  group:
-    name: frontend-ingress-group
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
