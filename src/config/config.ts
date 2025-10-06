@@ -24,6 +24,8 @@ export const ENDPOINTS = {
     AUTH: {
         LOGIN: `${API_BASE_URL}/auth/login`,
         REGISTER: `${API_BASE_URL}/auth/register`,
+        FETCH_LOGIN_URL: `/api/auth/url/login`,
+        FETCH_LOGOUT_URL: `/api/auth/url/logout`,
         LOGOUT: `/api/auth/logout`,
         ACCESS_TOKEN: `/api/auth/token`,
         REFRESH_TOKEN: `/api/auth/refresh`,

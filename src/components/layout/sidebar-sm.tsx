@@ -53,7 +53,7 @@ import {toast} from "sonner";
 import navigation from "@/constants/navigation.tsx";
 import { commonButtonStyles, logoutButtonStyle } from "@/common/menu-styles.tsx";
 import ProfileDetailsLayout from "@/components/templates/profile-details.tsx";
-import { logoutUser } from "@/hooks/auth-service.ts";
+import { fetchLogoutURL, logoutUser } from "@/hooks/auth-service.ts";
 import { iam_logout_url } from "@/constants/iam-uri.tsx";
 
 interface SidebarProps {
@@ -79,23 +79,35 @@ export default function Sidebar({
     toast('Logging out', {
       description: 'Please wait while we log you out',
     });
-    logoutUser({
-      successTask: (idToken: String) => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("isAuthenticated");
-        window.location.replace(iam_logout_url(idToken));
-      },
-      failureTask: () => {
-        toast('Failure', {
-          description: 'Logout failed unexpectedly. Please try again.',
-        });
-      },
+    const logoutURL = await fetchLogoutURL({
       errorTask: () => {
         toast('Error', {
-          description: 'Logout failed due to error',
+          description: 'An unexpected error occurred while logging out',
         });
-      },
+      }
     });
+    if (logoutURL) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("isAuthenticated");
+          window.location.replace(logoutURL);
+    }
+    // logoutUser({
+    //   successTask: (idToken: String) => {
+    //     localStorage.removeItem("access_token");
+    //     localStorage.removeItem("isAuthenticated");
+    //     window.location.replace(iam_logout_url(idToken));
+    //   },
+    //   failureTask: () => {
+    //     toast('Failure', {
+    //       description: 'Logout failed unexpectedly. Please try again.',
+    //     });
+    //   },
+    //   errorTask: () => {
+    //     toast('Error', {
+    //       description: 'Logout failed due to error',
+    //     });
+    //   },
+    // });
   }
 
   const [location] = useLocation();

@@ -3,7 +3,7 @@ import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios.ts";
 import {ENDPOINTS} from "@/config/config.ts";
 import {Chat, ChatMessage, ChatSessions, FileDetails, Message, MessageContent } from "@/types";
 import {extractAttachedFilesPublicLinks, extractRenderVizUrls, getTextWithoutReasoning} from "@/utils/utils.ts";
-import {refreshAccessToken} from "@/hooks/auth-service.ts";
+import {fetchLoginURL, refreshAccessToken} from "@/hooks/auth-service.ts";
 import {iam_login_url} from "@/constants/iam-uri.tsx";
 import {buildHeaderJSON} from "@/utils/axios/auth-axios.ts";
 import { app_name } from "@/constants/constants";
@@ -78,7 +78,14 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: errorTask
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    errorTask();
+                }
             } else {
                 await fetchUserChatSessions({
                     retry: true, 
@@ -125,7 +132,14 @@ export const fetchSessionDetails = async ({sessionId, successTask, failureTask, 
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: errorTask
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    errorTask();
+                }
             } else {
                 await fetchSessionDetails({
                     retry: true, 
@@ -313,7 +327,14 @@ export async function fetchChatMessages({sessionId, failureTask, errorTask, retr
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: errorTask
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    errorTask();
+                }
                 return { readonly: true, conversations: [] };
             } else {
                 return await fetchChatMessages({
@@ -368,7 +389,14 @@ export async function fetchSharedUserInteraction({sessionId, failureTask, errorT
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: errorTask
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    errorTask();
+                }
                 return { readonly: true, conversations: [] };
             } else {
                 return await fetchSharedUserInteraction({
@@ -422,7 +450,14 @@ export async function toggleChatSharability({sessionId, isSharable, successTask,
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: errorTask
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    errorTask();
+                }
             } else {
                 await toggleChatSharability({
                     sessionId,
@@ -494,7 +529,16 @@ export async function getFileDetailsFromURL(urls: string[], session_id: string, 
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: () => {
+                        console.log("Error encountered while fetching login URL");
+                    }
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    console.log("Error encountered while fetching login URL");
+                }
                 return [];
             } else {
                 return await getFileDetailsFromURL(urls, session_id, user_id, true);
@@ -567,7 +611,14 @@ export async function removeChat({sessionId, successTask, failureTask, errorTask
         if (response.status == 401) {
             if (retry) {
                 console.log("Redirecting to login page");
-                window.location.replace(iam_login_url);
+                const login_url = await fetchLoginURL({
+                    errorTask: errorTask
+                });
+                if (login_url) {
+                    window.location.replace(login_url);
+                } else {
+                    errorTask();
+                }
             } else {
                 return await removeChat({
                     sessionId,
