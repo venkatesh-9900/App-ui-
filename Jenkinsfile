@@ -213,7 +213,7 @@ spec:
                         -H "Authorization: token $GIT_PASSWORD" \
                         -H "Content-Type: application/json" \
                         -d '{
-                            "title": "Helm Chart: v${env.IMAGE_TAG}",
+                            "title": "Helm Chart: Versiong Upgrade",
                             "head": "${newBranch}",
                             "base": "main",
                             "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
