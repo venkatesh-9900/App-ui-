@@ -60,6 +60,7 @@ interface SidebarProps {
   isExpanded: boolean;
   onToggle: (value: boolean) => void;
   userProfile: AppUserProfile | null;
+  openChatHistory: () => void;
 }
 
 const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
@@ -67,7 +68,8 @@ const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
 export default function Sidebar({
                                   isExpanded,
                                   onToggle,
-                                  userProfile
+                                  userProfile,
+                                  openChatHistory
                                 }: SidebarProps) {
   const displayName = userProfile?.displayName || "User";
   const fallbackInitials = userProfile?.displayName?.slice(0, 2).toUpperCase() || "??";
@@ -235,11 +237,12 @@ export default function Sidebar({
                             {section.items.map((item) => {
                                 if (item.href === "/chat") {
                                     return (
-                                        <ListItem key="chat-sidebar-content" disablePadding>
+                                        <ListItem key="chat-sidebar-content" disablePadding sx={{ display: 'block' }}>
                                         <ChatSidebarContent
                                             isActive={location.startsWith('/chat')}
                                             isMenuExpanded={true}
                                             closeSidebar={() => onToggle(false)}
+                                            openChatHistory={openChatHistory}
                                         />
                                         </ListItem>
                                     );

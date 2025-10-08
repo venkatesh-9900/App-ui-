@@ -50,12 +50,14 @@ import { commonButtonStyles } from "@/common/menu-styles";
 interface SidebarProps {
   isExpanded: boolean;
   onToggle: () => void;
+  openChatHistory: () => void;
   collapseSidebar?: () => void;
 }
 
 export default function Sidebar({
                                   isExpanded,
                                   onToggle,
+                                  openChatHistory
                                 }: SidebarProps) {
 
   const [location] = useLocation();
@@ -220,11 +222,12 @@ export default function Sidebar({
                     {section.items.map((item) => {
                       if (item.href === "/chat") {
                         return (
-                          <ListItem key="chat-sidebar-content" disablePadding>
+                          <ListItem key="chat-sidebar-content" disablePadding sx={{ display: 'block' }}>
                             <ChatSidebarContent
                               isActive={location.startsWith('/chat')}
                               isMenuExpanded={isExpanded}
                               closeSidebar={ () => {} }
+                              openChatHistory={openChatHistory}
                             />
                           </ListItem>
                         );

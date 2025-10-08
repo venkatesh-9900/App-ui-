@@ -60,6 +60,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
             if (!currentChatId || currentChatId === '' || currentChatId === 'new') {
                 // Fallback to reset
                 resetChat();
+                setIsShared(false);
+                setIsSharedLoading(false);
                 return;
             }
             if (manuallyLoadedRef.current) {

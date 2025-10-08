@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare, MessageSquarePlus, History } from "lucide-react";
 import {archiveChat, fetchUserChatSessions, loadChatMessages, removeChat, updateChatTitle} from "@/hooks";
 import {Chat, ChatSessions} from "@/types";
 import {onChatHistoryUpdate} from "@/utils/eventBus.ts";
@@ -22,9 +22,10 @@ interface ChatCollapsibleItemProps {
     isActive: boolean;
     isMenuExpanded: boolean;
     closeSidebar: () => void;
+    openChatHistory: () => void;
 }
 
-export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActive, isMenuExpanded, closeSidebar }) => {
+export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActive, isMenuExpanded, closeSidebar, openChatHistory }) => {
     const location = useLocation();
     const theme = useTheme();
     const navigate = useNavigate();
@@ -66,19 +67,6 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
                     console.error('Error loading chats');
                 }
             });
-            // try {
-            //     const sessions = await fetchUserChatSessions();
-            //     setChatHistory(sessions);
-            //     if (sessions.length > 0) {
-            //         const defaultChatId = sessions[0].id;
-            //         setCurrentChatId(defaultChatId);
-            //         const { title, messages } = await loadChatMessages(defaultChatId);
-            //     } else {
-            //         resetChat(); // fallback if no prior chats
-            //     }
-            // } catch (err) {
-            //     console.error('Failed to load chats:', err);
-            // }
         };
 
         void loadChats();
@@ -94,16 +82,6 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
 
     useEffect(() => {
         const loadChats = async () => {
-            // try {
-            //     const updated = await fetchUserChatSessions();
-            //     setChatHistory(updated);
-            //     if (updated.length > 0 && location.pathname === '/chat/new'
-            //     ) {
-            //         navigate(`/chat/${updated[0].id}`);
-            //     }
-            // } catch (err) {
-            //     console.error("Failed to refresh chat history:", err);
-            // }
             await fetchUserChatSessions({
                 successTask: async (sessions: ChatSessions[]) => {
                     setChatHistory(sessions);
@@ -243,20 +221,20 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
                     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.chat-header')) {
                         setIsChatExpanded(!isChatExpanded);
                     }
-                    if (!isMenuExpanded) {
-                        navigate('/chat');
-                    }
+                    // if (!isMenuExpanded) {
+                    //     navigate('/chat');
+                    // }
                 }}
                 sx={isMenuExpanded ? {
                     ...commonButtonStyles(isActive),
                     gap: 1.5, // Equivalent to space-x-3 (12px)
                     px: 1.5, // Equivalent to px-3 (12px)
                     py: 1.25, // Equivalent to py-2.5 (10px)
+                    width: '100%'
                 } : {
                     ...commonButtonStyles(isActive),
                     justifyContent: 'center',
-                    width: 40, // Equivalent to w-10 (40px)
-                    height: 40, // Equivalent to h-10 (40px)
+                    width: '100%'
                     // ...(isActive && {
                     //     boxShadow: 1, // Equivalent to shadow-sm
                     // }),
@@ -272,23 +250,65 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
                         sx={{ flex: 1, m: 0, '& .MuiTypography-root': { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }}
                     />
                 )}
-                {isMenuExpanded && (
+                {/* {isMenuExpanded && (
                     <IconButton onClick={handleNewChat} size="small" title="New Chat" sx={{ p: 0.5, opacity: 0.6, '&:hover': { opacity: 1 } }}>
                         <Plus size={16} />
                     </IconButton>
-                )}
+                )} */}
             </ListItemButton>
             {isMenuExpanded && isChatExpanded && (
-                <Box sx={{ ml: 3, mt: 0.5, minHeight: 0 }}>
+                <Box sx={{ ml: 1, mt: 0.5, minHeight: 0 }}>
                     {/* Scrollable conversations container */}
                     <Box
                         sx={{
-                            maxHeight: chatHistory.length > 5 ? '8rem' : 'auto',
-                            overflowY: chatHistory.length > 5 ? 'auto' : 'visible',
-                            pr: chatHistory.length > 5 ? 0.5 : 0,
+                            pr: 0.5
                         }}
                     >
-                        {chatHistory.map((conv) => (
+                        <Box
+                            key={"new_chat"}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                py: 0.75,
+                                px: 1,
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease-in-out',
+                                '&:hover': { bgcolor: 'action.hover' },
+                            }}
+                            onClick={handleNewChat}
+                        >
+                            <MessageSquarePlus size={12} style={{ color: 'var(--mui-palette-text-secondary)', flexShrink: 0 }} />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="caption" sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    New Chat
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Box
+                            key={"chat_history"}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                py: 0.75,
+                                px: 1,
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease-in-out',
+                                '&:hover': { bgcolor: 'action.hover' },
+                            }}
+                            onClick={openChatHistory}
+                        >
+                            <History size={12} style={{ color: 'var(--mui-palette-text-secondary)', flexShrink: 0 }} />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="caption" sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    Chat History
+                                </Typography>
+                            </Box>
+                        </Box>
+                        {/* {chatHistory.map((conv) => (
                             <Box
                                 key={conv.session_id}
                                 sx={{
@@ -321,7 +341,7 @@ export const ChatSidebarContent: React.FC<ChatCollapsibleItemProps> = ({ isActiv
                                     onRename={renameConversation}
                                 />
                             </Box>
-                        ))}
+                        ))} */}
                     </Box>
                 </Box>
             )}

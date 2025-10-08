@@ -18,9 +18,6 @@ export const getAgentsList = async ({successTask, failureTask, errorTask, retry 
             console.log("Refreshing access token");
             await refreshAccessToken({failureTask, errorTask});
         }
-        // const response = await axiosAuthServices.get(API_ENDPOINTS.GET, {
-        //     headers: buildHeader(false),
-        // });
         const response = await fetch(API_ENDPOINT, {
             method: 'GET',
             headers: buildHeaderJSON(false),
@@ -37,7 +34,6 @@ export const getAgentsList = async ({successTask, failureTask, errorTask, retry 
                 } else {
                     errorTask();
                 }
-                // window.location.replace(iam_login_url);
             } else {
                 await getAgentsList({
                     retry: true, 
