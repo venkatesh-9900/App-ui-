@@ -151,7 +151,10 @@ export default function ChatHistorySidebar({ isExpanded, onToggle, closeSidebar 
     };
 
     return (
-        <Drawer open={isExpanded} onClose={() => onToggle(false)}>
+        <Drawer open={isExpanded} onClose={(e, r) => {
+            console.log(e, r);
+            onToggle(false);
+        }}>
             <Box
                 sx={{
                     overflowY: 'auto',

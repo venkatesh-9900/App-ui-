@@ -3,7 +3,7 @@ import {ChatMessages} from "@/components/chat/chat-messages.tsx";
 import {ChatInterfaceProps, ChatMessage, FileDetails, FileUploadResponse, Message} from "@/types";
 import {useLocation, useNavigate} from 'react-router-dom';
 import {ChatInput} from "@/components/chat/chat-input.tsx";
-import {fetchSessionDetails, hasAnyVisualization, loadChatMessages, toggleChatSharability} from "@/hooks";
+import {fetchSessionDetails, hasAnyVisualization, loadChatMessages, removeChat, toggleChatSharability} from "@/hooks";
 import {uploadFilesToServer, uploadFileToServer} from "@/hooks/upload-file.ts";
 import {useMessageHandling} from "@/hooks/use-message-handling.ts";
 import {Box} from "@mui/material";
@@ -17,6 +17,8 @@ import { InfoIcon } from "lucide-react";
 import { ShareLinkDialog } from "@/components/ui/share-link-dialog";
 import { getAgentsList } from "@/hooks/agent-service";
 import { set } from "date-fns";
+import ChatMenuButton from "@/components/chat/tools/chat-menu-button";
+import { triggerChatHistoryUpdate } from "@/utils/eventBus";
 
 const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
     const navigate = useNavigate();
@@ -289,10 +291,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
 
     // Auto-resize textarea
     useEffect(() => {
-        // const urlParams = new URLSearchParams(query);
-        // console.log("Sharable: ", typeof urlParams.get("sharable"));
-        // console.log("UserId: ", typeof urlParams.get("userid"));
-        // console.log("Params: ", params);
         const fetchAgentsList = async () => {
             await getAgentsList({
                 successTask: (data: string[]) => {
@@ -321,6 +319,53 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
         }
         fetchAgentsList();
     }, []);
+
+    const deleteConversation = async (e: React.MouseEvent, id: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (id === "new") {
+            setCurrentChatId("new");
+            resetChat();
+            return;
+        }
+        toast('Deleting...', {
+            description: 'Please wait',
+        });
+        await removeChat({
+            sessionId: id,
+            successTask: async() => {
+                toast('Success', {
+                    description: 'Deleted successfully',
+                });
+                triggerChatHistoryUpdate();
+                // await fetchUserChatSessions({
+                //     successTask: async (sessions: ChatSessions[]) => {
+                //         setChatHistory(sessions);
+                //         // if (sessions.length > 0 && location.pathname === '/chat/new'
+                //         // ) {
+                //         //     navigate(`/chat/${sessions[0].session_id}`);
+                //         // }
+                //     },
+                //     failureTask: () => {
+                //         console.error('Failed to load chats');
+                //     },
+                //     errorTask: () => {
+                //         console.error('Error loading chats');
+                //     }
+                // });
+            },
+            failureTask: () => {
+                toast('Failure', {
+                    description: 'Could not delete the chat session. Please try again.',
+                });
+            },
+            errorTask: () => {
+                toast('Error', {
+                    description: 'A unexpected error occurred while deleting the chat session.',
+                });
+            }
+        });
+    };
 
     return (
         <Box>
@@ -358,6 +403,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
                     <p style={{ marginRight: '8px' }}>{isSharedLoading ? '' : isShared ? 'ON' : 'OFF'}</p>
                     {!isSharedLoading && isShared && <InfoIcon size={20} color="gray" style={{ cursor: 'pointer' }} onClick={() => { setOpenShareLinkDialogBox(true); }}/>}
                 </Box>
+                <Box sx={{ flex: 1 }}></Box>
+                {!(currentChatId == "new" || !currentChatId || currentChatId.length < 10 || readOnly) && <ChatMenuButton
+                    chatId={currentChatId}
+                    onRemove={deleteConversation}
+                    onArchive={()=>{}}
+                    onRename={()=>{}}
+                />}
             </Box>}
            <Box sx={{
                position: 'relative',
