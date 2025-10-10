@@ -174,6 +174,8 @@ const MessageUserPlainText: React.FC<MessageUserPlainTextProps> = ({
                         padding: "1.25rem 3rem 3rem 1.5rem",
                         borderRadius: "0.5rem",
                         whiteSpace: "pre-line",
+                        wordBreak: 'break-word',
+                        maxWidth: '100%', // Allow full width
                     }}
                 >
                     <Grid container spacing={1} sx={{mb: 1}}>

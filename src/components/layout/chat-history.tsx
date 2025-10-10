@@ -1,24 +1,25 @@
 import { fetchUserChatSessions, loadChatMessages, removeChat } from "@/hooks";
 import { toast } from 'sonner';
 import { ChatSessions } from "@/types";
-import { onChatHistoryUpdate } from "@/utils/eventBus";
+import { onChatHistoryUpdate, triggerChatHistoryUpdate } from "@/utils/eventBus";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { alpha, Box, Drawer, Typography, useTheme } from "@mui/material";
-import ChatMenuButton from "@/components/chat/tools/chat-menu-button.tsx";
-import { MessageSquare } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { alpha, Box, CircularProgress, Drawer, Typography, useTheme } from "@mui/material";
+import ChatDeleteButton from "@/components/chat/tools/chat-delete-button.tsx";
+import { MessageSquare, MessagesSquare, MessageSquareWarning } from "lucide-react";
 
-interface ChatHistorySidebarProps {
-  isExpanded: boolean;
-  onToggle: (value: boolean) => void;
-  closeSidebar: () => void;
+interface ChatHistoryProps {
+    onMenuItemClick: () => void;
 }
 
-export default function ChatHistorySidebar({ isExpanded, onToggle, closeSidebar } : ChatHistorySidebarProps) {
+export default function ChatHistory({ onMenuItemClick } : ChatHistoryProps) {
     const [chatHistory, setChatHistory] = useState<ChatSessions[]>([]);
     const [currentChatId, setCurrentChatId] = useState("initial");
+    const [chatHistoryLoading, setChatHistoryLoading] = useState(true);
+    const [chatHistoryError, setChatHistoryError] = useState(false);
     const manuallyLoadedRef = useRef(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const theme = useTheme();
 
     const resetChat = useCallback(() => {
@@ -27,62 +28,85 @@ export default function ChatHistorySidebar({ isExpanded, onToggle, closeSidebar 
     
     useEffect(() => {
         const loadChats = async () => {
+            console.log("Inside loadChats call without subscription");
+            setChatHistoryLoading(true);
+            setChatHistoryError(false);
             await fetchUserChatSessions({
                 successTask: async (sessions: ChatSessions[]) => {
                     setChatHistory(sessions);
-                    if (sessions.length > 0) {
-                        const defaultChatId = sessions[0].session_id;
-                        setCurrentChatId(defaultChatId);
-                        // const { readonly, conversations } = await loadChatMessages({
-                        //     sessionId: defaultChatId,
-                        //     failureTask: () => {
-                        //         console.error('Failed to load chat messages');
-                        //     },
-                        //     errorTask: () => {
-                        //         console.error('Error loading chat messages');
-                        //     }
-                        // });
-                    } else {
-                        resetChat(); // fallback if no prior chats
+                    console.log("Inside API call: path: " + location.pathname)
+                    if (sessions.length > 0 && location.pathname.startsWith('/chat')) {
+                        console.log(`Inside condition check location.pathname.startsWith("/chat")`);
+                        if (location.pathname != '/chat/new') {
+                            console.log(`Inside condition check location.pathname != "/chat/new"`);
+                            const session_id = location.pathname.split('/')[2];
+                            const matching_index = sessions.findIndex(session => session.session_id === session_id);
+                            if (matching_index >= 0) {
+                                console.log(`Inside condition check matching_index >= 0`);
+                                setCurrentChatId(session_id);
+                            } else {
+                                console.log(`Inside condition check no match`);
+                                setCurrentChatId(sessions[0].session_id);
+                            }
+                        }
                     }
+                    // if (sessions.length > 0) {
+                    //     const defaultChatId = sessions[0].session_id;
+                    //     setCurrentChatId(defaultChatId);
+                    // } else {
+                    //     resetChat(); // fallback if no prior chats
+                    // }
                 },
                 failureTask: () => {
                     console.error('Failed to load chats');
+                    setChatHistoryError(true);
                 },
                 errorTask: () => {
                     console.error('Error loading chats');
+                    setChatHistoryError(true);
                 }
             });
+            setChatHistoryLoading(false);
         };
     
         void loadChats();
     
-        const unsubscribe = onChatHistoryUpdate(() => {
-            void loadChats(); // ensure it's awaited properly in callback
-        });
-        return () => {
-            unsubscribe();
-        };
+        // const unsubscribe = onChatHistoryUpdate(() => {
+        //     void loadChats(); // ensure it's awaited properly in callback
+        // });
+        // return () => {
+        //     unsubscribe();
+        // };
     
     }, []);
     
     useEffect(() => {
         const loadChats = async () => {
+            setChatHistoryLoading(true);
+            setChatHistoryError(false);
             await fetchUserChatSessions({
                 successTask: async (sessions: ChatSessions[]) => {
                     setChatHistory(sessions);
-                    // if (sessions.length > 0 && location.pathname === '/chat/new'
-                    // ) {
-                    //     navigate(`/chat/${sessions[0].session_id}`);
-                    // }
+                    if (sessions.length > 0 && location.pathname.startsWith('/chat')) {
+                        if (location.pathname != '/chat/new') {
+                            const session_id = location.pathname.split('/')[2];
+                            const matching_index = sessions.findIndex(session => session.session_id === session_id);
+                            if (matching_index >= 0) {
+                                setCurrentChatId(session_id);
+                            }
+                        }
+                    }
                 },
                 failureTask: () => {
                     console.error('Failed to load chats');
+                    setChatHistoryError(true);
                 },
                 errorTask: () => {
                     console.error('Error loading chats');
+                    setChatHistoryError(true);
                 }
             });
+            setChatHistoryLoading(false);
         };
         const unsubscribe = onChatHistoryUpdate(() => {
             void loadChats();
@@ -102,7 +126,6 @@ export default function ChatHistorySidebar({ isExpanded, onToggle, closeSidebar 
             console.error(`Failed to reload chat ${id}`, err);
             manuallyLoadedRef.current = false;
         }
-        closeSidebar();
     }
 
     const deleteConversation = async (e: React.MouseEvent, id: string) => {
@@ -111,7 +134,6 @@ export default function ChatHistorySidebar({ isExpanded, onToggle, closeSidebar 
         if (id === "new") {
             setCurrentChatId("new");
             resetChat();
-            closeSidebar();
             return;
         }
         await removeChat({
@@ -120,21 +142,8 @@ export default function ChatHistorySidebar({ isExpanded, onToggle, closeSidebar 
                 toast('Success', {
                     description: 'Deleted successfully',
                 });
-                await fetchUserChatSessions({
-                    successTask: async (sessions: ChatSessions[]) => {
-                        setChatHistory(sessions);
-                        // if (sessions.length > 0 && location.pathname === '/chat/new'
-                        // ) {
-                        //     navigate(`/chat/${sessions[0].session_id}`);
-                        // }
-                    },
-                    failureTask: () => {
-                        console.error('Failed to load chats');
-                    },
-                    errorTask: () => {
-                        console.error('Error loading chats');
-                    }
-                });
+                navigate('/chat/new');
+                triggerChatHistoryUpdate();
             },
             failureTask: () => {
                 toast('Failure', {
@@ -147,86 +156,78 @@ export default function ChatHistorySidebar({ isExpanded, onToggle, closeSidebar 
                 });
             }
         });
-        closeSidebar();
     };
 
     return (
-        <Drawer open={isExpanded} onClose={(e, r) => {
-            console.log(e, r);
-            onToggle(false);
-        }}>
-            <Box
-                sx={{
-                    overflowY: 'auto',
-                    height: 'calc(100% - 48px)', 
-                    pb: 4,
-                    mt: 15,
-                    width: 300
-                }}
-            >
-                <Box sx={{ ml: 1, mt: 0.5, minHeight: 0 }}>
-                    {/* Scrollable conversations container */}
-                    <Box
+        <Box sx={{ ml: 0.5, mt: 0.5, width: 290, pb: 4 }}>
+            {/* Scrollable conversations container */}
+            {chatHistory.length == 0 && <Box
+                    sx={{
+                        width: '100%',
+                        height: '350px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
+                        py: 0.75,
+                        px: 1,
+                        borderRadius: '6px'
+                    }}
+                >
+                    { chatHistoryLoading ?  
+                        <CircularProgress size={30} color="info"/> : 
+                        chatHistoryError ? 
+                            <MessageSquareWarning size={50} style={{ color: '#666666' }}/> : 
+                            <MessagesSquare size={50} style={{ color: '#666666' }}/> }
+                    <Typography
+                        variant="h6"
                         sx={{
-                            maxHeight: 'calc(100% - 80px)',
-                            overflowY: 'auto',
-                            pr: 0.5,
-                        }}
-                    >
-                        {chatHistory.length == 0 && <Box
-                            sx={{
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 1,
-                                py: 0.75,
-                                px: 1,
-                                borderRadius: '6px'
-                            }}
-                        >
-                            <Typography
-                                variant="h6">
-                                No Recent Chats
-                            </Typography>
-                        </Box>}
-                        {chatHistory.map((conv) => (
-                            <Box
-                                key={conv.session_id}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    py: 0.75,
-                                    px: 1,
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease-in-out',
-                                    '&:hover': { bgcolor: 'action.hover' },
-                                    ...(conv.session_id === currentChatId && {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                        color: 'primary.dark',
-                                    }),
-                                }}
-                                onClick={() => onLoadCurrentConversation(conv.session_id)}
-                            >
-                                <MessageSquare size={12} style={{ color: 'var(--mui-palette-text-secondary)', flexShrink: 0 }} />
-                                <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Typography variant="caption" sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {conv.initial_text}
-                                    </Typography>
-                                </Box>
-                                <ChatMenuButton
-                                    chatId={conv.session_id}
-                                    onRemove={deleteConversation}
-                                    onArchive={()=>{}}
-                                    onRename={()=>{}}
-                                />
-                            </Box>
-                        ))}
+                            textAlign: 'center',
+                            color: '#666666'
+                        }}>
+                        { chatHistoryLoading ? "" : 
+                            chatHistoryError ? "Something went wrong." : 
+                            "Your chat history will appear here."}
+                    </Typography>
+                </Box>}
+            {chatHistory.map((conv) => (
+                <Box
+                    key={conv.session_id}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        py: 0.75,
+                        px: 1,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': { bgcolor: 'action.hover' },
+                        ...(conv.session_id === currentChatId && {
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.dark',
+                        }),
+                    }}
+                    onClick={() => {
+                        onMenuItemClick();
+                        onLoadCurrentConversation(conv.session_id)
+                    }}
+                >
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="caption" sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {conv.initial_text}
+                        </Typography>
                     </Box>
+                    <Box sx={{display: {xs: 'none', md: conv.session_id === currentChatId ? 'flex' : 'none'}}}>
+                        <ChatDeleteButton
+                            chatId={conv.session_id}
+                            onRemove={deleteConversation}
+                        />
+                    </Box>
+                    
                 </Box>
-            </Box>
-        </Drawer>
+            ))}
+        </Box>
     )
 };

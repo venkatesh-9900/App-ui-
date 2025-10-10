@@ -11,10 +11,9 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import {toast} from "sonner";
-import ChatHistorySidebar from "@/components/layout/chat-history";
 
-const HEADER_HEIGHT = '100px'; // Corresponds to pt-20 (5rem)
-const SIDEBAR_WIDTH_EXPANDED = '256px'; // Corresponds to w-64 (16rem)
+const HEADER_HEIGHT = '72px';
+const SIDEBAR_WIDTH_EXPANDED = '320px'; // Corresponds to w-64 (16rem)
 const SIDEBAR_WIDTH_COLLAPSED = '64px'; // Corresponds to w-16 (4rem)
 
 function ChatApp() {
@@ -24,11 +23,6 @@ function ChatApp() {
     });
     const [sidebarSmExpanded, setSidebarSmExpanded] = useState(false);
     const [profile, setProfile] = useState<AppUserProfile | null>(null);
-    const [isChatHistorySidebarExpanded, setIsChatHistorySidebarExpanded] = useState<boolean>(false);
-
-    const toggleChatHistorySidebar = (value: boolean) => {
-        setIsChatHistorySidebarExpanded(value);
-    };
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -56,13 +50,6 @@ function ChatApp() {
         setSidebarSmExpanded(value);
     };
 
-    const openChatHistory = () => {
-        if (sidebarSmExpanded) {
-            setSidebarSmExpanded(false);
-        }
-        setIsChatHistorySidebarExpanded(true);
-    };
-
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
@@ -82,9 +69,8 @@ function ChatApp() {
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'grey.50' }}>
                 <Header onMenuClick={() => toggleSidebarSm(true)} userProfile={profile} />
                 <Box sx={{ display: 'flex', flexGrow: 1, pt: HEADER_HEIGHT }}>
-                    <SidebarSm isExpanded={sidebarSmExpanded} onToggle={toggleSidebarSm} userProfile={profile} openChatHistory={openChatHistory}/>
-                    <Sidebar isExpanded={sidebarExpanded} onToggle={toggleSidebar} collapseSidebar={() => setSidebarExpanded((prev: boolean) => prev)} openChatHistory={openChatHistory}/>
-                    <ChatHistorySidebar isExpanded={isChatHistorySidebarExpanded} onToggle={toggleChatHistorySidebar} closeSidebar={() => { toggleChatHistorySidebar(false); }}  />
+                    <SidebarSm isExpanded={sidebarSmExpanded} onToggle={toggleSidebarSm} userProfile={profile}/>
+                    <Sidebar isExpanded={sidebarExpanded} onToggle={toggleSidebar} collapseSidebar={() => setSidebarExpanded((prev: boolean) => prev)}/>
                     <Box
                         component="main"
                         sx={{

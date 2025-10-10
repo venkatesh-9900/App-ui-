@@ -1,8 +1,4 @@
 import { Link, useLocation } from "wouter";
-// import { cn } from "@/lib/utils"; // No longer needed if all styling is MUI
-// import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // No longer needed if using MUI Tooltip
-
-// Material-UI imports
 import {
   Box,
   List,
@@ -16,48 +12,22 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Home,
-  BarChart,
-  ArrowRightLeft,
-  Wallet,
-  Network,
-  AlertTriangle,
-  ShieldCheck,
-  ClipboardCheck,
-  Bell,
-  Settings,
-  History,
-  Bot,
-  Sliders,
-  Gauge,
-  Users,
-  Cog,
-  Key,
-  Code,
-  Book,
-  Plug,
-  User,
-  CreditCard,
-  Building,
-  Search,
   ChevronLeft,
   ChevronRight
 } from "lucide-react"; // Keep lucide icons for consistency with original code
-import {ChatSidebarContent} from "@/components/chat/chat-sidebar-content.tsx";
 import navigation from "@/constants/navigation";
-import { commonButtonStyles } from "@/common/menu-styles";
+import { commonButtonStyles, sideBarMenuBoxLayoutStyle, sideBarMenuInnerBoxStyle, sideBarMenuItemNameStyle, sideBarMenuListStyle, sidebarMenuSectionHeadingStyle } from "@/common/menu-styles";
+import ChatHistory from "@/components/layout/chat-history.tsx";
 
 interface SidebarProps {
   isExpanded: boolean;
   onToggle: () => void;
-  openChatHistory: () => void;
   collapseSidebar?: () => void;
 }
 
 export default function Sidebar({
                                   isExpanded,
-                                  onToggle,
-                                  openChatHistory
+                                  onToggle
                                 }: SidebarProps) {
 
   const [location] = useLocation();
@@ -72,25 +42,14 @@ export default function Sidebar({
           <ListItemButton
             component={Link}
               href={item.href}
-            sx={{
-              ...commonButtonStyles(isActive),
-              gap: 1.5, // Equivalent to space-x-3 (12px)
-              px: 1.5, // Equivalent to px-3 (12px)
-              py: 1.25, // Equivalent to py-2.5 (10px)
-            }}
+            sx={commonButtonStyles(isActive)}
           >
             <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
               <Icon size={18} />
             </ListItemIcon>
             <ListItemText
               primary={item.name}
-              sx={{
-                '& .MuiTypography-root': {
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                },
-              }}
+              sx={sideBarMenuItemNameStyle}
             />
           </ListItemButton>
         </ListItem>
@@ -109,9 +68,6 @@ export default function Sidebar({
               justifyContent: 'center',
               width: 40, // Equivalent to w-10 (40px)
               height: 40 // Equivalent to h-10 (40px)
-              // ...(isActive && {
-              //   boxShadow: 1, // Equivalent to shadow-sm
-              // }),
             }}
             >
             <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
@@ -132,12 +88,12 @@ export default function Sidebar({
         borderColor: 'divider', // border-slate-200
         position: 'fixed', // fixed
         left: 0,
-        top: 100, // top-20 (assuming 80px based on common AppBar height)
+        top: 72, // top-20 (assuming 80px based on common AppBar height)
         bottom: 0,
         overflowX: 'hidden', // overflow-hidden (to hide horizontal scroll during width transition)
         transition: 'width 0.3s ease-in-out', // transition-all duration-300 ease-in-out
         zIndex: (theme) => theme.zIndex.drawer, // z-40
-        width: isExpanded ? 256 : 64, // w-64 : w-16 (256px for w-64, 64px for w-16)
+        width: isExpanded ? 320 : 64, // w-64 : w-16 (256px for w-64, 64px for w-16)
         // Mobile-first responsiveness: Hide by default on small screens, show on medium and up
         display: { xs: 'none', md: 'block' },
       }}
@@ -176,17 +132,10 @@ export default function Sidebar({
 
         {/* Scrollable Content */}
       <Box
-        sx={{
-          overflowY: 'auto',
-          height: 'calc(100% - 48px)', // Total height minus toggle button box height (32px icon + 2*8px padding = 48px)
-          pb: 4, // pb-4 (32px padding-bottom)
-        }}
+        sx={sideBarMenuBoxLayoutStyle}
       >
         <Box
-          sx={{
-            transition: 'padding 0.3s ease-in-out', // transition-all duration-300
-            p: isExpanded ? 2 : 1, // p-4 : p-2 (16px : 8px)
-          }}
+          sx={sideBarMenuInnerBoxStyle(isExpanded)}
         >
             {navigation.map((section) => (
             <Box
@@ -201,37 +150,15 @@ export default function Sidebar({
                   fontWeight="medium" // font-semibold
                   color="text.secondary" // text-slate-500
                   textTransform="uppercase"
-                  sx={{
-                    mb: 1.5, // mb-3 (12px)
-                    px: 1.5, // px-3 (12px)
-                    fontSize: '0.75rem', // text-xs
-                    letterSpacing: '0.05em', // tracking-wider
-                  }}
+                  sx={sidebarMenuSectionHeadingStyle}
                 >
                   {section.name}
                 </Typography>
               )}
               <List
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: isExpanded ? 0.5 : 1, // space-y-1 : space-y-2 (4px : 8px)
-                  p: 0, // Remove default List padding
-                }}
+                sx={sideBarMenuListStyle(isExpanded)}
               >
                     {section.items.map((item) => {
-                      if (item.href === "/chat") {
-                        return (
-                          <ListItem key="chat-sidebar-content" disablePadding sx={{ display: 'block' }}>
-                            <ChatSidebarContent
-                              isActive={location.startsWith('/chat')}
-                              isMenuExpanded={isExpanded}
-                              closeSidebar={ () => {} }
-                              openChatHistory={openChatHistory}
-                            />
-                          </ListItem>
-                        );
-                      }
                       return <SidebarItem key={item.name} item={item} />;
                     })}
               </List>
@@ -240,6 +167,23 @@ export default function Sidebar({
               )}
             </Box>
             ))}
+          {isExpanded && <Box
+              key={"all_chats"}
+              sx={{
+                mb: isExpanded ? 3 : 2, // mb-6 : mb-4 (24px : 16px)
+              }}
+            >
+              <Typography
+                variant="subtitle2" // text-xs
+                fontWeight="medium" // font-semibold
+                color="text.secondary" // text-slate-500
+                textTransform="uppercase"
+                sx={sidebarMenuSectionHeadingStyle}
+              >
+                All Chats
+              </Typography>
+              <ChatHistory onMenuItemClick={() => {}}/>
+          </Box>}
         </Box>
       </Box>
     </Box>

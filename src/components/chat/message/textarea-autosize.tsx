@@ -31,6 +31,7 @@ export const TextareaAutosize: FC<TextareaAutosizeProps> = ({
   placeholder = "",
   minRows = 1
 }) => {
+  console.log(value);
   return (
     <StyledTextarea
       className={cn(

@@ -83,6 +83,8 @@ export interface ChatMessagePageProps {
   onCloseSplitView?: () => void;
   userClosedSplitView?: boolean;
   selectedAgent: string;
+  chatLoadingError: boolean;
+  currentChatLoading: boolean;
 }
 
 /**

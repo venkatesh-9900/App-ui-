@@ -23,6 +23,17 @@ import {
 } from "recharts";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { encode } from "punycode";
+
+const frequentSearches = [
+  `What is latest number of transactions on ethereum mainnet, and on Base network?`,
+  `How many potential alerts have been generated on Base network?`,
+  `For contract address "0x7e0aedc93d9f898be835a44bfca3842e52416b82". Identify which entity it belongs to, and also identify all the transactions that it has interacted with in last 30 days. (Spot / highlight any anomalies).`,
+  `For the contract address 0x22342340abbe, identify all the addresses it has interacted in last month. Higlight any potential anomalies in the network graph`,
+  `What is the number of times it has interacted with potentially sanctioned entities?`,
+  `Can you put a monitoring on following entities, and send me an alert if these entities with my wallet?`
+]
 
 // Generate synthetic transaction volume data for last 12 months
 const generateVolumeData = () => {
@@ -1588,16 +1599,70 @@ function WalletMonitoringQA() {
   );
 }
 
+function QueryBox( fullQuestion: string ) {
+  const navigate = useNavigate();
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [questionText, setQuestionText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+
+  // const fullQuestion =
+  //   "Can you put a monitoring on following entities, and send me an alert if these entities with my wallet.";
+
+  // Generate synthetic wallet addresses
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowQuestion(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (showQuestion && !isTyping) {
+      setIsTyping(true);
+      let currentIndex = 0;
+      const typingInterval = setInterval(() => {
+        if (currentIndex <= fullQuestion.length) {
+          setQuestionText(fullQuestion.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          setIsTyping(false);
+        }
+      }, 50);
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [showQuestion, fullQuestion]);
+
+  if (!showQuestion) return null;
+
+  const handleClick = (fullQuestion: string) => () => {
+    const queryEncoded = encodeURIComponent(fullQuestion);
+    navigate(`/chat/new?user_query=${queryEncoded}`);
+  }
+
+  return (
+    <Box sx={{ bgcolor: 'white', borderRadius: 2, p: 2, borderLeft: 4, borderColor: 'divider', cursor: 'pointer' }} onClick={handleClick(fullQuestion)}>
+      <Typography sx={{ fontWeight: 500, wordBreak: 'break-word', fontSize: 13 }}>
+        {questionText}
+        {isTyping && <span className="animate-pulse">|</span>}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function HomePage() {
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-          Trending Conversations !
+          How can we help you?
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        {/* <Typography variant="body2" color="text.secondary">
           Converse. Discover. Act.
-        </Typography>
+        </Typography> */}
       </Box>
 
       {/* KPI Cards */}
@@ -1608,12 +1673,13 @@ export default function HomePage() {
         mb: { xs: 2, md: 3 },
         alignItems: 'stretch' // Ensures all items in a row have the same height, complementing the equal widths
       }}>
-        <EthereumTransactionQA />
+        {/* <EthereumTransactionQA />
         <BaseRiskAlertsQA />
         <WalletAnalysisQA />
         <ContractAnalysisQA />
         <SanctionedEntitiesQA />
-        <WalletMonitoringQA />
+        <WalletMonitoringQA /> */}
+        {frequentSearches.map((query) => QueryBox(query))}
       </Box>
     </Box>
   );

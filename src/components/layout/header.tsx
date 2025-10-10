@@ -1,4 +1,4 @@
-import { Bell, Building, LogOutIcon, Mail, Settings } from "lucide-react";
+import { Bell, Building, Code, CreditCard, Key, LogOutIcon, Mail, MoreVertical, Settings } from "lucide-react";
 import { Menu as Menuicon } from "lucide-react";
 import {
   AppBar,
@@ -13,17 +13,16 @@ import {
   Tooltip,
   ListItemIcon,
   ListItemText,
+  Divider,
 } from "@mui/material";
 import { KeyboardArrowDown } from "@mui/icons-material";
-import MenuIcon from '@mui/icons-material/Menu';
 import {toast} from "sonner";
 import config from "../../config/config.ts";
 import {useEffect, useState} from "react";
 import {AppUserProfile} from "@/types";
-import {getUserProfile} from "@/hooks/user-service.ts";
 import ProfileDetailsLayout from "@/components/templates/profile-details.tsx";
 import { fetchLogoutURL, logoutUser } from "@/hooks/auth-service.ts";
-import { iam_logout_url } from "@/constants/iam-uri.tsx";
+import { navigate } from "wouter/use-browser-location";
 
 
 const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
@@ -66,55 +65,6 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
           localStorage.removeItem("isAuthenticated");
           window.location.replace(logoutURL);
     }
-    // logoutUser({
-    //   successTask: (idToken: String) => {
-    //     localStorage.removeItem("access_token");
-    //     localStorage.removeItem("isAuthenticated");
-    //     window.location.replace(iam_logout_url(idToken));
-    //   },
-    //   failureTask: () => {
-    //     toast('Failure', {
-    //       description: 'Logout failed unexpectedly. Please try again.',
-    //     });
-    //   },
-    //   errorTask: () => {
-    //     toast('Error', {
-    //       description: 'Logout failed due to error',
-    //     });
-    //   },
-    // });
-    // try {
-      
-    //   const accessToken = localStorage.getItem('access_token');
-    //   if (accessToken) {
-    //     const response = await fetch(logoutUrl, {
-    //       method: 'GET',
-    //       headers: {
-    //         'Authorization': `Bearer ${accessToken}`,
-    //       }
-    //     });
-
-    //     if (!response.ok) {
-    //       throw new Error(`Logout failed with status: ${response.status}`);
-    //     }
-    //     const responseText = await response.text();
-    //     const idToken = JSON.parse(responseText);
-    //     console.log(idToken);
-    //     if (idToken.id_token) {
-    //       localStorage.removeItem("access_token");
-    //       localStorage.removeItem("isAuthenticated");
-    //       window.location.replace(`http://35.225.223.235:8080/realms/main/protocol/openid-connect/logout?id_token_hint=${idToken.id_token}&post_logout_redirect_uri=https%3A%2F%2Fjwt.io%2F`);
-    //     } else {
-    //       toast('Failure', {
-    //         description: 'Login failed unexpectedly. Please try again.',
-    //       });
-    //     }
-    //   }
-    // } catch (err) {
-    //   toast('Error', {
-    //     description: 'Login failed due to error',
-    //   });
-    // }
   };
 
   return (
@@ -130,16 +80,19 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
       >
         <Toolbar>
           {/* Left side: Logo and Title */}
-          <Box sx={{ py: 3, display: 'flex', alignItems: 'center', flexGrow: 1, overflow: 'hidden' }}>
-            <Box sx={{ display: {xs: 'block', sm: 'none'}, px: 1}}>
+          <Box sx={{ py: 2, display: 'flex', alignItems: 'center', flexGrow: 1, overflow: 'hidden' }}>
+            <Box sx={{ display: {xs: 'block', md: 'none'}}}>
               <Button
               variant="outlined"
               onClick={onMenuClick}
               sx={{
                 padding: '4px',
-                minWidth: 32
+                minWidth: 32,
+                mr: 2,
+                border: "none",
+                color: 'grey'
               }}>
-                <Menuicon size={16}/>
+                <Menuicon size={23}/>
               </Button>
             </Box>
             <Avatar
@@ -149,18 +102,15 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
                 sx={{ width: 40, height: 40, mr: 1.5 }}
             />
             <Box sx={{ display: 'block'}}>
-              <Typography variant="h6" component="h1" fontWeight="bold" color="text.primary" noWrap>
+              <Typography variant="h6" component="h1" fontWeight="bold" textTransform="uppercase" sx={{ color: '#666666' }} noWrap>
                 Argus Intelligence
-              </Typography>
-              <Typography variant="body2" color="text.secondary" noWrap>
-                the power of Natural language
               </Typography>
             </Box>
           </Box>
 
           {/* Right side: Actions and User Menu */}
-          <Box sx={{ display: {xs: 'none', sm: 'flex'}, alignItems: 'center', gap: { xs: 0, sm: 1 } }}>
-            <Tooltip title="Notifications">
+          <Box sx={{ alignItems: 'center', gap: { xs: 0, sm: 1 } }}>
+            {/* <Tooltip title="Notifications">
               <IconButton color="default">
                 <Bell size={20} />
               </IconButton>
@@ -169,10 +119,10 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
               <IconButton color="default">
                 <Settings size={20} />
               </IconButton>
-            </Tooltip>
+            </Tooltip> */}
 
             {/* User Menu */}
-            <Tooltip title="Account settings">
+            <Tooltip title="Explore">
               <Button
                   onClick={handleMenuOpen}
                   sx={{
@@ -186,13 +136,16 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
                   aria-haspopup="true"
                   aria-expanded={open ? 'true' : undefined}
               >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'var(--argus-green)', fontSize: '0.875rem' }}>
+                <Avatar sx={{ display: {xs: 'none', md: 'flex'}, width: 32, height: 32, bgcolor: 'var(--argus-green)', fontSize: '0.875rem' }}>
                   {fallbackInitials}
                 </Avatar>
-                <Typography sx={{ display: { xs: 'none', md: 'block' }, mx: 1 }}>
+                <Typography sx={{ display: {xs: 'none', md: 'flex'}, mx: 1 }}>
                   {displayName}
                 </Typography>
-                <KeyboardArrowDown sx={{ display: { xs: 'none', md: 'block' }, color: 'text.secondary' }} />
+                <KeyboardArrowDown sx={{ display: {xs: 'none', md: 'flex'}, color: 'text.secondary' }} />
+                <Box sx={{ display: {xs: 'flex', md: 'none'}}}>
+                  <MoreVertical className="h-5 w-5" style={{ color: '#666666' }}/>
+                </Box>
               </Button>
             </Tooltip>
             <Menu
@@ -204,11 +157,93 @@ export default function Header({ onMenuClick, userProfile }: HeaderProps) {
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 sx={{ mt: 1 }}
             >
+              <Box component={"div"} sx={{"display": {xs: 'flex', md: 'none'}, "alignItems": "center", ml: 3, py: 2 }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: 'var(--argus-green)', fontSize: '0.875rem' }}>
+                  {fallbackInitials}
+                </Avatar>
+                <Typography sx={{ display: 'block', mx: 1 }}>
+                  {displayName}
+                </Typography>
+              </Box>
               <ProfileDetailsLayout item={{
-                email: email,
+                  email: email,
                   organization: organization
                 }}
               />
+              <Divider/>
+              <MenuItem onClick={() => {
+                handleMenuClose();
+                navigate('/account');
+              }}>
+                <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
+                  <CreditCard size={18} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={"Account"}
+                  sx={{
+                    '& .MuiTypography-root': {
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </MenuItem>
+              <MenuItem onClick={() => {
+                handleMenuClose();
+                navigate('/developer');
+              }}>
+                <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
+                  <Code size={18} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={"Developer"}
+                  sx={{
+                    '& .MuiTypography-root': {
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </MenuItem>
+              <MenuItem onClick={() => {
+                handleMenuClose();
+                navigate('/administration');
+              }}>
+                <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
+                  <Key size={18} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={"Administration"}
+                  sx={{
+                    '& .MuiTypography-root': {
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </MenuItem>
+              <MenuItem onClick={() => {
+                handleMenuClose();
+                navigate('/notifications');
+              }}>
+                <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
+                  <Bell size={18} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={"Notifications"}
+                  sx={{
+                    '& .MuiTypography-root': {
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </MenuItem>
+              <Divider/>
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
                   <LogOutIcon size={18} />
