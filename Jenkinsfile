@@ -236,33 +236,33 @@ spec:
         // }
             steps {
                 script {
-                    // Re-checkout with full history + tags
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: scm.branches,
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [
-                            [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
-                            [$class: 'CheckoutOption', timeout: 15]
-                        ],
-                        submoduleCfg: [],
-                        userRemoteConfigs: scm.userRemoteConfigs
-                    ])
+                    // // Re-checkout with full history + tags
+                    // checkout([
+                    //     $class: 'GitSCM',
+                    //     branches: scm.branches,
+                    //     doGenerateSubmoduleConfigurations: false,
+                    //     extensions: [
+                    //         [$class: 'CloneOption', noTags: false, shallow: false, depth: 0, reference: ''],
+                    //         [$class: 'CheckoutOption', timeout: 15]
+                    //     ],
+                    //     submoduleCfg: [],
+                    //     userRemoteConfigs: scm.userRemoteConfigs
+                    // ])
 
-                    // Get highest semantic version from Git tags using GitHub Changelog plugin
-                    def highestVersion = getHighestSemanticVersion()
-                    echo "Highest version: ${highestVersion.toString()}"
-                    echo " Major: ${highestVersion.getMajor()}"
-                    echo " Minor: ${highestVersion.getMinor()}"
-                    echo " Patch: ${highestVersion.getPatch()}"
-                    echo " Git tag: ${highestVersion.findTag().orElse('')}"
+                    // // Get highest semantic version from Git tags using GitHub Changelog plugin
+                    // def highestVersion = getHighestSemanticVersion()
+                    // echo "Highest version: ${highestVersion.toString()}"
+                    // echo " Major: ${highestVersion.getMajor()}"
+                    // echo " Minor: ${highestVersion.getMinor()}"
+                    // echo " Patch: ${highestVersion.getPatch()}"
+                    // echo " Git tag: ${highestVersion.findTag().orElse('')}"
 
-                    // Calculate next version based on branch
-                    def baseBranch = env.CHANGE_TARGET ?: 'main'
-                    def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
-                    def finalVersion = versionInfo.version
+                    // // Calculate next version based on branch
+                    // def baseBranch = env.CHANGE_TARGET ?: 'main'
+                    // def versionInfo = determineSemanticVersionFromBaseBranch(baseBranch, highestVersion)
+                    def finalVersion = env.IMAGE_TAG
 
-                    echo "Creating and pushing Git tag: v${finalVersion}"
+                    echo "Pushing Git tag: v${finalVersion}"
 
                     // Configure Git and create the tag
                     sh """
