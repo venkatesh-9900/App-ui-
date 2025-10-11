@@ -116,7 +116,7 @@ spec:
                             def rawImageTag = "${highestVersionString}-${truncatedBranch}-${shortCommit}"
 
                             // Enforce Helm/Kubernetes label character rules and limit length
-                            def imageTag = rawImageTag
+                            imageTag = rawImageTag
                                 .replaceAll('[^a-z0-9.-]', '-')      // strictly conform to Helm allowed chars
                                 .replaceAll('-+', '-')               // collapse consecutive dashes
                                 .replaceAll('^-|-$', '')             // trim leading/trailing hyphen
