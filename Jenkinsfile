@@ -102,8 +102,8 @@ spec:
                             env.IMAGE_TAG = imageTag
                         } else {
                             def highestVersionString = highestVersion.toString()
-                            def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '.').toLowerCase()
-                            imageTag = "${highestVersionString}-${cleanBranchName}.${shortCommit}"
+                            def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
+                            imageTag = "${highestVersionString}-${cleanBranchName}-${shortCommit}"
                             echo "Image tag: " + imageTag
                             env.IMAGE_TAG = imageTag
                         }
@@ -208,18 +208,24 @@ spec:
                     
                     echo "Creating Pull Request..."
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
-                        sh """#!/bin/sh
-                        curl -s -o /dev/null -w "%{http_code}" -X POST \
-                        -H "Authorization: token $GIT_PASSWORD" \
-                        -H "Content-Type: application/json" \
-                        -d '{
-                            "title": "Helm Chart: Versiong Upgrade",
+                        def payload = """
+                        {
+                            "title": "Helm Chart: Version Upgrade",
                             "head": "${newBranch}",
                             "base": "main",
-                            "body": "Automated PR created by Jenkins for Helm Chart version bump to ${env.IMAGE_TAG}"
-                        }' \
+                            "body": "Automated PR created by Jenkins for Helm Chart version bump. Check commit logs for details."
+                        }
+                        """.stripIndent()
+
+                        writeFile file: 'payload.json', text: payload
+
+                        sh '''
+                        curl -s -o /dev/null -w "%{http_code}" -X POST \
+                        -H "Authorization: token ${GIT_PASSWORD}" \
+                        -H "Content-Type: application/json" \
+                        -d @payload.json \
                         https://api.github.com/repos/void-kernel/app-ui/pulls
-                        """
+                        '''
 
                     }
                     echo "PR created: ${newBranch}"
