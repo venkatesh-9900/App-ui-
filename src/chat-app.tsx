@@ -13,7 +13,7 @@ import {getUserProfile} from "@/hooks/user-service.ts";
 import {toast} from "sonner";
 
 const HEADER_HEIGHT = '72px';
-const SIDEBAR_WIDTH_EXPANDED = '320px'; // Corresponds to w-64 (16rem)
+const SIDEBAR_WIDTH_EXPANDED = '320px'; // Corresponds to w-64 (16rem).
 const SIDEBAR_WIDTH_COLLAPSED = '64px'; // Corresponds to w-16 (4rem)
 
 function ChatApp() {
