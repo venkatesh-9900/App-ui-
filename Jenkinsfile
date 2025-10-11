@@ -102,9 +102,30 @@ spec:
                             env.IMAGE_TAG = imageTag
                         } else {
                             def highestVersionString = highestVersion.toString()
-                            def cleanBranchName = branchInfo.branchName.replaceAll('[^a-zA-Z0-9._-]', '-').toLowerCase()
-                            imageTag = "${highestVersionString}-${cleanBranchName}-${shortCommit}"
-                            echo "Image tag: " + imageTag
+
+                            // Sanitize branch name: replace invalid chars, collapse multiple hyphens, and trim
+                            def cleanBranchName = branchInfo.branchName
+                                .replaceAll('[^a-zA-Z0-9.-]', '-')   // replace everything except letters, numbers, dot, hyphen
+                                .replaceAll('-+', '-')               // collapse multiple hyphens
+                                .replaceAll('^-|-$', '')             // remove leading/trailing hyphen
+                                .toLowerCase()
+
+                            def maxBranchPartLength = 40
+                            def truncatedBranch = cleanBranchName.take(maxBranchPartLength) 
+                            // Construct Helm-safe image tag
+                            def rawImageTag = "${highestVersionString}-${truncatedBranch}-${shortCommit}"
+
+                            // Enforce Helm/Kubernetes label character rules and limit length
+                            imageTag = rawImageTag
+                                .replaceAll('[^a-z0-9.-]', '-')      // strictly conform to Helm allowed chars
+                                .replaceAll('-+', '-')               // collapse consecutive dashes
+                                .replaceAll('^-|-$', '')             // trim leading/trailing hyphen
+                                .take(63)                            // ensure <= 63 characters (safe for K8s labels)
+
+                            // Ensure it doesn’t end with a hyphen or dot after truncation
+                            imageTag = imageTag.replaceAll('[-.]+$', '')
+
+                            echo "✅ Helm-safe Image tag: ${imageTag}"
                             env.IMAGE_TAG = imageTag
                         }
 
@@ -166,7 +187,6 @@ spec:
 
                     // Update Chart.yaml version and appVersion before packaging
                     def chartFile = readYaml file: "${CHART_PATH}/Chart.yaml" 
-                    chartFile.version = env.IMAGE_TAG
                     chartFile.appVersion = env.IMAGE_TAG
                     writeYaml file: "${CHART_PATH}/Chart.yaml", data: chartFile, overwrite: true
                     echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
