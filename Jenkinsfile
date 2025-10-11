@@ -231,9 +231,9 @@ spec:
         // STAGE 3: Tag Release to git repository
         // -----------------------------------------
         stage('Tag Release to git repository') {
-        // when {
-        //     anyOf { branch 'main'; branch 'master' }
-        // }
+            when {
+                anyOf { branch 'main'; branch 'master' }
+            }
             steps {
                 script {
                     // // Re-checkout with full history + tags
