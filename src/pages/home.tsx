@@ -1,6 +1,6 @@
 import { ArrowRightLeft, AlertTriangle, Wallet, Network } from "lucide-react";
 import KpiCard from "@/components/dashboard/kpi-card";
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, alpha } from "@mui/material";
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, alpha, keyframes } from "@mui/material";
 import TransactionVolumeChart from "@/components/charts/transaction-volume-chart";
 import AnomalyChart from "@/components/charts/anomaly-chart";
 import NetworkGraph from "@/components/charts/network-graph";
@@ -24,15 +24,25 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { encode } from "punycode";
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }`;
 
 const frequentSearches = [
-  `What is latest number of transactions on ethereum mainnet, and on Base network?`,
-  `How many potential alerts have been generated on Base network?`,
-  `For contract address "0x7e0aedc93d9f898be835a44bfca3842e52416b82". Identify which entity it belongs to, and also identify all the transactions that it has interacted with in last 30 days. (Spot / highlight any anomalies).`,
-  `For the contract address 0x22342340abbe, identify all the addresses it has interacted in last month. Higlight any potential anomalies in the network graph`,
-  `What is the number of times it has interacted with potentially sanctioned entities?`,
-  `Can you put a monitoring on following entities, and send me an alert if these entities with my wallet?`
+  `Find out latest news and information about "0xde.....8as" account address.`,
+  `Is this address "0xjr.....w90" suspicious for making payments?`,
+  `Find me everything about this transaction "0xbtg.....aj5" as I want to understand the risks associated with parties and activities involved.`,
+  `Add "0xpr5.....yw1" into monitoring watchlist and flag any activity involved with any sanctioned wallets.`,
+  `What are recent activities from all the accounts and address I am monitoring?`,
+  `Create a detailed investigative report on USDC stablecoin and who are holding majority of its reserve?`,
+  `Notify me over email if any activity happens on "0x45d.….yt3" in ethereum main net.`
 ]
 
 // Generate synthetic transaction volume data for last 12 months
@@ -1613,7 +1623,7 @@ function QueryBox( fullQuestion: string ) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowQuestion(true);
-    }, 1000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -1655,9 +1665,9 @@ function QueryBox( fullQuestion: string ) {
 
 export default function HomePage() {
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, mt: 10 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 0.5, animation: `${fadeIn} 1s ease-out` }}>
           How can we help you?
         </Typography>
         {/* <Typography variant="body2" color="text.secondary">

@@ -144,7 +144,7 @@ export default function Sidebar({
                 mb: isExpanded ? 3 : 2, // mb-6 : mb-4 (24px : 16px)
               }}
             >
-              {isExpanded && (
+              {/* {isExpanded && (
                 <Typography
                   variant="subtitle2" // text-xs
                   fontWeight="medium" // font-semibold
@@ -154,7 +154,7 @@ export default function Sidebar({
                 >
                   {section.name}
                 </Typography>
-              )}
+              )} */}
               <List
                 sx={sideBarMenuListStyle(isExpanded)}
               >

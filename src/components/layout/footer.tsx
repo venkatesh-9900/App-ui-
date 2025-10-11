@@ -33,7 +33,7 @@ export default function Footer({ sidebarPresent, sidebarExpanded }: FooterProps)
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: 2,
-            py: 2
+            py: 1
           }}
         >
           {/* Logo and Brand Name */}
@@ -81,17 +81,19 @@ export default function Footer({ sidebarPresent, sidebarExpanded }: FooterProps)
             <Link href="#" color="text.secondary" underline="none">
               Support
             </Link>
-            <Link href="#" color="text.secondary" underline="none">
+            {/* <Link href="#" color="text.secondary" underline="none">
               Documentation
-            </Link>
+            </Link> */}
           </Box>
+
+          <Typography variant="body2" color="text.secondary" align="center">
+          © {new Date().getFullYear()} Argus Intelligence. All rights reserved.
+          </Typography>
         </Box>
 
-        <Divider sx={{ my: { xs: 2, md: 3 } }} />
+        
 
-        <Typography variant="body2" color="text.secondary" align="center">
-          © {new Date().getFullYear()} Argus Intelligence. All rights reserved.
-        </Typography>
+        {/* <Divider sx={{ my: { xs: 2, md: 3 } }} /> */}
       </Container>
     </Box>
   );
