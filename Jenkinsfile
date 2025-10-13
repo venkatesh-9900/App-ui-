@@ -160,7 +160,7 @@ spec:
                 script {
                     checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
                     
-                    def newBranch = "bump/helm-version/dev"
+                    def newBranch = "bump/helm-version-dev"
 
                     // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
@@ -232,7 +232,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         def payload = """
                         {
-                            "title": "Helm Chart: Version Upgrade",
+                            "title": "[DEV]: Helm Chart: Version Upgrade",
                             "head": "${newBranch}",
                             "base": "main",
                             "body": "Automated PR created by Jenkins for Helm Chart version bump. Check commit logs for details."
@@ -263,7 +263,7 @@ spec:
                 script {
                     checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
                     
-                    def newBranch = "bump/helm-version/qa"
+                    def newBranch = "bump/helm-version-qa"
 
                     // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
@@ -335,7 +335,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         def payload = """
                         {
-                            "title": "Helm Chart: Version Upgrade",
+                            "title": "[QA]: Helm Chart: Version Upgrade",
                             "head": "${newBranch}",
                             "base": "main",
                             "body": "Automated PR created by Jenkins for Helm Chart version bump. Check commit logs for details."
