@@ -1,18 +1,26 @@
-replicaCount: 2
+replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: 0.0.7-feat.chat_history_side_drawer_addition.3719955f
   pullPolicy: IfNotPresent
-containerPort: 3000
+  tag: 0.0.7-feat.chat_history_side_drawer_addition.3719955f
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ''
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
 service:
   type: ClusterIP
   port: 3000
 ingress:
   enabled: true
   className: alb
-  host: qa.app.argusintelligence.net
-  scheme: internet-facing
-  targetType: ip
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -22,13 +30,18 @@ ingress:
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/a9f7370b-c2a5-4e98-8f3a-e96470d1b028
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 300m
-    memory: 256Mi
+  hosts:
+  - host: qa.app.argusintelligence.net
+    paths:
+    - path: /
+      pathType: Prefix
+  tls: []
+resources: {}
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
 nodeSelector: {}
 tolerations: []
 affinity: {}
