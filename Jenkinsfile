@@ -167,6 +167,8 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
+                            git config pull.rebase true
+                            git config pull.ff false
                             echo "Fetching all branches..."
                             git fetch origin
                             
