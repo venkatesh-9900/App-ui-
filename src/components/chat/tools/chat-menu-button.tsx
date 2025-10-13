@@ -42,7 +42,7 @@ const ChatMenuButton: React.FC<ChatMenuButtonProps> = ({ chatId, onRemove, onArc
                     {/*</DropdownMenu.Item>*/}
 
 
-                    <DropdownMenu.Item
+                    {/* <DropdownMenu.Item
                         className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded"
                         onSelect={(e) => onArchive?.(e as any, chatId)}
                     >
@@ -61,9 +61,9 @@ const ChatMenuButton: React.FC<ChatMenuButtonProps> = ({ chatId, onRemove, onArc
                     >
                         <Pencil className="inline-block w-4 h-4 mr-2" />
                         Rename
-                    </DropdownMenu.Item>
+                    </DropdownMenu.Item> */}
 
-                    <DropdownMenu.Separator className="h-px my-1 bg-gray-200 dark:bg-gray-700" />
+                    {/* <DropdownMenu.Separator className="h-px my-1 bg-gray-200 dark:bg-gray-700" /> */}
                     <DropdownMenu.Item
                         className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded"
                         onSelect={(e) => {
@@ -93,7 +93,10 @@ const ChatMenuButton: React.FC<ChatMenuButtonProps> = ({ chatId, onRemove, onArc
                         <AlertDialog.Action asChild>
                             <Button
                                 variant="destructive"
-                                onClick={(e) => onRemove(e, chatId)}
+                                onClick={(e) => {
+                                    setOpen(false);
+                                    onRemove(e, chatId)
+                                }}
                             >
                                 Delete
                             </Button>

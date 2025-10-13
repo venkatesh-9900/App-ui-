@@ -12,7 +12,7 @@ interface MessageMarkdownProps {
 
 export const MessageMarkdown: FC<MessageMarkdownProps> = ({ content }) => {
     return (
-        <Box component={"div"} className="markdown-container">
+        <Box component={"div"} className="markdown-container" sx={{wordBreak: 'break-word', maxWidth: '100%'}}>
             <MessageMarkdownMemoized
                 remarkPlugins={[remarkGfm, remarkMath]}
                 components={{

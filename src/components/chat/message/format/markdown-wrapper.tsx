@@ -40,7 +40,7 @@ const MarkdownWrapper: React.FC<MarkdownWrapperProps> = ({ content, components }
     }, [content]);
 
     return (
-        <Box component={"div"} ref={containerRef}>
+        <Box component={"div"} ref={containerRef} sx={{wordBreak: 'break-word', maxWidth: '100%'}}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={components}

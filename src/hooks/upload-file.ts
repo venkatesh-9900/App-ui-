@@ -1,7 +1,7 @@
 import axiosAuthServices, {axiosAuthUploadServices, buildFileHeader, buildHeader} from "@/utils/axios/auth-axios.ts";
 import {ENDPOINTS} from "@/config/config.ts";
 import {FileDetails, FileUploadResponse, UserProfileImageUploadResponse} from "@/types";
-import {fetchLoginURL, refreshAccessToken} from "@/hooks/auth-service.ts";
+import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service.ts";
 import { app_name } from "@/constants/constants";
 import { iam_login_url } from "@/constants/iam-uri";
 
@@ -46,15 +46,7 @@ export const uploadFilesToServer = async ({files, currentChatId, fileFailureTask
         });
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
                 return [];
             } else {
                 return await uploadFilesToServer({
@@ -150,15 +142,7 @@ export const removeAttachedFile = async ({fileId, currentChatId, successTask, fa
         });
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
             } else {
                 await removeAttachedFile({
                     retry: true, 

@@ -29,6 +29,10 @@ import BillingPage from "@/pages/billing";
 import EnterprisePage from "@/pages/enterprise";
 import ChatInterface from "@/pages/chat";
 import {AppearanceProvider} from "@/contexts/AppearanceContext.tsx";
+import AccountPage from "@/pages/account";
+import AdministrationPage from "@/pages/administration";
+import DeveloperPage from "@/pages/developer";
+import NotificationsPage from "@/pages/notifications";
 
 export default function Router() {
     return (
@@ -45,7 +49,11 @@ export default function Router() {
                  <ChatInterface params={{ id: 'new' }} />
             </Route>
             <Route path="/" component={HomePage} />
-            <Route path="/investigate" component={InvestigatePage} />
+            <Route path="/account" component={AccountPage} />
+            <Route path="/administration" component={AdministrationPage} />
+            <Route path="/developer" component={DeveloperPage} />
+            <Route path="/notifications" component={NotificationsPage} />
+            {/* <Route path="/investigate" component={InvestigatePage} />
             <Route path="/overview" component={OverviewPage} />
             <Route path="/analytics" component={AnalyticsPage} />
             <Route path="/transaction-analysis" component={TransactionAnalysisPage} />
@@ -68,7 +76,7 @@ export default function Router() {
             <Route path="/integration" component={IntegrationPage} />
             <Route path="/profile" component={ProfilePage} />
             <Route path="/billing" component={BillingPage} />
-            <Route path="/enterprise" component={EnterprisePage} />
+            <Route path="/enterprise" component={EnterprisePage} /> */}
             <Route component={NotFound} />
         </Switch>
     );
