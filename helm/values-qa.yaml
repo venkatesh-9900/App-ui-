@@ -1,8 +1,8 @@
 replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
+  tag: 0.0.57-feat-chat_history_side_drawer_addition-5ef18552
   pullPolicy: IfNotPresent
-  tag: 0.0.7-feat.chat_history_side_drawer_addition.3719955f
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
