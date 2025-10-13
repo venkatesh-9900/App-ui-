@@ -1,11 +1,11 @@
 replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: 0.0.63
+  tag: 0.0.57-feat-chat_history_side_drawer_addition-5ef18552
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ''
-fullnameOverride: app-ui
+fullnameOverride: 'app-ui'
 serviceAccount:
   create: false
   automount: false
@@ -25,13 +25,13 @@ ingress:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: argus-qa-app
+    alb.ingress.kubernetes.io/group.name: argus-dev-app
     alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/a9f7370b-c2a5-4e98-8f3a-e96470d1b028
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/48e2d4ea-0ed0-4dc9-b8a3-d3319f6e1447
   hosts:
-  - host: qa.app.argusintelligence.net
+  - host: dev.app.argusintelligence.net
     paths:
     - path: /
       pathType: Prefix

@@ -152,13 +152,118 @@ spec:
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
-        stage('Update Repo Helm Chart Version & Push Branch to git repository') {
-            when { expression { env.IMAGE_TAG } }
+        stage('[NON-MAIN] Update Repo Helm Chart Version & Push Branch to git repository') {
+            when {
+                not { anyOf { branch 'main'; branch 'master' } }
+            }
             steps {
                 script {
                     checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
                     
-                    def newBranch = "bump/helm-version"
+                    def newBranch = "bump/helm-version-dev"
+
+                    // Setup git and fetch all branches
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        sh """
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git config pull.rebase true
+                            git config pull.ff false
+                            echo "Fetching all branches..."
+                            git fetch origin
+                            
+                            # Check if remote branch exists
+                            if git ls-remote --exit-code --heads origin ${newBranch}; then
+                                echo "Remote branch ${newBranch} exists, checking it out..."
+                                git checkout -B ${newBranch} origin/${newBranch}
+                            else
+                                echo "Remote branch ${newBranch} does not exist, creating new branch..."
+                                git checkout -b ${newBranch}
+                            fi
+                            
+                            echo "Pulling latest changes from main..."
+                            git pull origin main
+                            echo "Pulled main branch"
+                        """
+                    }
+
+                    // Update Chart.yaml version and appVersion before packaging
+                    def chartFile = readYaml file: "${CHART_PATH}/Chart.yaml" 
+                    chartFile.appVersion = env.IMAGE_TAG
+                    writeYaml file: "${CHART_PATH}/Chart.yaml", data: chartFile, overwrite: true
+                    echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
+
+                    //Update Values.yaml image.tag with env.IMAGE_TAG
+                    def values = readYaml file: "${CHART_PATH}/values-dev.yaml"
+                    values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
+                    values.image.tag = env.IMAGE_TAG
+                    // Write back
+                    writeYaml file: "${CHART_PATH}/values-dev.yaml", data: values, overwrite: true
+                    echo "Updated ${CHART_PATH}/values-dev.yaml with tag ${env.IMAGE_TAG}"
+                    
+                    //cat values.yaml and chart.yaml
+                    sh """
+                        cat ${CHART_PATH}/values-dev.yaml
+                        cat ${CHART_PATH}/Chart.yaml
+                    """
+
+                    echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
+                    echo "Branch created: ${newBranch}"
+
+                    // Commit and push using credentials
+                    // Commit, push, and create PR using credentials
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        sh """
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git add ${CHART_PATH}/values-dev.yaml ${CHART_PATH}/Chart.yaml
+                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            echo "Pushing branch ${newBranch}..."
+                            git push --force "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
+                        """
+                    }
+
+                    echo "Commit created: ${env.IMAGE_TAG}"
+                    echo "Branch pushed: ${newBranch}"
+
+                    echo "Creating PR using GitHub plugin..."
+                    
+                    echo "Creating Pull Request..."
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        def payload = """
+                        {
+                            "title": "[DEV]: Helm Chart: Version Upgrade",
+                            "head": "${newBranch}",
+                            "base": "main",
+                            "body": "Automated PR created by Jenkins for Helm Chart version bump. Check commit logs for details."
+                        }
+                        """.stripIndent()
+
+                        writeFile file: 'payload.json', text: payload
+
+                        sh '''
+                        curl -s -o /dev/null -w "%{http_code}" -X POST \
+                        -H "Authorization: token ${GIT_PASSWORD}" \
+                        -H "Content-Type: application/json" \
+                        -d @payload.json \
+                        https://api.github.com/repos/void-kernel/app-ui/pulls
+                        '''
+
+                    }
+                    echo "PR created: ${newBranch}"
+                }
+            }
+        }
+
+        stage('[MAIN] Update Repo Helm Chart Version & Push Branch to git repository') {
+            when {
+                anyOf { branch 'main'; branch 'master' }
+            }
+            steps {
+                script {
+                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    
+                    def newBranch = "bump/helm-version-qa"
 
                     // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
@@ -230,7 +335,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         def payload = """
                         {
-                            "title": "Helm Chart: Version Upgrade",
+                            "title": "[QA]: Helm Chart: Version Upgrade",
                             "head": "${newBranch}",
                             "base": "main",
                             "body": "Automated PR created by Jenkins for Helm Chart version bump. Check commit logs for details."
@@ -256,7 +361,7 @@ spec:
         // -----------------------------------------
         // STAGE 3: Tag Release to git repository
         // -----------------------------------------
-        stage('Tag Release to git repository') {
+        stage('[MAIN] Tag Release to git repository') {
             when {
                 anyOf { branch 'main'; branch 'master' }
             }
