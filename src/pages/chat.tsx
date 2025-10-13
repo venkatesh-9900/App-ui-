@@ -3,7 +3,7 @@ import {ChatMessages} from "@/components/chat/chat-messages.tsx";
 import {ChatInterfaceProps, ChatMessage, FileDetails, FileUploadResponse, Message} from "@/types";
 import {useLocation, useNavigate} from 'react-router-dom';
 import {ChatInput} from "@/components/chat/chat-input.tsx";
-import {fetchSessionDetails, hasAnyVisualization, loadChatMessages, toggleChatSharability} from "@/hooks";
+import {fetchSessionDetails, hasAnyVisualization, loadChatMessages, removeChat, toggleChatSharability} from "@/hooks";
 import {uploadFilesToServer, uploadFileToServer} from "@/hooks/upload-file.ts";
 import {useMessageHandling} from "@/hooks/use-message-handling.ts";
 import {Box} from "@mui/material";
@@ -11,12 +11,13 @@ import {toast} from "sonner";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MuiToggleIconButton } from "@/components/ui/toggle-icon-button";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { InfoOutlineRounded } from "@mui/icons-material";
 import { InfoIcon } from "lucide-react";
 import { ShareLinkDialog } from "@/components/ui/share-link-dialog";
 import { getAgentsList } from "@/hooks/agent-service";
+import ChatDeleteButton from "@/components/chat/tools/chat-delete-button";
+import { triggerChatHistoryUpdate } from "@/utils/eventBus";
 import { set } from "date-fns";
+import { url } from "inspector";
 
 const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
     const navigate = useNavigate();
@@ -43,6 +44,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
     const [openShareLinkDialogBox, setOpenShareLinkDialogBox] = useState(false);
     const [shareLink, setShareLink] = useState("");
     const [readOnly, setReadOnly] = useState(false);
+    const [currentChatLoading, setCurrentChatLoading] = useState(true);
+    const [chatLoadingError, setChatLoadingError] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const getBaseUrl = (): string => {
         return `${window.location.protocol}//${window.location.host}`;
@@ -60,6 +63,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
             if (!currentChatId || currentChatId === '' || currentChatId === 'new') {
                 // Fallback to reset
                 resetChat();
+                setIsShared(false);
+                setIsSharedLoading(false);
                 return;
             }
             if (manuallyLoadedRef.current) {
@@ -93,9 +98,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
         }
 
         const fetchChat = async () => {
+            setCurrentChatLoading(true);
+            setChatLoadingError(false);
             if (!currentChatId || currentChatId === '' || currentChatId === 'new') {
                 // Fallback to reset
                 resetChat();
+                setCurrentChatLoading(false);
                 return;
             }
             if (manuallyLoadedRef.current) {
@@ -110,35 +118,42 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
                         description: 'Could not load chat messages'
                     });
                     console.error('Failed to load chat messages');
+                    setChatLoadingError(true);
                 },
                 errorTask: () => {
                     toast('Error', {
                         description: 'An unexpected error occurred while loading chat messages'
                     });
                     console.error('Error loading chat messages');
+                    setChatLoadingError(true);
                 }
             });
             console.log("Read_only:", readonly);
             setReadOnly(readonly);
             console.log("Conversations:", conversations);
             setMessages(conversations);
+            setCurrentChatLoading(false);
             setTitle('');
-            // try {
-            //     const { title, messages } = await loadChatMessages(currentChatId);
-            //     setMessages(messages);
-            //     setTitle(title || '');
-            // } catch (err) {
-            //     console.error('Failed to load selected chat:', err);
-            //     resetChat();
-            // }
-            // Cleanup shared state
-            setInput('');
+            // Do not clear input if a user_query is present,
+            // as it's meant to be the initial input.
+            if (urlParams.has("userid") && !urlParams.has("user_query")) {
+                setInput('');
+            }
             setCurrentTypingIndex(-1);
             setDisplayedText('');
         };
         fetchSessionDetailsAPICall();
         fetchChat();
     }, [currentChatId]);
+
+    useEffect(() => {
+        const userQuery : string | null = urlParams.get("user_query");
+        if (userQuery) {
+            console.log("User Query:", userQuery);
+            const userQueryDecoded = decodeURIComponent(userQuery);
+            setInput(userQueryDecoded);
+        }
+    }, []);
 
     useEffect(() => {
         if (selectedVizUrl !== null) {
@@ -180,6 +195,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
         setMessages([]);
         setTitle("");
         setCurrentChatId("new");
+        // Do not clear input if a user_query is present
+        const params = new URLSearchParams(window.location.search);
         setInput('');
         setIsThinking(false);
         setCurrentTypingIndex(-1);
@@ -287,10 +304,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
 
     // Auto-resize textarea
     useEffect(() => {
-        // const urlParams = new URLSearchParams(query);
-        // console.log("Sharable: ", typeof urlParams.get("sharable"));
-        // console.log("UserId: ", typeof urlParams.get("userid"));
-        // console.log("Params: ", params);
         const fetchAgentsList = async () => {
             await getAgentsList({
                 successTask: (data: string[]) => {
@@ -319,6 +332,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
         }
         fetchAgentsList();
     }, []);
+
+    const deleteConversation = async (e: React.MouseEvent, id: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (id === "new") {
+            setCurrentChatId("new");
+            resetChat();
+            return;
+        }
+        toast('Deleting...', {
+            description: 'Please wait',
+        });
+        await removeChat({
+            sessionId: id,
+            successTask: async() => {
+                toast('Success', {
+                    description: 'Deleted successfully',
+                });
+                triggerChatHistoryUpdate();
+                navigate('/chat/new');
+            },
+            failureTask: () => {
+                toast('Failure', {
+                    description: 'Could not delete the chat session. Please try again.',
+                });
+            },
+            errorTask: () => {
+                toast('Error', {
+                    description: 'A unexpected error occurred while deleting the chat session.',
+                });
+            }
+        });
+    };
 
     return (
         <Box>
@@ -356,12 +402,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
                     <p style={{ marginRight: '8px' }}>{isSharedLoading ? '' : isShared ? 'ON' : 'OFF'}</p>
                     {!isSharedLoading && isShared && <InfoIcon size={20} color="gray" style={{ cursor: 'pointer' }} onClick={() => { setOpenShareLinkDialogBox(true); }}/>}
                 </Box>
+                {!(currentChatId == "new" || !currentChatId || currentChatId.length < 10 || readOnly) && <Box sx={{ display: {xs: 'flex', md: 'none'}, alignItems: 'center' }}>
+                    <ChatDeleteButton
+                        chatId={currentChatId}
+                        onRemove={deleteConversation}
+                    />
+                </Box>}
             </Box>}
            <Box sx={{
                position: 'relative',
                display: 'flex',
                flexDirection: 'column',
-               height: readOnly ? 'calc(100vh - 80px)' : 'calc(100vh - 160px)', // Adjust based on actual header height
+               height: readOnly ? 'calc(100vh - 80px)' : 'calc(100vh - 135px)', // Adjust based on actual header height
                width: '100%',
                overflow: 'hidden',
                bgcolor: 'background.paper',
@@ -387,6 +439,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
                    }}
                    userClosedSplitView={userClosedSplitView}
                    selectedAgent={selectedAgent}
+                   chatLoadingError={chatLoadingError}
+                   currentChatLoading={currentChatLoading}
                />
                {!readOnly && <ChatInput
                    input={input}

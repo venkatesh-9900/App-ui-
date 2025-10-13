@@ -12,9 +12,9 @@ import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import {toast} from "sonner";
 
-const HEADER_HEIGHT = '100px'; // Corresponds to pt-20 (5rem)
-const SIDEBAR_WIDTH_EXPANDED = '256px'; // Corresponds to w-64 (16rem)
-const SIDEBAR_WIDTH_COLLAPSED = '64px'; // Corresponds to w-16 (4rem)
+const HEADER_HEIGHT = '72px';
+const SIDEBAR_WIDTH_EXPANDED = '320px'; // Corresponds to w-64 (16rem).
+const SIDEBAR_WIDTH_COLLAPSED = '64px'; // Corresponds to w-16 (4rem).
 
 function ChatApp() {
     const [sidebarExpanded, setSidebarExpanded] = useState(() => {
@@ -62,13 +62,14 @@ function ChatApp() {
     useEffect(() => {
         localStorage.setItem('sidebar-expanded', JSON.stringify(sidebarExpanded));
     }, [sidebarExpanded]);
+
     return (
         <TooltipProvider>
             <CssBaseline />
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'grey.50' }}>
                 <Header onMenuClick={() => toggleSidebarSm(true)} userProfile={profile} />
                 <Box sx={{ display: 'flex', flexGrow: 1, pt: HEADER_HEIGHT }}>
-                    <SidebarSm isExpanded={sidebarSmExpanded} onToggle={toggleSidebarSm} userProfile={profile} />
+                    <SidebarSm isExpanded={sidebarSmExpanded} onToggle={toggleSidebarSm} userProfile={profile}/>
                     <Sidebar isExpanded={sidebarExpanded} onToggle={toggleSidebar} collapseSidebar={() => setSidebarExpanded((prev: boolean) => prev)}/>
                     <Box
                         component="main"

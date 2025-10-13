@@ -1,6 +1,6 @@
 import { ArrowRightLeft, AlertTriangle, Wallet, Network } from "lucide-react";
 import KpiCard from "@/components/dashboard/kpi-card";
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, alpha } from "@mui/material";
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, alpha, keyframes } from "@mui/material";
 import TransactionVolumeChart from "@/components/charts/transaction-volume-chart";
 import AnomalyChart from "@/components/charts/anomaly-chart";
 import NetworkGraph from "@/components/charts/network-graph";
@@ -23,6 +23,27 @@ import {
 } from "recharts";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }`;
+
+const frequentSearches = [
+  `Find out latest news and information about "0xde.....8as" account address.`,
+  `Is this address "0xjr.....w90" suspicious for making payments?`,
+  `Find me everything about this transaction "0xbtg.....aj5" as I want to understand the risks associated with parties and activities involved.`,
+  `Add "0xpr5.....yw1" into monitoring watchlist and flag any activity involved with any sanctioned wallets.`,
+  `What are recent activities from all the accounts and address I am monitoring?`,
+  `Create a detailed investigative report on USDC stablecoin and who are holding majority of its reserve?`,
+  `Notify me over email if any activity happens on "0x45d.….yt3" in ethereum main net.`
+]
 
 // Generate synthetic transaction volume data for last 12 months
 const generateVolumeData = () => {
@@ -1588,16 +1609,70 @@ function WalletMonitoringQA() {
   );
 }
 
+function QueryBox( fullQuestion: string ) {
+  const navigate = useNavigate();
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [questionText, setQuestionText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+
+  // const fullQuestion =
+  //   "Can you put a monitoring on following entities, and send me an alert if these entities with my wallet.";
+
+  // Generate synthetic wallet addresses
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowQuestion(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (showQuestion && !isTyping) {
+      setIsTyping(true);
+      let currentIndex = 0;
+      const typingInterval = setInterval(() => {
+        if (currentIndex <= fullQuestion.length) {
+          setQuestionText(fullQuestion.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          setIsTyping(false);
+        }
+      }, 50);
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [showQuestion, fullQuestion]);
+
+  if (!showQuestion) return null;
+
+  const handleClick = (fullQuestion: string) => () => {
+    const queryEncoded = encodeURIComponent(fullQuestion);
+    navigate(`/chat/new?user_query=${queryEncoded}`);
+  }
+
+  return (
+    <Box sx={{ bgcolor: 'white', borderRadius: 2, p: 2, borderLeft: 4, borderColor: 'divider', cursor: 'pointer' }} onClick={handleClick(fullQuestion)}>
+      <Typography sx={{ fontWeight: 500, wordBreak: 'break-word', fontSize: 13 }}>
+        {questionText}
+        {isTyping && <span className="animate-pulse">|</span>}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function HomePage() {
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, mt: 10 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-          Trending Conversations !
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 0.5, animation: `${fadeIn} 1s ease-out` }}>
+          How can we help you?
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        {/* <Typography variant="body2" color="text.secondary">
           Converse. Discover. Act.
-        </Typography>
+        </Typography> */}
       </Box>
 
       {/* KPI Cards */}
@@ -1608,12 +1683,13 @@ export default function HomePage() {
         mb: { xs: 2, md: 3 },
         alignItems: 'stretch' // Ensures all items in a row have the same height, complementing the equal widths
       }}>
-        <EthereumTransactionQA />
+        {/* <EthereumTransactionQA />
         <BaseRiskAlertsQA />
         <WalletAnalysisQA />
         <ContractAnalysisQA />
         <SanctionedEntitiesQA />
-        <WalletMonitoringQA />
+        <WalletMonitoringQA /> */}
+        {frequentSearches.map((query) => QueryBox(query))}
       </Box>
     </Box>
   );

@@ -10,10 +10,9 @@ import { AppearanceProvider } from "@/contexts/AppearanceContext.tsx";
 import {AppUserProfile} from "@/types";
 import {getUserProfile} from "@/hooks/user-service.ts";
 import {toast} from "sonner";
-import { getAgentsList } from "./hooks/agent-service";
 
-const HEADER_HEIGHT = '100px'; // Corresponds to pt-20 (5rem)
-const SIDEBAR_WIDTH_EXPANDED = '256px'; // Corresponds to w-64 (16rem)
+const HEADER_HEIGHT = '72px';
+const SIDEBAR_WIDTH_EXPANDED = '320px'; // Corresponds to w-64 (16rem)
 const SIDEBAR_WIDTH_COLLAPSED = '64px'; // Corresponds to w-16 (4rem)
 
 function MainApp() {
@@ -43,22 +42,6 @@ function MainApp() {
                     });
                 }
             });
-
-            // await getAgentsList({
-            //     successTask: (data: any) => {
-            //         console.log(data);
-            //     },
-            //     failureTask: () => {
-            //         toast('Failure', {
-            //             description: 'Could not fetch agents list.',
-            //         });
-            //     },
-            //     errorTask: () => {
-            //         toast('Error', {
-            //             description: 'An unexpected error occurred while fetching agents list.',
-            //         });
-            //     }
-            // })
         };
         loadProfile();
     }, []);
@@ -75,7 +58,6 @@ function MainApp() {
         setSidebarSmExpanded(value);
     };
 
-
     return (
         <>
             <CssBaseline />
@@ -83,7 +65,7 @@ function MainApp() {
                 <Header onMenuClick={() => toggleSidebarSm(true)} userProfile={profile}/>
                 <Box sx={{ display: 'flex', flexGrow: 1, pt: HEADER_HEIGHT }}>
                     <SidebarSm isExpanded={sidebarSmExpanded} onToggle={toggleSidebarSm} userProfile={profile}/>
-                    <Sidebar isExpanded={sidebarExpanded} onToggle={toggleSidebar} />
+                    <Sidebar isExpanded={sidebarExpanded} onToggle={toggleSidebar}/>
                     <Box
                         component="main"
                         sx={{

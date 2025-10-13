@@ -3,7 +3,7 @@ import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios.ts";
 import {ENDPOINTS} from "@/config/config.ts";
 import {Chat, ChatMessage, ChatSessions, FileDetails, Message, MessageContent } from "@/types";
 import {extractAttachedFilesPublicLinks, extractRenderVizUrls, getTextWithoutReasoning} from "@/utils/utils.ts";
-import {fetchLoginURL, refreshAccessToken} from "@/hooks/auth-service.ts";
+import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service.ts";
 import {iam_login_url} from "@/constants/iam-uri.tsx";
 import {buildHeaderJSON} from "@/utils/axios/auth-axios.ts";
 import { app_name } from "@/constants/constants";
@@ -62,9 +62,6 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
             console.log("Refreshing access token");
             await refreshAccessToken({failureTask, errorTask});
         }
-        // const response = await axiosAuthServices.get(API_ENDPOINTS.GET, {
-        //     headers: buildHeader(false),
-        // });
         const token = localStorage.getItem('access_token');
         const response = await fetch(ENDPOINTS.CHAT_SESSION, {
             method: 'GET',
@@ -77,15 +74,7 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
             } else {
                 await fetchUserChatSessions({
                     retry: true, 
@@ -115,9 +104,6 @@ export const fetchSessionDetails = async ({sessionId, successTask, failureTask, 
             console.log("Refreshing access token");
             await refreshAccessToken({failureTask, errorTask});
         }
-        // const response = await axiosAuthServices.get(API_ENDPOINTS.GET, {
-        //     headers: buildHeader(false),
-        // });
         const token = localStorage.getItem('access_token');
         const response = await fetch(ENDPOINTS.FETCH_SESSION_DETAILS, {
             method: 'GET',
@@ -131,15 +117,7 @@ export const fetchSessionDetails = async ({sessionId, successTask, failureTask, 
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
             } else {
                 await fetchSessionDetails({
                     retry: true, 
@@ -174,28 +152,6 @@ export const fetchSessionDetails = async ({sessionId, successTask, failureTask, 
     }
 }
 
-// export const fetchUserChatSessions = async (): Promise<Chat[]> => {
-//     try {
-//         const response = await axiosAuthServices.get(ENDPOINTS.CHAT_SESSION, {
-//             headers: buildHeader(false),
-//         });
-
-//         const rawSessions = response.data?.data || [];
-//         const visible = rawSessions.filter(
-//             (s: any) => typeof s.title === "string" && s.title.trim().length > 0
-//         );
-//         return visible.map((session: any) => ({
-//             id: session.sessionId,
-//             title: session.title,
-//             createdAt: new Date(session.createdAt),
-//             messages: [], // default empty, lazy-loaded
-//         }));
-//     } catch (error) {
-//         console.error("Failed to fetch chat sessions:", error);
-//         return [];
-//     }
-// };
-
 export async function loadChatMessages({sessionId, userid, failureTask, errorTask, retry = false}: fetchCommonUserInteractionParams): Promise<{ readonly: boolean, conversations: ChatMessage[] }> {
     try {
         
@@ -229,74 +185,6 @@ export async function loadChatMessages({sessionId, userid, failureTask, errorTas
                     attachments: []
                 }
             }
-            // let message_content: string = msg.content;
-            // if (msg.author == "user") {
-            //     message_content = msg.content;
-            // } else {
-            //     message_content = getTextWithoutReasoning(msg.content);
-            // }
-            // let content: MessageContent = { summary: '' };
-            // if (isUser && msg.content?.query) {
-            //     content = { summary: msg.content.query, type: 'text' };
-            // } else if (!isUser) {
-            //     const {
-            //         recommendation,
-            //         code,
-            //         language,
-            //         chartData,
-            //         chartType,
-            //         tableData,
-            //         columns,
-            //         fileType,
-            //         fileExtension,
-            //         showDownload,
-            //         image,
-            //         commands,
-            //         visualizationUrls,
-            //         html,
-            //     } = msg.content || {};
-
-            //     content = {
-            //         summary: recommendation || '',
-            //         type: 'text', // default fallback
-            //         code,
-            //         language,
-            //         chartData,
-            //         chartType,
-            //         tableData,
-            //         columns,
-            //         fileType,
-            //         fileExtension,
-            //         showDownload,
-            //         image,
-            //         commands,
-            //         isCommandSuggestion: !!commands?.length,
-            //         visualizationUrls,
-            //         html,
-            //     };
-            //     if (msg.visualizationUrls?.length) {
-            //         content.visualizationUrls = msg.visualizationUrls;
-            //     }
-            //     // Dynamically assign a better type
-            //     if (code) content.type = 'code';
-            //     else if (chartData) content.type = 'chart';
-            //     else if (tableData) content.type = 'table';
-            //     else if (image) content.type = 'image';
-            //     else if (visualizationUrls?.length) content.type = 'visualization';
-            //     else if (commands?.length) content.type = 'command';
-            // }
-            // return {
-            //     id: msg.messageId,
-            //     text: content,
-            //     isUser,
-            //     timestamp: msg.createdAt,
-            //     botIcon: isUser ? undefined : 'default-bot',
-            // };
-            // return {
-            //     author: msg.author,
-            //     content: msg.content,
-            //     timestamp: msg.timestamp
-            // }
         }));
         console.log(mappedMessages);
         const finalChatList = mappedMessages.filter((msg) => msg.author == "user" || msg.content.length > 0);
@@ -326,15 +214,7 @@ export async function fetchChatMessages({sessionId, failureTask, errorTask, retr
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
                 return { readonly: true, conversations: [] };
             } else {
                 return await fetchChatMessages({
@@ -388,15 +268,7 @@ export async function fetchSharedUserInteraction({sessionId, failureTask, errorT
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
                 return { readonly: true, conversations: [] };
             } else {
                 return await fetchSharedUserInteraction({
@@ -449,15 +321,7 @@ export async function toggleChatSharability({sessionId, isSharable, successTask,
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
             } else {
                 await toggleChatSharability({
                     sessionId,
@@ -528,17 +392,9 @@ export async function getFileDetailsFromURL(urls: string[], session_id: string, 
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: () => {
-                        console.log("Error encountered while fetching login URL");
-                    }
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
+                reauthenticationStep(() => {
                     console.log("Error encountered while fetching login URL");
-                }
+                });
                 return [];
             } else {
                 return await getFileDetailsFromURL(urls, session_id, user_id, true);
@@ -560,22 +416,6 @@ export async function getFileDetailsFromURL(urls: string[], session_id: string, 
     }
 }
 
-// export async function fetchChatMessages(chatId: string) {
-//     try {
-//         const response = await axiosAuthServices.get(
-//             ENDPOINTS.CHAT_SESSION_MESSAGES.replace('{sessionId}', chatId),
-//             { headers: buildHeader(false) }
-//         );
-//         const payload = response.data?.data;
-//         if (payload && typeof payload.title === "string" && Array.isArray(payload.messages)) {
-//             return payload;
-//         }
-//         return { title: "", messages: [] };
-//     } catch (error) {
-//         console.error(`Failed to load messages for chatId=${chatId}`, error);
-//         return [];
-//     }
-// }
 export async function checkIsSessionNew(sessionId: string): Promise<boolean> {
     try {
         const resp  = await axiosAuthServices.get(
@@ -610,15 +450,7 @@ export async function removeChat({sessionId, successTask, failureTask, errorTask
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(errorTask);
             } else {
                 return await removeChat({
                     sessionId,
@@ -647,15 +479,6 @@ export async function removeChat({sessionId, successTask, failureTask, errorTask
         console.error(`Failed to load messages for chatId=${sessionId}`, error);
         errorTask();
     }
-    // try {
-    //      await axiosAuthServices.delete(
-    //         ENDPOINTS.DELETE_SESSION.replace('{sessionId}', chatId),
-    //         { headers: buildHeader(false) }
-    //     );
-    // } catch (error) {
-    //     console.error(`Failed to load messages for chatId=${chatId}`, error);
-    //     return [];
-    // }
 }
 /**
  * Archive a chat session by ID
@@ -693,29 +516,16 @@ export const hasAnyVisualization = (messages: ChatMessage[]): boolean => {
         const content = msg.content || '';
         const urls = extractRenderVizUrls(content);
         return urls.length > 0;
-        // if (typeof msg.text === 'object') {
-        //     const summary = msg.text.summary || '';
-        //     const urls = extractRenderVizUrls(summary);
-        //     return urls.length > 0;
-        // }
-        return false;
     });
 };
 
 export const getRenderVizUrls=(message: ChatMessage): string[] => {
     return extractRenderVizUrls(message.content || '');
-    // if (typeof message.text === "object" && "summary" in message.text) {
-    //     return extractRenderVizUrls(message.text.summary || '');
-    // }
-    // return [];
 }
+
 export const getAllRenderVizUrls = (messages: ChatMessage[]): string[]  => {
     return messages.flatMap((message) => {
         return extractRenderVizUrls(message.content || '');
-        // if (typeof message.text === "object" && "summary" in message.text) {
-        //     return extractRenderVizUrls(message.text.summary || '');
-        // }
-        // return [];
     });
 }
 

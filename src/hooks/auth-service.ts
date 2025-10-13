@@ -20,7 +20,6 @@ interface fetchLogoutURLParams {
     errorTask: () => void;
 }
 
-
 export const logoutUser = async ({successTask, failureTask, errorTask}: logoutRequestParams) => {
     try {
         const accessToken = localStorage.getItem('access_token');
@@ -131,11 +130,7 @@ export const fetchLogoutURL = async ({retry = false, errorTask}: fetchLogoutURLP
         console.log(response);
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                window.location.replace(login_url);
+                reauthenticationStep(errorTask);
                 return "";
             } else {
                 return await fetchLogoutURL({
@@ -159,5 +154,17 @@ export const fetchLogoutURL = async ({retry = false, errorTask}: fetchLogoutURLP
         errorTask();
         console.error(`Failed to get file details`, error);
         return "";
+    }
+}
+
+export const reauthenticationStep = async (errorTask: () => void) => {
+    console.log("Redirecting to login page");
+    const login_url = await fetchLoginURL({
+        errorTask: errorTask
+    });
+    if (login_url) {
+        window.location.replace(login_url);
+    } else {
+        errorTask();
     }
 }

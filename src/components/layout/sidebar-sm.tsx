@@ -7,54 +7,13 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  IconButton,
-  Tooltip as MuiTooltip,
-  Divider,
   Drawer,
-  Avatar,
-  Button
 } from '@mui/material';
-import {
-  Home,
-  BarChart,
-  ArrowRightLeft,
-  Wallet,
-  Network,
-  AlertTriangle,
-  ShieldCheck,
-  ClipboardCheck,
-  Bell,
-  Settings,
-  History,
-  Bot,
-  Sliders,
-  Gauge,
-  Users,
-  Cog,
-  Key,
-  Code,
-  Book,
-  Plug,
-  User,
-  CreditCard,
-  Building,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  LogOutIcon,
-  Mail,
-} from "lucide-react";
-import {ChatSidebarContent} from "@/components/chat/chat-sidebar-content.tsx";
-import {useEffect, useState} from "react";
 import {AppUserProfile} from "@/types";
-import {getUserProfile} from "@/hooks/user-service.ts";
 import config from "../../config/config.ts";
-import {toast} from "sonner";
 import navigation from "@/constants/navigation.tsx";
-import { commonButtonStyles, logoutButtonStyle } from "@/common/menu-styles.tsx";
-import ProfileDetailsLayout from "@/components/templates/profile-details.tsx";
-import { fetchLogoutURL, logoutUser } from "@/hooks/auth-service.ts";
-import { iam_logout_url } from "@/constants/iam-uri.tsx";
+import { commonButtonStyles, sideBarMenuBoxLayoutStyle, sideBarMenuInnerBoxStyle, sideBarMenuItemNameStyle, sideBarMenuListStyle, sidebarMenuSectionHeadingStyle } from "@/common/menu-styles.tsx";
+import ChatHistory from "@/components/layout/chat-history.tsx";
 
 interface SidebarProps {
   isExpanded: boolean;
@@ -62,54 +21,10 @@ interface SidebarProps {
   userProfile: AppUserProfile | null;
 }
 
-const logoutUrl = config.ENDPOINTS.AUTH.LOGOUT;
-
 export default function Sidebar({
                                   isExpanded,
-                                  onToggle,
-                                  userProfile
+                                  onToggle
                                 }: SidebarProps) {
-  const displayName = userProfile?.displayName || "User";
-  const fallbackInitials = userProfile?.displayName?.slice(0, 2).toUpperCase() || "??";
-  const email = userProfile?.email || "user@example.com";
-  const organization = userProfile?.organization || "Default Organization";
-
-  const handleLogout = async () => {
-    onToggle(false);
-    toast('Logging out', {
-      description: 'Please wait while we log you out',
-    });
-    const logoutURL = await fetchLogoutURL({
-      errorTask: () => {
-        toast('Error', {
-          description: 'An unexpected error occurred while logging out',
-        });
-      }
-    });
-    if (logoutURL) {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("isAuthenticated");
-          window.location.replace(logoutURL);
-    }
-    // logoutUser({
-    //   successTask: (idToken: String) => {
-    //     localStorage.removeItem("access_token");
-    //     localStorage.removeItem("isAuthenticated");
-    //     window.location.replace(iam_logout_url(idToken));
-    //   },
-    //   failureTask: () => {
-    //     toast('Failure', {
-    //       description: 'Logout failed unexpectedly. Please try again.',
-    //     });
-    //   },
-    //   errorTask: () => {
-    //     toast('Error', {
-    //       description: 'Logout failed due to error',
-    //     });
-    //   },
-    // });
-  }
-
   const [location] = useLocation();
   const SidebarItem = ({ item }: { item: any; }) => {
     const Icon = item.icon;
@@ -120,12 +35,7 @@ export default function Sidebar({
           <ListItemButton
             component={Link}
               href={item.href}
-            sx={{
-              ...commonButtonStyles(isActive),
-              gap: 1.5, // Equivalent to space-x-3 (12px)
-              px: 1.5, // Equivalent to px-3 (12px)
-              py: 1.25, // Equivalent to py-2.5 (10px)
-            }}
+            sx={commonButtonStyles(isActive)}
             onClick={() => onToggle(false)}
           >
             <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
@@ -133,13 +43,7 @@ export default function Sidebar({
             </ListItemIcon>
             <ListItemText
               primary={item.name}
-              sx={{
-                '& .MuiTypography-root': {
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                },
-              }}
+              sx={sideBarMenuItemNameStyle}
             />
           </ListItemButton>
         </ListItem>
@@ -150,60 +54,12 @@ export default function Sidebar({
     <Drawer open={isExpanded} onClose={() => onToggle(false)}>
         <Box
             sx={{
-                overflowY: 'auto',
-                height: 'calc(100% - 48px)', 
-                pb: 4,
-                mt: 15
+                ...sideBarMenuBoxLayoutStyle,
+                mt: 10
             }}
         >
-            <Box component={"div"} sx={{"display": "flex", "alignItems": "center", ml: 3, py: 2 }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'var(--argus-green)', fontSize: '0.875rem' }}>
-                {fallbackInitials}
-              </Avatar>
-              <Typography sx={{ display: 'block', mx: 1 }}>
-                {displayName}
-              </Typography>
-            </Box>
-            <ProfileDetailsLayout item={{
-                email: email,
-                organization: organization
-              }}
-            />
-            <Divider/>
-            <Box component={"div"} sx={{"display": "inline-block", ml: 2}}>
-              <ListItem disablePadding sx={{ display: 'block' }}>
-                <ListItemButton
-                  component={Button}
-                  onClick={() => handleLogout()}
-                  sx={{
-                    ...logoutButtonStyle,
-                    gap: 1.5, // Equivalent to space-x-3 (12px)
-                    px: 1.5, // Equivalent to px-3 (12px)
-                    py: 1.25, // Equivalent to py-2.5 (10px)
-                    textTransform: 'none'
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 0, color: 'inherit' }}>
-                    <LogOutIcon size={18} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={"Logout"}
-                    sx={{
-                      '& .MuiTypography-root': {
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      },
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            </Box>
             <Box
-                sx={{
-                    transition: 'padding 0.3s ease-in-out',
-                    p: 2,
-                }}
+                sx={sideBarMenuInnerBoxStyle(true)}
             >
                 {navigation.map((section) => (
                     <Box
@@ -215,40 +71,34 @@ export default function Sidebar({
                             fontWeight="medium" // font-semibold
                             color="text.secondary" // text-slate-500
                             textTransform="uppercase"
-                            sx={{
-                                mb: 1.5, // mb-3 (12px)
-                                px: 1.5, // px-3 (12px)
-                                fontSize: '0.75rem', // text-xs
-                                letterSpacing: '0.05em', // tracking-wider
-                            }}
+                            sx={sidebarMenuSectionHeadingStyle}
                         >
                             {section.name}
                         </Typography>
                         <List
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 0.5,
-                            p: 0,
-                        }}
+                        sx={sideBarMenuListStyle(true)}
                         >
                             {section.items.map((item) => {
-                                if (item.href === "/chat") {
-                                    return (
-                                        <ListItem key="chat-sidebar-content" disablePadding>
-                                        <ChatSidebarContent
-                                            isActive={location.startsWith('/chat')}
-                                            isMenuExpanded={true}
-                                            closeSidebar={() => onToggle(false)}
-                                        />
-                                        </ListItem>
-                                    );
-                                }
                                 return <SidebarItem key={item.name} item={item} />;
                             })}
                         </List>
                     </Box>
                 ))}
+                <Box
+                        key={"all_chats_mob"}
+                        sx={{ mb: 3 }}
+                >
+                  <Typography
+                        variant="subtitle2" // text-xs
+                        fontWeight="medium" // font-semibold
+                        color="text.secondary" // text-slate-500
+                        textTransform="uppercase"
+                        sx={sidebarMenuSectionHeadingStyle}
+                    >
+                    All Chats
+                  </Typography>
+                  <ChatHistory onMenuItemClick={() => {onToggle(false)}}/>
+                </Box>
             </Box>
         </Box>
     </Drawer>
