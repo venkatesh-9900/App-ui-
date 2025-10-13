@@ -261,7 +261,34 @@ spec:
             }
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    
+                    def newBranch = "bump/helm-version"
+
+                    // Setup git and fetch all branches
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        sh """
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git config pull.rebase true
+                            git config pull.ff false
+                            echo "Fetching all branches..."
+                            git fetch origin
+                            
+                            # Check if remote branch exists
+                            if git ls-remote --exit-code --heads origin ${newBranch}; then
+                                echo "Remote branch ${newBranch} exists, checking it out..."
+                                git checkout -B ${newBranch} origin/${newBranch}
+                            else
+                                echo "Remote branch ${newBranch} does not exist, creating new branch..."
+                                git checkout -b ${newBranch}
+                            fi
+                            
+                            echo "Pulling latest changes from main..."
+                            git pull origin main
+                            echo "Pulled main branch"
+                        """
+                    }
 
                     // Update Chart.yaml version and appVersion before packaging
                     def chartFile = readYaml file: "${CHART_PATH}/Chart.yaml" 
@@ -284,6 +311,7 @@ spec:
                     """
 
                     echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
+                    echo "Branch created: ${newBranch}"
 
                     // Commit and push using credentials
                     // Commit, push, and create PR using credentials
@@ -292,15 +320,40 @@ spec:
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
                             git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
-                            git commit -m "chore: Update Helm chart version to ${env.IMAGE_TAG} in main"
-                            echo "Pushing branch main..."
-                            git push origin HEAD:main  
+                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                            echo "Pushing branch ${newBranch}..."
+                            git push --force "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
 
                     echo "Commit created: ${env.IMAGE_TAG}"
-                    echo "Branch pushed: main"
+                    echo "Branch pushed: ${newBranch}"
 
+                    echo "Creating PR using GitHub plugin..."
+                    
+                    echo "Creating Pull Request..."
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        def payload = """
+                        {
+                            "title": "Helm Chart: Version Upgrade",
+                            "head": "${newBranch}",
+                            "base": "main",
+                            "body": "Automated PR created by Jenkins for Helm Chart version bump. Check commit logs for details."
+                        }
+                        """.stripIndent()
+
+                        writeFile file: 'payload.json', text: payload
+
+                        sh '''
+                        curl -s -o /dev/null -w "%{http_code}" -X POST \
+                        -H "Authorization: token ${GIT_PASSWORD}" \
+                        -H "Content-Type: application/json" \
+                        -d @payload.json \
+                        https://api.github.com/repos/void-kernel/app-ui/pulls
+                        '''
+
+                    }
+                    echo "PR created: ${newBranch}"
                 }
             }
         }
