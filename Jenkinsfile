@@ -294,7 +294,7 @@ spec:
                             git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: Update Helm chart version to ${env.IMAGE_TAG} in main"
                             echo "Pushing branch main..."
-                            git push --force-with-lease "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" 
+                            git push origin main  
                         """
                     }
 
