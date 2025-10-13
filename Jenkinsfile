@@ -1,6 +1,8 @@
 // ===============================
-// Jenkinsfile for app-ui (Kaniko Version - No DinD)
+// Jenkinsfile (Kaniko Version - No DinD)
 // ===============================
+
+def appName = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
 
 def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
     def versionIncrement = 'patch'
@@ -39,12 +41,10 @@ pipeline {
     environment {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
-        ECR_REPO       = "docker/app-ui"
-        ECR_HELM_REPO  = "helm" //not helm/app-ui because Helm appends the chart name to that repository path when pushing, so it attempts to push to the registry path helm/app-ui/
-        PARENT_HELM_REPO = "https://github.com/void-kernel/application-helm.git"
+        ECR_REPO       = "docker/${appName}"
         ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         CHART_PATH     = "helm" //chart path in the github repo
-        CHART_NAME     = "app-ui"
+        CHART_NAME     = "${appName}"
     }
     
     stages {
