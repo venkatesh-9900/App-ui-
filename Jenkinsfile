@@ -160,7 +160,7 @@ spec:
                 script {
                     checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
                     
-                    def newBranch = "bump/helm-version"
+                    def newBranch = "bump/helm-version/dev"
 
                     // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
@@ -263,7 +263,7 @@ spec:
                 script {
                     checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
                     
-                    def newBranch = "bump/helm-version"
+                    def newBranch = "bump/helm-version/qa"
 
                     // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
