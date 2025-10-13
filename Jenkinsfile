@@ -152,8 +152,10 @@ spec:
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
-        stage('Update Repo Helm Chart Version & Push Branch to git repository') {
-            when { expression { env.IMAGE_TAG } }
+        stage('[NON-MASTER] Update Repo Helm Chart Version & Push Branch to git repository') {
+            when {
+                not { anyOf { branch 'main'; branch 'master' } }
+            }
             steps {
                 script {
                     checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
@@ -192,16 +194,16 @@ spec:
                     echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
 
                     //Update Values.yaml image.tag with env.IMAGE_TAG
-                    def values = readYaml file: "${CHART_PATH}/values-qa.yaml"
+                    def values = readYaml file: "${CHART_PATH}/values-dev.yaml"
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
                     // Write back
-                    writeYaml file: "${CHART_PATH}/values-qa.yaml", data: values, overwrite: true
-                    echo "Updated ${CHART_PATH}/values-qa.yaml with tag ${env.IMAGE_TAG}"
+                    writeYaml file: "${CHART_PATH}/values-dev.yaml", data: values, overwrite: true
+                    echo "Updated ${CHART_PATH}/values-dev.yaml with tag ${env.IMAGE_TAG}"
                     
                     //cat values.yaml and chart.yaml
                     sh """
-                        cat ${CHART_PATH}/values-qa.yaml
+                        cat ${CHART_PATH}/values-dev.yaml
                         cat ${CHART_PATH}/Chart.yaml
                     """
 
@@ -214,7 +216,7 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
-                            git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
+                            git add ${CHART_PATH}/values-dev.yaml ${CHART_PATH}/Chart.yaml
                             git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
                             echo "Pushing branch ${newBranch}..."
                             git push --force "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
@@ -249,6 +251,56 @@ spec:
 
                     }
                     echo "PR created: ${newBranch}"
+                }
+            }
+        }
+
+        stage('[MASTER] Update Repo Helm Chart Version & Push Branch to git repository') {
+            when {
+                anyOf { branch 'main'; branch 'master' }
+            }
+            steps {
+                script {
+                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+
+                    // Update Chart.yaml version and appVersion before packaging
+                    def chartFile = readYaml file: "${CHART_PATH}/Chart.yaml" 
+                    chartFile.appVersion = env.IMAGE_TAG
+                    writeYaml file: "${CHART_PATH}/Chart.yaml", data: chartFile, overwrite: true
+                    echo "Updated ${CHART_PATH}/Chart.yaml with version ${env.IMAGE_TAG}"
+
+                    //Update Values.yaml image.tag with env.IMAGE_TAG
+                    def values = readYaml file: "${CHART_PATH}/values-qa.yaml"
+                    values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
+                    values.image.tag = env.IMAGE_TAG
+                    // Write back
+                    writeYaml file: "${CHART_PATH}/values-qa.yaml", data: values, overwrite: true
+                    echo "Updated ${CHART_PATH}/values-qa.yaml with tag ${env.IMAGE_TAG}"
+                    
+                    //cat values.yaml and chart.yaml
+                    sh """
+                        cat ${CHART_PATH}/values-qa.yaml
+                        cat ${CHART_PATH}/Chart.yaml
+                    """
+
+                    echo "Chart file updated: ${CHART_PATH}/Chart.yaml"
+
+                    // Commit and push using credentials
+                    // Commit, push, and create PR using credentials
+                    withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
+                        sh """
+                            git config user.name "argus-cicd"
+                            git config user.email "cicd@argusintelligence.net"
+                            git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
+                            git commit -m "chore: Update Helm chart version to ${env.IMAGE_TAG} in main"
+                            echo "Pushing branch main..."
+                            git push --force-with-lease "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" 
+                        """
+                    }
+
+                    echo "Commit created: ${env.IMAGE_TAG}"
+                    echo "Branch pushed: main"
+
                 }
             }
         }
