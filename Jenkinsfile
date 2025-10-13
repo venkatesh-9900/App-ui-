@@ -158,7 +158,7 @@ spec:
             }
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
                     
                     def newBranch = "bump/helm-version-dev"
 
@@ -167,8 +167,6 @@ spec:
                         sh """
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
-                            git config pull.rebase true
-                            git config pull.ff false
                             echo "Fetching all branches..."
                             git fetch origin
                             
