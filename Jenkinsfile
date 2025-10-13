@@ -152,7 +152,7 @@ spec:
         // -----------------------------------------
         // STAGE 2: Update Helm Chart + Push via Git Plugin
         // -----------------------------------------
-        stage('[NON-MASTER] Update Repo Helm Chart Version & Push Branch to git repository') {
+        stage('[NON-MAIN] Update Repo Helm Chart Version & Push Branch to git repository') {
             when {
                 not { anyOf { branch 'main'; branch 'master' } }
             }
@@ -255,13 +255,13 @@ spec:
             }
         }
 
-        stage('[MASTER] Update Repo Helm Chart Version & Push Branch to git repository') {
+        stage('[MAIN] Update Repo Helm Chart Version & Push Branch to git repository') {
             when {
                 anyOf { branch 'main'; branch 'master' }
             }
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
 
                     // Update Chart.yaml version and appVersion before packaging
                     def chartFile = readYaml file: "${CHART_PATH}/Chart.yaml" 
@@ -308,7 +308,7 @@ spec:
         // -----------------------------------------
         // STAGE 3: Tag Release to git repository
         // -----------------------------------------
-        stage('Tag Release to git repository') {
+        stage('[MAIN] Tag Release to git repository') {
             when {
                 anyOf { branch 'main'; branch 'master' }
             }
