@@ -11,7 +11,7 @@ import {toast} from "sonner";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MuiToggleIconButton } from "@/components/ui/toggle-icon-button";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, BrainCircuit } from "lucide-react";
 import { ShareLinkDialog } from "@/components/ui/share-link-dialog";
 import { getAgentsList } from "@/hooks/agent-service";
 import ChatDeleteButton from "@/components/chat/tools/chat-delete-button";
@@ -378,10 +378,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = memo(({ params }) => {
                p: 1,
                gap: 2
             }}>
-                <Box sx={{ width: '130px' }}>
+                <Box sx={{ width: '155px', display: 'flex', alignItems: 'center'}}>
+                    <Box sx={{ mr: 1 }}>
+                        <BrainCircuit size={21} color="gray" style={{ transform: `rotate(90deg)` }}/>
+                    </Box>
                     {/* <Label className="text-sm font-medium text-slate-600">Select Team</Label> */}
                     <Select value={selectedAgent ?? ''} onValueChange={handleAgentSelect}>
-                        <SelectTrigger className="mt-1 bg-slate-100">
+                        <SelectTrigger className="bg-slate-100">
                             <SelectValue placeholder="Select Agent" />
                         </SelectTrigger>
                         <SelectContent>

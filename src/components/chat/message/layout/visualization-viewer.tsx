@@ -52,13 +52,13 @@ export const VisualizationViewer: React.FC<VisualizationViewerProps> = ({ htmlUr
 
     return (
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Paper variant="outlined" sx={{ width: '100%', maxHeight: '90vh', overflow: 'hidden', borderRadius: 2, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Paper variant="outlined" sx={{ width: {xs: 350, sm: 500, md: 525, lg: 750}, maxHeight: '90vh', overflow: 'hidden', borderRadius: 2, display: 'flex', flexDirection: 'column' }}>
+                {/* <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} aria-label="visualization tabs">
                         <Tab label="View" value="view" />
                         <Tab label="Code" value="code" />
                     </Tabs>
-                </Box>
+                </Box> */}
                 {isLoading ? (
                     <Box sx={{ height: { xs: 400, sm: 500, md: 600 }, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, color: 'text.secondary' }}>
                         <CircularProgress size={24} />
@@ -70,20 +70,19 @@ export const VisualizationViewer: React.FC<VisualizationViewerProps> = ({ htmlUr
                     </Alert>
                 ) : (
                     <Box sx={{ flex: 1, overflow: 'auto' }}>
-                        {activeTab === 'view' && (
-                            <Box
-                                component="iframe"
-                                src={htmlUrl}
-                                sandbox="allow-scripts allow-same-origin"
-                                sx={{
-                                    width: '100%',
-                                    height: { xs: 400, sm: 500, md: 600 }, // Responsive height
-                                    border: 'none',
-                                    display: 'block',
-                                }}
-                            />
-                        )}
-                        {activeTab === 'code' && (
+                        <Box
+                            component="iframe"
+                            src={htmlUrl}
+                            sandbox="allow-scripts allow-same-origin"
+                            sx={{
+                                width: 1000,
+                                height: 800, // Responsive height
+                                border: 'none',
+                                display: 'block',
+                                boxSizing: 'border-box'
+                            }}
+                        />
+                        {/* {activeTab === 'code' && (
                             <Box sx={{ height: { xs: 400, sm: 500, md: 600 }, overflow: 'auto' }}>
                                 <CodeMirror
                                     value={formattedHtml}
@@ -99,7 +98,7 @@ export const VisualizationViewer: React.FC<VisualizationViewerProps> = ({ htmlUr
                                     theme="light"
                                 />
                             </Box>
-                        )}
+                        )} */}
                     </Box>
                 )}
             </Paper>
