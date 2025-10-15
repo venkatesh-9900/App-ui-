@@ -2,7 +2,8 @@
 // Jenkinsfile (Kaniko Version - No DinD)
 // ===============================
 
-def appName = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
+def APP_NAME = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
+def GIT_REPO_API_URL = "https://api.github.com/repos/void-kernel/${APP_NAME}"
 
 def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
     def versionIncrement = 'patch'
@@ -41,10 +42,10 @@ pipeline {
     environment {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
-        ECR_REPO       = "docker/${appName}"
+        ECR_REPO       = "docker/${APP_NAME}"
         ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         CHART_PATH     = "helm" //chart path in the github repo
-        CHART_NAME     = "${appName}"
+        CHART_NAME     = "${APP_NAME}"
     }
     
     stages {
@@ -151,7 +152,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo:"${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Build',
@@ -162,7 +163,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Build',
@@ -270,7 +271,7 @@ spec:
                         -H "Authorization: token ${GIT_PASSWORD}" \
                         -H "Content-Type: application/json" \
                         -d @payload.json \
-                        https://api.github.com/repos/void-kernel/app-ui/pulls
+                        ${GIT_REPO_API_URL}/pulls
                         '''
 
                     }
@@ -281,7 +282,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -292,7 +293,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -397,7 +398,7 @@ spec:
                         -H "Authorization: token ${GIT_PASSWORD}" \
                         -H "Content-Type: application/json" \
                         -d @payload.json \
-                        https://api.github.com/repos/void-kernel/app-ui/pulls
+                        ${GIT_REPO_URL}/pulls
                         '''
 
                     }
@@ -408,7 +409,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -419,7 +420,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -486,7 +487,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Git Tag Release',
@@ -497,7 +498,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Git Tag Release',
