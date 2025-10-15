@@ -147,6 +147,14 @@ spec:
                     }
                 }
             }
+            post {  
+                success {
+                    githubNotify context: 'Build', status: 'SUCCESS', description: 'Build successful & pushed to ECR'
+                }
+                failure {
+                    githubNotify context: 'Build', status: 'FAILURE', description: 'Build failed & pushed to ECR'
+                }
+            }
         }
 
         // -----------------------------------------
@@ -253,6 +261,14 @@ spec:
                     echo "PR created: ${newBranch}"
                 }
             }
+            post {
+                success {
+                    githubNotify context: 'Helm Chart', status: 'SUCCESS', description: 'Helm Chart version bumped & pushed to git repository'
+                }
+                failure {
+                    githubNotify context: 'Helm Chart', status: 'FAILURE', description: 'Helm Chart version bump failed & pushed to git repository'
+                }
+            }
         }
 
         stage('[MAIN] Update Repo Helm Chart Version & Push Branch to git repository') {
@@ -356,6 +372,14 @@ spec:
                     echo "PR created: ${newBranch}"
                 }
             }
+            post {
+                success {
+                    githubNotify context: 'Helm Chart', status: 'SUCCESS', description: 'Helm Chart version bumped & pushed to git repository'
+                }
+                failure {
+                    githubNotify context: 'Helm Chart', status: 'FAILURE', description: 'Helm Chart version bump failed & pushed to git repository'
+                }
+            }
         }
 
         // -----------------------------------------
@@ -408,6 +432,14 @@ spec:
                         targetBranch: env.BRANCH_NAME,
                         targetRepo: 'origin'
                     )
+                }
+            }
+            post {
+                success {
+                    githubNotify context: 'Git Tag Release', status: 'SUCCESS', description: 'Git tag release successful'
+                }
+                failure {
+                    githubNotify context: 'Git Tag Release', status: 'FAILURE', description: 'Git tag release failed'
                 }
             }
         }
