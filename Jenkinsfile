@@ -398,7 +398,7 @@ spec:
                         -H "Authorization: token ${GIT_PASSWORD}" \
                         -H "Content-Type: application/json" \
                         -d @payload.json \
-                        ${GIT_REPO_URL}/pulls
+                        ${GIT_REPO_API_URL}/pulls
                         '''
 
                     }
