@@ -2,7 +2,7 @@
 // Jenkinsfile (Kaniko Version - No DinD)
 // ===============================
 
-def appName = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
+def APP_NAME = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
 
 def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
     def versionIncrement = 'patch'
@@ -41,10 +41,10 @@ pipeline {
     environment {
         AWS_REGION     = "ap-south-1"
         AWS_ACCOUNT_ID = "210519480143"
-        ECR_REPO       = "docker/${appName}"
+        ECR_REPO       = "docker/${APP_NAME}"
         ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         CHART_PATH     = "helm" //chart path in the github repo
-        CHART_NAME     = "${appName}"
+        CHART_NAME     = "${APP_NAME}"
     }
     
     stages {
@@ -151,7 +151,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo:"${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Build',
@@ -162,7 +162,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Build',
@@ -221,6 +221,7 @@ spec:
                     def values = readYaml file: "${CHART_PATH}/values-dev.yaml"
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
+                    values.timestamp = (System.currentTimeMillis() / 1000)
                     // Write back
                     writeYaml file: "${CHART_PATH}/values-dev.yaml", data: values, overwrite: true
                     echo "Updated ${CHART_PATH}/values-dev.yaml with tag ${env.IMAGE_TAG}"
@@ -281,7 +282,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -292,7 +293,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -348,6 +349,7 @@ spec:
                     def values = readYaml file: "${CHART_PATH}/values-qa.yaml"
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
+                    values.timestamp = (System.currentTimeMillis() / 1000)
                     // Write back
                     writeYaml file: "${CHART_PATH}/values-qa.yaml", data: values, overwrite: true
                     echo "Updated ${CHART_PATH}/values-qa.yaml with tag ${env.IMAGE_TAG}"
@@ -408,7 +410,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -419,7 +421,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Helm Chart',
@@ -486,7 +488,7 @@ spec:
                 success {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Git Tag Release',
@@ -497,7 +499,7 @@ spec:
                 failure {
                     githubNotify(
                         account: 'void-kernel',
-                        repo: 'app-ui',
+                        repo: "${APP_NAME}",
                         sha: "${env.GIT_COMMIT}",
                         credentialsId: 'argus-cicd-pat',
                         context: 'Git Tag Release',
