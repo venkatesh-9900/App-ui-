@@ -1,7 +1,7 @@
 replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: 0.0.68-patch-minor-review-code-changes-ccfe1f60
+  tag: 0.0.68-feat-jenkins-github-notify-test-3ac5f306
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ''
