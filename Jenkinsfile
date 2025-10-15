@@ -3,7 +3,6 @@
 // ===============================
 
 def APP_NAME = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
-def GIT_REPO_API_URL = "https://api.github.com/repos/void-kernel/${APP_NAME}"
 
 def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
     def versionIncrement = 'patch'
@@ -272,7 +271,7 @@ spec:
                         -H "Authorization: token ${GIT_PASSWORD}" \
                         -H "Content-Type: application/json" \
                         -d @payload.json \
-                        ${GIT_REPO_API_URL}/pulls
+                        https://api.github.com/repos/void-kernel/app-ui/pulls
                         '''
 
                     }
@@ -400,7 +399,7 @@ spec:
                         -H "Authorization: token ${GIT_PASSWORD}" \
                         -H "Content-Type: application/json" \
                         -d @payload.json \
-                        ${GIT_REPO_API_URL}/pulls
+                        https://api.github.com/repos/void-kernel/app-ui/pulls
                         '''
 
                     }
