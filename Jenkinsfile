@@ -222,7 +222,7 @@ spec:
                     def values = readYaml file: "${CHART_PATH}/values-dev.yaml"
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
-                    values.timestamp = (System.currentTimeMillis() / 1000).toLong()
+                    values.timestamp = (System.currentTimeMillis() / 1000)
                     // Write back
                     writeYaml file: "${CHART_PATH}/values-dev.yaml", data: values, overwrite: true
                     echo "Updated ${CHART_PATH}/values-dev.yaml with tag ${env.IMAGE_TAG}"
@@ -350,7 +350,7 @@ spec:
                     def values = readYaml file: "${CHART_PATH}/values-qa.yaml"
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
-                    values.timestamp = (System.currentTimeMillis() / 1000).toLong()
+                    values.timestamp = (System.currentTimeMillis() / 1000)
                     // Write back
                     writeYaml file: "${CHART_PATH}/values-qa.yaml", data: values, overwrite: true
                     echo "Updated ${CHART_PATH}/values-qa.yaml with tag ${env.IMAGE_TAG}"
