@@ -1,7 +1,7 @@
 replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: 0.0.68-feat-jenkins-github-notify-test-119645ba
+  tag: 0.0.68-feat-jenkins-github-notify-test-ee189911
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ''
