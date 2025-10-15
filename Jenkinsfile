@@ -149,10 +149,26 @@ spec:
             }
             post {  
                 success {
-                    githubNotify context: 'Build', status: 'SUCCESS', description: 'Build successful & pushed to ECR'
+                    githubNotify(
+                        account: 'void-kernel',
+                        repo: 'app-ui',
+                        sha: "${env.GIT_COMMIT}",
+                        credentialsId: 'argus-cicd-pat',
+                        context: 'Build',
+                        status: 'SUCCESS',
+                        description: 'Build successful...'
+                    )
                 }
                 failure {
-                    githubNotify context: 'Build', status: 'FAILURE', description: 'Build failed & pushed to ECR'
+                    githubNotify(
+                        account: 'void-kernel',
+                        repo: 'app-ui',
+                        sha: "${env.GIT_COMMIT}",
+                        credentialsId: 'argus-cicd-pat',
+                        context: 'Build',
+                        status: 'FAILURE',
+                        description: 'Build failed...'
+                    )
                 }
             }
         }
