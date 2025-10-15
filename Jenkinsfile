@@ -3,7 +3,6 @@
 // ===============================
 
 def APP_NAME = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
-def GIT_REPO_API_URL = "https://api.github.com/repos/void-kernel/${APP_NAME}"
 
 def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
     def versionIncrement = 'patch'
@@ -222,6 +221,7 @@ spec:
                     def values = readYaml file: "${CHART_PATH}/values-dev.yaml"
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
+                    values.timestamp = (System.currentTimeMillis() / 1000)
                     // Write back
                     writeYaml file: "${CHART_PATH}/values-dev.yaml", data: values, overwrite: true
                     echo "Updated ${CHART_PATH}/values-dev.yaml with tag ${env.IMAGE_TAG}"
@@ -271,7 +271,7 @@ spec:
                         -H "Authorization: token ${GIT_PASSWORD}" \
                         -H "Content-Type: application/json" \
                         -d @payload.json \
-                        ${GIT_REPO_API_URL}/pulls
+                        https://api.github.com/repos/void-kernel/app-ui/pulls
                         '''
 
                     }
@@ -349,6 +349,7 @@ spec:
                     def values = readYaml file: "${CHART_PATH}/values-qa.yaml"
                     values.image.repository = "${ECR_BASE_URL}/${ECR_REPO}"
                     values.image.tag = env.IMAGE_TAG
+                    values.timestamp = (System.currentTimeMillis() / 1000)
                     // Write back
                     writeYaml file: "${CHART_PATH}/values-qa.yaml", data: values, overwrite: true
                     echo "Updated ${CHART_PATH}/values-qa.yaml with tag ${env.IMAGE_TAG}"
@@ -398,7 +399,7 @@ spec:
                         -H "Authorization: token ${GIT_PASSWORD}" \
                         -H "Content-Type: application/json" \
                         -d @payload.json \
-                        ${GIT_REPO_URL}/pulls
+                        https://api.github.com/repos/void-kernel/app-ui/pulls
                         '''
 
                     }
