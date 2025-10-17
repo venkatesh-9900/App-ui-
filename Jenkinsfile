@@ -55,6 +55,11 @@ pipeline {
                 sh """
                     echo "Cleaned Up Workspace For Project"
                 """
+                if (env.BRANCH_NAME.startsWith("bump/helm")) {
+                    echo "Skipping build for automated Helm bump branch."
+                    currentBuild.result = 'SUCCESS'
+                    return
+                }
             }
         }
 
