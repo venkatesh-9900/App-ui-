@@ -2,8 +2,10 @@ import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config.ts";
 import { app_name } from "@/constants/constants";
 import {ChatMessage, FileDetails, Message, MessageContent} from "@/types";
 import { addAttachedFilesPublicLinks } from "@/utils/utils";
+import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service.ts";
 
 export async function handleStreamMessage({
+                                              retry = false,
                                               text,
                                               image,
                                               newMessages,
@@ -19,6 +21,17 @@ export async function handleStreamMessage({
                                               attachedFiles,
                                               showError
                                           }: any) {
+    if (retry) {
+        console.log("Refreshing access token");
+        await refreshAccessToken({
+            failureTask: () => {
+                console.log("Failed to refresh token while sending message")
+            }, 
+            errorTask: () => {
+                console.log("Error encountered while refreshing token on send message")
+            }
+        });
+    }
     const interactionMode = SELECTED_ENDPOINT;
     console.log('selectedAgent:', selectedAgent);
     let messageText = text;
@@ -41,11 +54,40 @@ export async function handleStreamMessage({
             body: JSON.stringify(payload)
         });
 
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(() => {
+                    console.log("Error encountered while fetching login URL");
+                });
+            } else {
+                await handleStreamMessage({
+                    text,
+                    image,
+                    newMessages,
+                    setMessages,
+                    setIsThinking,
+                    generateTitle,
+                    currentChatId: currentChatId,
+                    setCurrentChatId,
+                    updateTyping,
+                    setSelectedVizUrl,
+                    setIsSplitMode,
+                    selectedAgent,
+                    attachedFiles,
+                    showError,
+                    retry: true
+                });
+            }
+            return;
+        }
+
         if (!response.ok || !response.body) throw new Error(`Stream failed with status: ${response.status}`);
 
         //const sessionId = content.replace('__SESSION_ID__:', '');
+        let updateURL = false;
         if (!currentChatId || currentChatId === 0 || currentChatId === 'new') {
             setCurrentChatId(newChatId);
+            updateURL = true;
             if (attachedFiles.length > 0) {
                 updateSessionIdForAttachedFilesInNewChat(attachedFiles, newChatId);
             }
@@ -111,7 +153,7 @@ export async function handleStreamMessage({
                         const rawUrl = pendingVizLine.replace('RENDER-VIZ-ON-UI:', '');
                         const cleanedUrl = rawUrl.replace(/\s+/g, '').trim();
                         // console.log('cleanedUrl:', cleanedUrl);
-                        if (cleanedUrl.startsWith('https://') && cleanedUrl.endsWith('.html')) {
+                        if ((cleanedUrl.startsWith('https://') || cleanedUrl.startsWith('http://')) && cleanedUrl.endsWith('.html')) {
                             setSelectedVizUrl(cleanedUrl);
                             setIsSplitMode(true);
                             vizUrls.push(cleanedUrl);
@@ -159,6 +201,9 @@ export async function handleStreamMessage({
         //     };
 
         setMessages([...updatedMessages]);
+        if (updateURL) {
+            history.replaceState(null, '', `/chat/${newChatId}`);
+        }
     } catch (error: any) {
         console.error('Error in handleStreamMessage:', error);
         // alert(error.message || 'Stream failed.');
@@ -176,8 +221,8 @@ function processMarkdownVizChunk(
     if (!line.startsWith('RENDER-VIZ-ON-UI:') && !pendingMarkdownUrl.active) {
         return false;
     }
-    const startMatch = /\[https:\/\/[^\]\s]*/;
-    const endMatch = /\]\(https:\/\/[^\)\s]*\.html\)/;
+    const startMatch = /\[http(s)?:\/\/[^\]\s]*/;
+    const endMatch = /\]\(http(s)?:\/\/[^\)\s]*\.html\)/;
 
     if (startMatch.test(line) || pendingMarkdownUrl.active) {
         pendingMarkdownUrl.buffer += line.trim();

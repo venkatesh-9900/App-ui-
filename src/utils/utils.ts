@@ -37,7 +37,7 @@ export const isValidEmail = (email: string) => {
 };
 
 export const extractRenderVizUrls = (text: string): string[] => {
-    const regex = /RENDER-VIZ-ON-UI:(https:\/\/[^\s]+\.html)/g;
+    const regex = /RENDER-VIZ-ON-UI:(http(s)?:\/\/[^\s]+\.html)/g;
     const matches = [];
     let match;
     while ((match = regex.exec(text)) !== null) {
