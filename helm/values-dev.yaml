@@ -2,11 +2,11 @@ timestamp: "20251015101010"
 replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: 0.0.57-feat-chat_history_side_drawer_addition-5ef18552
+  tag: 0.0.68-feat-jenkins-github-notify-test-3ac5f306
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ''
-fullnameOverride: 'app-ui'
+fullnameOverride: app-ui
 serviceAccount:
   create: false
   automount: false
