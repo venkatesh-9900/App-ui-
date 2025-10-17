@@ -49,6 +49,15 @@ pipeline {
     
     stages {
 
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+                sh """
+                    echo "Cleaned Up Workspace For Project"
+                """
+            }
+        }
+
         // -----------------------------------------
         // STAGE 1: Build & Push Docker Image to ECR
         // -----------------------------------------
@@ -182,7 +191,7 @@ spec:
             }
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
                     
                     def newBranch = "bump/helm-version-dev"
 
