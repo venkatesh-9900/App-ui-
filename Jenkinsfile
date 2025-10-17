@@ -191,7 +191,17 @@ spec:
             }
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    // ✅ Always start clean from main
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [
+                            [$class: 'WipeWorkspace'],
+                            [$class: 'CleanCheckout']
+                        ],
+                        userRemoteConfigs: scm.userRemoteConfigs
+                    ])
                     
                     def newBranch = "bump/helm-version-dev"
 
@@ -251,8 +261,12 @@ spec:
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
                             git add ${CHART_PATH}/values-dev.yaml ${CHART_PATH}/Chart.yaml
-                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
-                            echo "Pushing branch ${newBranch}..."
+                            if ! git diff --cached --quiet; then
+                                git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                                echo "Pushing branch ${newBranch}..."
+                            else
+                                echo "No changes to commit"
+                            fi
                             git push --force "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
                         """
                     }
@@ -319,7 +333,17 @@ spec:
             }
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: scm.extensions, submoduleCfg: [], userRemoteConfigs: scm.userRemoteConfigs])
+                    // ✅ Always start clean from main
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [
+                            [$class: 'WipeWorkspace'],
+                            [$class: 'CleanCheckout']
+                        ],
+                        userRemoteConfigs: scm.userRemoteConfigs
+                    ])
                     
                     def newBranch = "bump/helm-version-qa"
 
@@ -379,9 +403,13 @@ spec:
                             git config user.name "argus-cicd"
                             git config user.email "cicd@argusintelligence.net"
                             git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
-                            git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
-                            echo "Pushing branch ${newBranch}..."
-                            git push --force "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
+                            if ! git diff --cached --quiet; then
+                                git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
+                                echo "Pushing branch ${newBranch}..."
+                                git push --force "https://${GIT_USERNAME}:${GIT_PASSWORD}@${scm.userRemoteConfigs[0].url.split('//')[1]}" HEAD:${newBranch}
+                            else
+                                echo "No changes to commit"
+                            fi
                         """
                     }
 
