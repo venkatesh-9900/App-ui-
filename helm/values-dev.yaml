@@ -1,4 +1,4 @@
-timestamp: 1760702012.079
+timestamp: 1760702496.222
 replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
