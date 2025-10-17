@@ -53,7 +53,7 @@ pipeline {
             steps {
                 cleanWs()
                 echo "Cleaned Up Workspace For Project"
-
+                echo "Skipping build for automated Helm bump branch: ${env.BRANCH_NAME}"
                 script {
                     if (env.BRANCH_NAME?.startsWith("bump/helm")) {
                         echo "Skipping build for automated Helm bump branch: ${env.BRANCH_NAME}"
