@@ -1,11 +1,9 @@
-
-import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios.ts";
-import {ENDPOINTS} from "@/config/config.ts";
-import {Chat, ChatMessage, ChatSessions, FileDetails, Message, MessageContent } from "@/types";
-import {extractAttachedFilesPublicLinks, extractRenderVizUrls, getTextWithoutReasoning} from "@/utils/utils.ts";
-import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service.ts";
-import {iam_login_url} from "@/constants/iam-uri.tsx";
-import {buildHeaderJSON} from "@/utils/axios/auth-axios.ts";
+import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios";
+import {ENDPOINTS} from "@/config/config";
+import {FileDetails } from "@/types";
+import { ChatSessions, ChatMessage } from "@/types/chat-types";
+import {extractAttachedFilesPublicLinks, extractRenderVizUrls} from "@/utils/utils";
+import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 import { app_name } from "@/constants/constants";
 
 interface ApiParams {

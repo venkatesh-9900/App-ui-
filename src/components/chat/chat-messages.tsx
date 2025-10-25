@@ -1,115 +1,72 @@
-import {useEffect, useRef} from 'react';
-import {ChatMessagePageProps, ChatMessage, Message} from "@/types";
-import MessageInterface from "@/components/chat/message/message-interface.tsx";
-import {hasAnyVisualization} from "@/hooks";
-import LoadingDots from "@/utils/loading-dots.tsx";
-import {Box, CircularProgress, Container, Typography} from "@mui/material";
-import { MessageSquareText, MessageSquareWarning, MessageSquareX } from 'lucide-react';
 
-export function ChatMessages({
-                                                             title,
-                                                             input,
-                                                             readonly,
-                                                             setInput,
-                                                             currentChatId,
-                                                             handleSendMessage,
-                                                             handleFileUpload,
-                                                             messages,
-                                                             isThinking,
-                                                             currentTypingIndex,
-                                                             displayedText,
-                                                             onVizSelect,
-                                                             onCloseSplitView,
-                                                             userClosedSplitView,
-                                                             selectedAgent,
-                                                             chatLoadingError,
-                                                             currentChatLoading
-                                                         }: ChatMessagePageProps) {
-    // console.log("[ChatMessages] messages:", messages);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const hasAnyViz = hasAnyVisualization(messages);
-    const getMessageText = (message: ChatMessage, index: number): string => {
-        if (index === currentTypingIndex) {
-            return displayedText;
-        }
+"use client"
 
-        // if (typeof message.text === 'object') {
-        //     return typeof message.text === 'object'
-        //         ? message.text.summary ?? ''
-        //         : message.text;
-        // }
+import { useEffect, useRef } from "react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Loader2 } from "lucide-react"
+import { ChatMessage } from "./chat-message"
 
-        return message.content;
-    };
-    // Scroll to bottom on new messages
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+export interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  timestamp: Date
+}
 
-    return (
-        <Box sx={{ flex: 1, overflowY: 'auto', bgcolor: 'background.paper' }}>
-            <Container
-                maxWidth="lg"
-                sx={{ pt: { xs: 2, md: 4 }, pb: readonly ? {xs: '20px', sm: '40px'} : { xs: '140px', sm: '160px' } }}
-            >
-                {messages.length === 0 && <Box
-                    sx={{
-                        width: '100%',
-                        height: '500px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 1,
-                        py: 0.75,
-                        px: 1,
-                        borderRadius: '6px'
-                    }}
-                >
-                    { currentChatLoading ?  
-                        <CircularProgress size={50} color="info"/> : 
-                        chatLoadingError ? 
-                            <MessageSquareX size={50} style={{ color: '#666666' }}/> : 
-                                (readonly && currentChatId !== 'new') ? 
-                                    <MessageSquareWarning size={50} style={{ color: '#666666' }}/>: 
-                                    <MessageSquareText size={50} style={{ color: '#666666' }}/> }
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            textAlign: 'center',
-                            color: '#666666'
-                        }}>
-                        { currentChatLoading ? "" : 
-                            chatLoadingError ? "Something went wrong." : 
-                                (readonly && currentChatId !== 'new') ? "No chat conversations to show." :
-                                "Your chat conversations will appear here." }
-                    </Typography>
-                </Box>}
-                {messages.map((message, index) => (
-                    <MessageInterface
-                        key={index}
-                        input={input}
-                        readonly={readonly}
-                        setInput={setInput}
-                        currentChatId={String(currentChatId)}
-                        handleSendMessage={handleSendMessage}
-                        message={message}
-                        isTyping={index === currentTypingIndex}
-                        displayedText={getMessageText(message, index)}
-                        onVizSelect={onVizSelect}
-                        onCloseSplitView={onCloseSplitView}
-                        selectedAgent={selectedAgent}
-                    />
-                ))}
-                {isThinking && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 3, mb: 4 }}>
-                        <Box sx={{ p: 1.5, borderRadius: '8px', bgcolor: 'action.hover' }}>
-                            <LoadingDots />
-                        </Box>
-                    </Box>
-                )}
-                {!readonly && <Box ref={messagesEndRef} sx={{ height: '96px' }} />}
-            </Container>
-        </Box>
-    );
+interface ChatMessagesProps {
+  messages: Message[]
+  isLoading?: boolean
+}
+
+export function ChatMessages({ messages, isLoading = false }: ChatMessagesProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Auto-scroll to bottom
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [messages, isLoading])
+
+  return (
+    <ScrollArea className="flex-1 bg-background pt-8 overflow-hidden">
+      <div className="h-full flex flex-col py-6">
+        <div className="space-y-4 flex-1 flex flex-col">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center flex-1 text-center px-4">
+              <h2 className="text-2xl font-semibold mb-2">Start a conversation</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">
+                Ask Argus Intelligence anything. Type your message below to begin.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  role={message.role}
+                  content={message.content}
+                  timestamp={message.timestamp}
+                />
+              ))}
+
+              {isLoading && (
+                <div className="py-4 px-3">
+                  <div className="flex gap-3">
+                    <div className="h-8 w-8 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={scrollRef} className="h-1" />
+            </div>
+          )}
+        </div>
+      </div>
+    </ScrollArea>
+  )
 }

@@ -1,17 +1,20 @@
-
 const resolveApiBaseUrl = (): string => {
-    if (import.meta.env?.VITE_API_BASE_URL) {
-        return import.meta.env.VITE_API_BASE_URL;
-    }
-    if (process.env.REACT_APP_API_BASE_URL) {
-        return process.env.REACT_APP_API_BASE_URL;
+    // Check for Next.js environment variables
+    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+        return process.env.NEXT_PUBLIC_API_BASE_URL;
     }
 
-    const protocol = window.location.protocol;
-    const host = window.location.hostname;
-    const port = window.location.port === "3000" ? "10000" : window.location.port;
+    // Fallback to dynamic resolution based on window location (client-side only)
+    if (typeof window !== 'undefined') {
+        const protocol = window.location.protocol;
+        const host = window.location.hostname;
+        const port = window.location.port === "3000" ? "10000" : window.location.port;
+        
+        return `${protocol}//${host}:${port}`;
+    }
 
-    return `${protocol}//${host}:${port}`;
+    // Default fallback for server-side rendering
+    return 'http://localhost:10000';
 };
 
 export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;

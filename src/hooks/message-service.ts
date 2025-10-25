@@ -1,8 +1,9 @@
-import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config.ts";
+import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config";
 import { app_name } from "@/constants/constants";
-import {ChatMessage, FileDetails, Message, MessageContent} from "@/types";
+import {FileDetails } from "@/types";
+import { ChatMessage } from "@/types/chat-types";
 import { addAttachedFilesPublicLinks } from "@/utils/utils";
-import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service.ts";
+import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 
 export async function handleStreamMessage({
                                               retry = false,

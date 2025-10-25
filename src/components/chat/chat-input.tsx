@@ -1,245 +1,199 @@
-import {useEffect, useRef, useState} from "react";
-import {ChatToolbar} from "@/components/chat/chat-toolbar.tsx";
-import {AttachedFile, FileDetails, FileUploadResponse} from "@/types";
-import {deleteFileFromServer, removeAttachedFile} from "@/hooks/upload-file.ts";
-import {FileUpload, FileUploadHandle} from "@/components/chat/tools/file-upload.tsx";
-import {Cross2Icon} from "@radix-ui/react-icons";
-import {FiFile} from "react-icons/fi";
-import {TextareaAutosize} from "@/components/chat/message/textarea-autosize.tsx";
-import {Box, Container, Grid, IconButton, Paper, TextareaAutosize as MuiTextareaAutosize, Typography, CircularProgress} from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import CloseIcon from '@mui/icons-material/Close';
-import { toast } from "sonner";
-import { attachmentStyles } from "@/common/chat-messages";
-import LoadingDots from "@/utils/loading-dots";
+
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import { ArrowUp, Paperclip, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { FileDetails } from "@/types"
+import { uploadFilesToServer, removeAttachedFile as removeAttachedFileAPI } from "@/hooks/upload-file"
 
 interface ChatInputProps {
-    input: string;
-    setInput: React.Dispatch<React.SetStateAction<string>>;
-    currentChatId: string;
-    handleSendMessage: (message: string, selectedAgent: string, attachedFiles: FileDetails[]) => void;
-    handleFileUpload: (files: File[], sessionIdOverride?: string) => Promise<FileDetails[]>;
-    isLoading?: boolean;
-    selectedAgent: string;
+  onSend: (message: string, attachedFiles?: FileDetails[]) => void
+  isLoading?: boolean
+  initialValue?: string
+  currentChatId?: string | null
 }
 
-export function ChatInput({
-                              input,
-                              setInput,
-                              currentChatId,
-                              handleSendMessage,
-                              handleFileUpload,
-                              isLoading = false,
-                              selectedAgent
-                          }: ChatInputProps) {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const fileUploadRef = useRef<FileUploadHandle>(null);
-    const [attachedFiles, setAttachedFiles] = useState<FileDetails[]>([]);
-    const [isTyping, setIsTyping] = useState<boolean>(false)
-    const [isFileUploading, setIsFileUploading] = useState<boolean>(false);
-    const [isRemoveAttachmentLoading, setIsRemoveAttachmentLoading] = useState<boolean>(false);
-    const [attachmentSelectedForRemoval, setAttachmentSelectedForRemoval] = useState<number | null>(null);
+export function ChatInput({ onSend, isLoading = false, initialValue = "", currentChatId = null }: ChatInputProps) {
+  const [input, setInput] = useState("")
+  const [attachedFiles, setAttachedFiles] = useState<FileDetails[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-    // Auto-resize textarea height based on content
-    useEffect(() => {
-        if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            // const scrollHeight = textareaRef.current.scrollHeight;
-            // textareaRef.current.style.height = `${scrollHeight}px`;
-        }
-    }, []);
-
-
-    const isEmpty = input.trim() === '';
-
-    const onFileSelectedAndUpload = async (files: File[]) => {
-        try {
-            setIsFileUploading(true);
-            // 1) upload immediately, get back an uploadId
-            const uploadedFileList  = await handleFileUpload(files);
-            // 2) store { file, uploadId } in state so we can preview the name locally
-            setAttachedFiles(prev => [
-                ...prev,
-                ...uploadedFileList]);
-            setIsFileUploading(false);
-        } catch (err) {
-            // If upload fails, you could show an error toast here
-            console.error("Error uploading file:", err);
-        }
-    };
-
-    const handleFileAttachment = () => {
-        if (!isLoading) {
-            fileUploadRef.current?.triggerFileDialog();
-        }
-    };
-    const removeAttachmentAt = async (index: number) => {
-        setAttachmentSelectedForRemoval(index);
-        setIsRemoveAttachmentLoading(true);
-        // 1) Find the uploadId we need to delete
-        const removingFileObj = attachedFiles[index];
-        try {
-            // await deleteFileFromServer(removingFileObj.file_id);
-            // setAttachedFiles(prev => prev.filter((e, i) => e.file_id !== removingFileObj.file_id));
-            const isNewSession = !currentChatId || currentChatId === '0' || currentChatId.length < 10;
-            const sessionId = isNewSession ? '' : currentChatId;
-            await removeAttachedFile({
-                fileId: removingFileObj.file_id,
-                currentChatId: sessionId,
-                successTask: () => {
-                    setAttachedFiles(prev => prev.filter((e, i) => e.file_id !== removingFileObj.file_id));
-                },
-                failureTask: () => {
-                    toast('Failure', {
-                        description: 'Could not remove file attachment'
-                    });
-                },
-                errorTask: () => {
-                    toast('Error', {
-                        description: 'An unexpected error occurred while removing file attachment'
-                    });
-                }
-            });
-            setIsRemoveAttachmentLoading(false);
-            setAttachmentSelectedForRemoval(null); 
-        } catch (err) {
-            console.error("Error deleting file:", err);
-        }
-    };
-    const handleKeyDown = (e: React.KeyboardEvent<Element>): void => {
-        if (
-            e instanceof KeyboardEvent &&
-            e.key === 'Enter' &&
-            !e.shiftKey
-        ) {
-            e.preventDefault();
-            // Optional: trigger your send logic here if needed
-        }
-    };
-    const handleMessageSubmit = () => {
-        if (!isLoading && input.trim()) {
-            handleSendMessage(input, selectedAgent, attachedFiles);
-            setInput("");
-            setAttachedFiles([]);
-        }
-    };
-    const handleInputChange = (value: string) => {
-        setInput(value);
-    };
-
-    const handlePaste = (event: React.ClipboardEvent) => {
-
+  useEffect(() => {
+    if (initialValue) {
+      setInput(initialValue)
     }
-    // const handlePaste = (event: React.ClipboardEvent) => {
-    //     const imagesAllowed = LLM_LIST.find(
-    //         llm => llm.modelId === chatSettings?.model
-    //     )?.imageInput
-    //
-    //     const items = event.clipboardData.items
-    //     for (const item of items) {
-    //         if (item.type.indexOf("image") === 0) {
-    //             if (!imagesAllowed) {
-    //                 toast.error(
-    //                     `Images are not supported for this model. Use models like GPT-4 Vision instead.`
-    //                 )
-    //                 return
-    //             }
-    //             const file = item.getAsFile()
-    //             if (!file) return
-    //             handleSelectDeviceFile(file)
-    //         }
-    //     }
-    // }
+  }, [initialValue])
 
-    return (
-        <Box
-            sx={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                bgcolor: 'background.paper',
-                p: { xs: 1, sm: 2 },
-                zIndex: 10,
-            }}
+  // Keep textarea focused - run on every render and on mount
+  useEffect(() => {
+    // Focus immediately on mount
+    textareaRef.current?.focus()
+  })
+
+  const handleSend = () => {
+    if (input.trim()) {
+      onSend(input, attachedFiles)
+      setInput("")
+      setAttachedFiles([])
+      // Restore focus after send with setTimeout to ensure it happens after state updates
+      setTimeout(() => textareaRef.current?.focus(), 0)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files
+    if (!files) return
+
+    setIsUploading(true)
+    try {
+      // Convert FileList to array
+      const filesArray = Array.from(files)
+      
+      // Upload all files at once
+      const uploadedFiles = await uploadFilesToServer({
+        files: filesArray,
+        currentChatId: currentChatId || "new",
+        fileFailureTask: (error: string) => {
+          console.error(`File upload warning: ${error}`)
+        },
+        failureTask: () => {
+          console.error("Failed to upload files")
+        },
+        errorTask: () => {
+          console.error("Error uploading files")
+        },
+      })
+      
+      // Map the response to FileDetails format with constructed public links
+      const formattedFiles: FileDetails[] = uploadedFiles.map((file: any) => ({
+        file_id: file.file_id || file.uploadId,
+        original_file_name: file.original_file_name || file.fileName,
+        file_size: file.file_size,
+        file_type: file.file_type,
+        public_link: file.public_link || `/api/interaction/download-file?uploadId=${file.file_id || file.uploadId}`,
+      }))
+      
+      setAttachedFiles([...attachedFiles, ...formattedFiles])
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+      // Restore focus after upload
+      textareaRef.current?.focus()
+    }
+  }
+
+  const removeAttachedFile = async (fileId: string) => {
+    try {
+      await removeAttachedFileAPI({
+        fileId,
+        currentChatId: currentChatId || "new",
+        successTask: () => {
+          setAttachedFiles(attachedFiles.filter(f => f.file_id !== fileId))
+        },
+        failureTask: () => {
+          console.error("Failed to remove file attachment")
+        },
+        errorTask: () => {
+          console.error("Error removing file attachment")
+        },
+      })
+    } catch (error) {
+      console.error(`Failed to remove file with ID: ${fileId}`, error)
+    }
+  }
+
+  return (
+    <div className="sticky bottom-2 bg-background pb-3 shrink-0">
+      {/* Attached Files Display */}
+      {attachedFiles.length > 0 && (
+        <div className="px-3 mb-3 flex flex-wrap gap-2">
+          {attachedFiles.map((file) => (
+            <div
+              key={file.file_id}
+              className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md text-sm"
+            >
+              <span className="truncate max-w-xs">{file.original_file_name}</span>
+              <button
+                onClick={() => removeAttachedFile(file.file_id)}
+                disabled={isLoading}
+                className="ml-1 hover:text-destructive disabled:opacity-50 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Input Area */}
+      <div className="flex gap-3 items-center px-3">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={isLoading || isUploading}
+                className="flex-shrink-0 h-10 w-10 cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isUploading ? "Uploading..." : "Attach file"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileSelect}
+          className="hidden cursor-pointer"
+          disabled={isLoading || isUploading}
+        />
+
+        <Textarea
+          ref={textareaRef}
+          placeholder="Message Argus Intelligence... (Enter to send, Shift+Enter for new line)"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isLoading || isUploading}
+          className="min-h-10 max-h-32 resize-none flex-1 py-2 px-3 !focus-visible:ring-0 !focus-visible:border-transparent"
+        />
+
+        <Button
+          onClick={handleSend}
+          disabled={isLoading || isUploading || !input.trim()}
+          className="flex-shrink-0 h-10 w-10 px-0 cursor-pointer"
+          size="icon"
         >
-            <Container maxWidth="md">
-                <Paper
-                    variant="outlined"
-                    sx={{
-                        position: 'relative',
-                        borderRadius: '16px',
-                        pb: 5,
-                        bgcolor: alpha('#708090', 0.1),
-                        border: 'none'
-                    }}
-                >
-                    {(attachedFiles.length > 0 || isFileUploading) && (
-                        <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
-                            <Grid container spacing={1} sx={{alignItems: 'center'}}>
-                                {attachedFiles.map((file_item, idx) => (
-                                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
-                                        <Paper
-                                            variant="outlined"
-                                            sx={attachmentStyles}
-                                        >
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
-                                                {file_item.file_type.startsWith("image/") ? (
-                                                    <Box
-                                                        component="img"
-                                                        src={file_item.public_link}
-                                                        alt={file_item.original_file_name}
-                                                        sx={{ height: 24, width: 24, objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }}
-                                                    />
-                                                ) : (
-                                                    <FiFile className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                                                )}
-                                                <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
-                                                    {file_item.original_file_name} ({(file_item.file_size / 1024).toFixed(1)} KB)
-                                                </Typography>
-                                            </Box>
-                                            <IconButton
-                                                size="small"
-                                                onClick={(attachmentSelectedForRemoval === idx && isRemoveAttachmentLoading) ? undefined : () => removeAttachmentAt(idx)}
-                                                sx={{
-                                                    bgcolor: 'rgba(255,255,255,0.7)',
-                                                    '&:hover': { bgcolor: 'rgba(255,255,255,1)' }
-                                                }}
-                                            >
-                                                {(attachmentSelectedForRemoval === idx && isRemoveAttachmentLoading) ? <CircularProgress size={16} /> : <CloseIcon sx={{ fontSize: 16 }} /> }
-                                            </IconButton>
-                                        </Paper>
-                                    </Grid>
-                                ))}
-                                {isFileUploading && <Box sx={{ p: 1.5, borderRadius: '8px', bgcolor: 'action.hover' }}>
-                                    <LoadingDots />
-                                </Box>}
-                            </Grid>
-                        </Box>
-                    )}
-                    <Box sx={{overflowY: 'scroll', maxHeight: '200px', p: 2}}>
-                        <TextareaAutosize
-                            className="ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring text-md flex w-full resize-none rounded-md border-none bg-transparent px-4 py-3 pb-16 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder={`Ask anything.`}
-                            onValueChange={handleInputChange}
-                            value={input}
-                            minRows={1}
-                        />
-                    </Box>
-                    <Box sx={{ position: 'absolute', bottom: 1, left: 1, right: 1, p: 1 }}>
-                        <ChatToolbar isEmpty={isEmpty}
-                                     handleSubmit={handleMessageSubmit}
-                                     handleFileAttachment={handleFileAttachment}
-                        />
-                    </Box>
-                    <FileUpload
-                        ref={fileUploadRef}
-                        onFileUpload={onFileSelectedAndUpload}
-                        disabled={isLoading}
-                        showButton={false}
-                    />
-                </Paper>
-            </Container>
-        </Box>
-    );
+          <ArrowUp className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
 }
