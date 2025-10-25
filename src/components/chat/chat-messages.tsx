@@ -16,9 +16,10 @@ export interface Message {
 interface ChatMessagesProps {
   messages: Message[]
   isLoading?: boolean
+  isLoadingSession?: boolean
 }
 
-export function ChatMessages({ messages, isLoading = false }: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading = false, isLoadingSession = false }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -28,43 +29,45 @@ export function ChatMessages({ messages, isLoading = false }: ChatMessagesProps)
     }
   }, [messages, isLoading])
 
+  if (messages.length === 0 && !isLoadingSession) {
+    return (
+      <div className="flex-1 bg-background flex flex-col items-center justify-center text-center px-4 gap-6">
+        <div className="space-y-3">
+          <h2 className="text-2xl font-semibold">Start a conversation</h2>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+            Ask Argus Intelligence anything. Type your message below to begin.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <ScrollArea className="flex-1 bg-background pt-8 overflow-hidden">
-      <div className="h-full flex flex-col py-6">
-        <div className="space-y-4 flex-1 flex flex-col">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center flex-1 text-center px-4">
-              <h2 className="text-2xl font-semibold mb-2">Start a conversation</h2>
-              <p className="text-muted-foreground text-sm max-w-sm">
-                Ask Argus Intelligence anything. Type your message below to begin.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <ChatMessage
-                  key={message.id}
-                  role={message.role}
-                  content={message.content}
-                  timestamp={message.timestamp}
-                />
-              ))}
+    <ScrollArea className="flex-1 bg-background pt-10 overflow-hidden">
+      <div className="w-full flex flex-col">
+        <div className="space-y-4 py-6 w-full">
+          {messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              role={message.role}
+              content={message.content}
+              timestamp={message.timestamp}
+            />
+          ))}
 
-              {isLoading && (
-                <div className="py-4 px-3">
-                  <div className="flex gap-3">
-                    <div className="h-8 w-8 flex-shrink-0" />
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Thinking...</span>
-                    </div>
-                  </div>
+          {isLoading && (
+            <div className="py-4 px-3">
+              <div className="flex gap-3">
+                <div className="h-8 w-8 flex-shrink-0" />
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Thinking...</span>
                 </div>
-              )}
-
-              <div ref={scrollRef} className="h-1" />
+              </div>
             </div>
           )}
+
+          <div ref={scrollRef} className="h-1" />
         </div>
       </div>
     </ScrollArea>

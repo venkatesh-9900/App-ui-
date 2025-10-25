@@ -187,7 +187,7 @@ export default function ChatPage() {
                         <p className="text-sm text-muted-foreground">Loading chat session...</p>
                     </div>
                 )}
-                <ChatMessages messages={messages} isLoading={isLoading} />
+                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} />
                 <ChatInput 
                     key={`${sessionId || 'new'}-${initialMessage}`}
                     onSend={handleSendMessage} 
