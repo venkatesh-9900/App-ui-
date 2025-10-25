@@ -151,16 +151,17 @@ export function ChatMessage({ role, content, timestamp }: ChatMessageProps) {
             </div>
           )}
 
-          {/* Copy button - always visible for assistant messages */}
-          <Button
-            onClick={handleCopy}
-            size="sm"
-            variant="ghost"
-            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-            title="Copy message"
-          >
-            <Copy className="h-3.5 w-3.5 mr-1.5" />
-          </Button>
+          {cleanContent && (
+            <Button
+              onClick={handleCopy}
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Copy message"
+            >
+              <Copy className="h-3.5 w-3.5 mr-1.5" />
+            </Button>
+          )}
           
           {/* {timestamp && (
             <p className="text-xs font-medium text-muted-foreground">
