@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Loader2 } from "lucide-react"
 import { ChatMessage } from "./chat-message"
 import { FileDetails } from "@/types/files"
+import ChatStarter from "./chat-starter"
 
 export interface Message {
   id: string
@@ -33,14 +34,7 @@ export function ChatMessages({ messages, isLoading = false, isLoadingSession = f
 
   if (messages.length === 0 && !isLoadingSession) {
     return (
-      <div className="flex-1 bg-background flex flex-col items-center justify-center text-center px-4 gap-6">
-        <div className="space-y-3">
-          <h2 className="text-2xl font-semibold">Start a conversation</h2>
-          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-            Ask Argus Intelligence anything. Type your message below to begin.
-          </p>
-        </div>
-      </div>
+      <ChatStarter></ChatStarter>
     )
   }
 
