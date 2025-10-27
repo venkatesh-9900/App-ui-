@@ -31,6 +31,10 @@ export function ChatSessionsList() {
     loadChatSessions()
   }, [])
 
+  useEffect(() => {
+    loadChatSessions()
+  }, [currentSessionId])
+
   const extractUserMessage = (text: string) => {
     const match = text.match(/User Request:\s*(.+?)(?:\n|$)/)
     return match ? match[1].trim() : text

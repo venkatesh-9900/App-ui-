@@ -11,9 +11,11 @@ import { ChatMessage } from "@/types/chat-types"
 import { ChatContext } from "@/contexts"
 import { FileDetails } from "@/types"
 import { fetchSessionDetails } from "@/hooks/chat-service"
+import { useRouter } from "next/navigation"
 
 export default function ChatPage() {
     const searchParams = useSearchParams()
+    const router = useRouter()
     const { selectedModel, setIsShared, setShareableLink } = useContext(ChatContext)
     const [messages, setMessages] = useState<Message[]>([])
     const [isLoading, setIsLoading] = useState(false)
@@ -169,6 +171,7 @@ export default function ChatPage() {
                 updateTyping: () => {},
                 setSelectedVizUrl: () => {},
                 setIsSplitMode: () => {},
+                router: router,
             })
             
             console.log("Message streaming completed")
