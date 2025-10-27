@@ -62,7 +62,7 @@ export function ChatSessionsList() {
   return (
     <Collapsible
       asChild
-      defaultOpen={true}
+      defaultOpen={false}
       className="group/collapsible"
       onOpenChange={(open) => {
         if (open && chatSessions.length === 0) {

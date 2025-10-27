@@ -1,72 +1,69 @@
 "use client"
 
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import Link from "next/link"
+import { useSearchParams, usePathname } from "next/navigation"
+import {
+  ChevronRight,
+  type LucideIcon,
+} from "lucide-react"
 
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import { ChatSessionsList } from "@/components/chat/chat-sessions"
+import { Web3Monitoring } from "@/components/app-sidebar/web3-monitoring"
 
 export function NavMain({
-  items,
+    menuItems,
 }: {
-  items: {
-    title: string
+  menuItems: {
+    name: string
     url: string
-    icon?: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
+    icon: LucideIcon
   }[]
 }) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const isNewChat = searchParams.get('new') === 'true'
+  const hasPrompt = searchParams.get('prompt') !== null
+  const sessionId = searchParams.get('sessionId')
+
+  const isActive = (url: string) => {
+    // Check for home
+    if (url === "/home" && pathname === "/home") {
+      return true
+    }
+    // Check for new chat (includes ?new=true or ?prompt=xxx)
+    if (url === "/chat?new=true" && pathname === "/chat" && (isNewChat || hasPrompt)) {
+      return true
+    }
+    // Check for regular chat (not new, not with sessionId, not with prompt)
+    if (url === "/chat" && pathname === "/chat" && !isNewChat && !sessionId && !hasPrompt) {
+      return true
+    }
+    return false
+  }
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Monitoring</SidebarGroupLabel>
+      {/* <SidebarGroupLabel>Your Space</SidebarGroupLabel> */}
       <SidebarMenu>
-        {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
-                          <span>{subItem.title}</span>
-                        </a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
+        {menuItems.map((item) => (
+          <SidebarMenuItem key={item.name}>
+            <SidebarMenuButton asChild isActive={isActive(item.url)}>
+              <Link href={item.url}>
+                <item.icon />
+                <span>{item.name}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         ))}
+
+        <ChatSessionsList />
+        <Web3Monitoring />
       </SidebarMenu>
     </SidebarGroup>
   )

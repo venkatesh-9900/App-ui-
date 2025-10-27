@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 
-export function TeamSwitcher() {
+export function AppSidebarHeader() {
   const { setTheme, theme } = useTheme()
   const { toggleSidebar } = useSidebar()
   const [mounted, setMounted] = React.useState(false)
