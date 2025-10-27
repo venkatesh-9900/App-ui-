@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
 import { FileDetails } from "@/types/files"
 import { FileAttachments } from "./file-attachments"
+import MarkdownHTMLRenderer from "./html-markdown-renderer"
 
 interface ChatMessageProps {
   role: "user" | "assistant"
@@ -119,16 +120,9 @@ export function ChatMessage({ role, content, timestamp, attachments }: ChatMessa
         <div className="flex flex-col items-start gap-3 flex-1 w-full" ref={containerRef}>
           {cleanContent && (
             <>
+              {/* {isHtmlContent ? ( */}
               {isHtmlContent ? (
-                // Render HTML content in iframe for safety
-                <div className="w-full border rounded-lg overflow-hidden bg-white">
-                  <iframe
-                    srcDoc={cleanContent}
-                    className="w-full h-96 border-0"
-                    title="HTML Content"
-                    sandbox="allow-same-origin allow-scripts"
-                  />
-                </div>
+                <MarkdownHTMLRenderer content={cleanContent} /> 
               ) : (
                 // Render markdown content
                 <div className="text-sm leading-relaxed break-words prose prose-sm dark:prose-invert max-w-none prose-p:m-0 prose-headings:my-1">
