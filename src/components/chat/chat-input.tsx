@@ -177,7 +177,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
 
         <Textarea
           ref={textareaRef}
-          placeholder="Message Argus Intelligence... (Enter to send, Shift+Enter for new line)"
+          placeholder="Enter to send, Shift+Enter for new line..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}

@@ -4,7 +4,7 @@ import { MessagesSquareIcon } from "lucide-react"
 
 export default function ChatStarter() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-secondary/5">
+    <div className="flex-1 bg-background flex flex-col items-center justify-center text-center px-4 gap-6">
       <div className="text-center space-y-6 max-w-md mx-auto px-4">
         {/* Icon */}
         <div className="flex justify-center">
@@ -15,15 +15,12 @@ export default function ChatStarter() {
         </div>
 
         {/* Text */}
-        <div className="space-y-3">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Start a conversation
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Ask Argus Intelligence anything.
-          </p>
           <p className="text-sm text-muted-foreground/70">
-            Type your message below to begin.
+            Type your message below
           </p>
         </div>
 
