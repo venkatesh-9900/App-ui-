@@ -1,4 +1,4 @@
-import {FileDetails, Message } from "@/types";
+import {FileDetails } from "@/types";
 import { file_attachments_delimiter } from "@/constants/constants";
 
 /**
@@ -94,4 +94,58 @@ export const extractAttachedFilesPublicLinks = (text: string) : { message: strin
             attachedFiles: []
         };
     }
+}
+
+// export const getChatFragments = (messageText: string): ChatFragment[] => {
+//     let fragments: ChatFragment[] = [];
+//     // console.log("Message Text:", messageText);
+//     let messageTextSubstring = messageText;
+//     while (messageTextSubstring.trim().length > 0) {
+//         const posReasoning = messageTextSubstring.indexOf('<think>');
+//         if (posReasoning >= 0) {
+//             if (posReasoning > 0) {
+//                 const responseString = removeToolUsageAndResults(messageTextSubstring.substring(0, posReasoning)).trim();
+//                 if (responseString.length > 0) {
+//                     fragments.push({ text: responseString, type: 'response' });
+//                 }
+//             }
+//             messageTextSubstring = messageTextSubstring.substring(posReasoning + '<think>'.length).trim();
+//             const posReasoningEnd = messageTextSubstring.indexOf('</think>');
+//             if (posReasoningEnd > 0) {
+//                 const reasoningString = messageTextSubstring.substring(0, posReasoningEnd).trim();
+//                 if (reasoningString.length > 0) {
+//                     fragments.push({ text: reasoningString, type: 'thought' });
+//                 }
+//                 messageTextSubstring = messageTextSubstring.substring(posReasoningEnd + '</think>'.length).trim();
+//             } else if (posReasoningEnd == 0) {
+//                 messageTextSubstring = messageTextSubstring.substring('</think>'.length).trim();
+//             } else {
+//                 if (messageTextSubstring.trim().length > 0) {
+//                     fragments.push({ text: messageTextSubstring.trim(), type: 'thought' });
+//                 }
+//                 messageTextSubstring = '';
+//             }
+//         } else {
+//             const responseString = removeToolUsageAndResults(messageTextSubstring).trim();
+//             if (responseString.length > 0) {
+//                 fragments.push({ text: removeToolUsageAndResults(messageTextSubstring), type: 'response' });
+//             }
+//             messageTextSubstring = '';
+//         }
+//     }
+//     console.log("Fragments:", fragments);
+//     return fragments;
+// }
+
+function removeToolUsageAndResults(text: string) {
+    const complexToolUseRegex = /\s*\{"name":\s*"[^"]*",[\s\S]*?"arguments":\s*\{[\s\S]*?\}\}\}\s*,?\s*/g;
+    const simpleToolUseRegex = /\s*\{"name":\s*"[^"]*",\s*"arguments":\s*\{[\s\S]*?\}\}\s*/g;
+    let cleanText = text;
+    
+    // First, remove the tool call JSON
+    cleanText = cleanText.replace(complexToolUseRegex, '');
+    cleanText = cleanText.replace(simpleToolUseRegex, '');
+
+    // Trim any extra whitespace/newlines remaining at the start/end
+    return cleanText.trim();
 }

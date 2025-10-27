@@ -1,9 +1,9 @@
-import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config.ts";
+import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config";
 import { app_name } from "@/constants/constants";
-import {ChatMessage, FileDetails, Message, MessageContent} from "@/types";
+import {FileDetails } from "@/types";
+import { ChatMessage } from "@/types/chat-types";
 import { addAttachedFilesPublicLinks } from "@/utils/utils";
-import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service.ts";
-
+import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 export async function handleStreamMessage({
                                               retry = false,
                                               text,
@@ -19,7 +19,8 @@ export async function handleStreamMessage({
                                               setIsSplitMode,
                                               selectedAgent,
                                               attachedFiles,
-                                              showError
+                                              showError,
+                                              router
                                           }: any) {
     if (retry) {
         console.log("Refreshing access token");
@@ -202,7 +203,8 @@ export async function handleStreamMessage({
 
         setMessages([...updatedMessages]);
         if (updateURL) {
-            history.replaceState(null, '', `/chat/${newChatId}`);
+            router.replace(`/chat?sessionId=${newChatId}`);
+            //redirect(`/chat?sessionId=${newChatId}`);
         }
     } catch (error: any) {
         console.error('Error in handleStreamMessage:', error);
