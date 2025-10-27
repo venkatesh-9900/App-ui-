@@ -1,4 +1,4 @@
-import config from "../config/config.ts";
+import config from "@/config/config";
 
 interface logoutRequestParams {
     successTask: (idToken: string) => void;
@@ -24,7 +24,9 @@ export const logoutUser = async ({successTask, failureTask, errorTask}: logoutRe
     try {
         const accessToken = localStorage.getItem('access_token');
         if (accessToken) {
-            const response = await fetch(config.ENDPOINTS.AUTH.LOGOUT, {
+            console.log("Logging out user", config.ENDPOINTS.AUTH.FETCH_LOGOUT_URL);
+            console.log("Access token", accessToken);
+            const response = await fetch(config.ENDPOINTS.AUTH.FETCH_LOGOUT_URL, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -35,12 +37,14 @@ export const logoutUser = async ({successTask, failureTask, errorTask}: logoutRe
                 throw new Error(`Logout failed with status: ${response.status}`);
             }
             const responseText = await response.text();
-            const idToken = JSON.parse(responseText);
-            console.log(idToken);
-            if (idToken.id_token) {
-                successTask(idToken.id_token);
+            const responseData = JSON.parse(responseText);
+            console.log(responseData);
+            if (responseData.url) {
+                successTask(responseData.url);
+                window.location.href = responseData.url;
             } else {
                 failureTask();
+                console.error('Logout failed - no logout URL received');
             }
         }
     } catch (err) {
@@ -68,7 +72,7 @@ export const refreshAccessToken = async ({failureTask, errorTask}: refreshAccess
             console.log(newAccessToken);
             if (newAccessToken.access_token) {
                 localStorage.setItem("access_token", newAccessToken.access_token || "");
-                localStorage.setItem("isAuthenticated", "true");
+                localStorage.setItem("is_authenticated", "true");
             } else {
                 failureTask();
             }
@@ -81,6 +85,7 @@ export const refreshAccessToken = async ({failureTask, errorTask}: refreshAccess
 
 export const fetchLoginURL = async ({errorTask}: fetchLoginURLParams) : Promise<string> => {
     try {
+        console.log("Fetching login URL", config.ENDPOINTS.AUTH.FETCH_LOGIN_URL);
         const response = await fetch(config.ENDPOINTS.AUTH.FETCH_LOGIN_URL, {
             method: 'GET',
             headers: {
@@ -168,3 +173,4 @@ export const reauthenticationStep = async (errorTask: () => void) => {
         errorTask();
     }
 }
+

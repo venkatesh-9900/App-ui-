@@ -1,60 +1,56 @@
-import {ENDPOINTS} from "@/config/config.ts";
-import { fetchLoginURL, refreshAccessToken } from "@/hooks/auth-service";
-import {iam_login_url} from "@/constants/iam-uri.tsx";
-import { buildHeaderJSON } from "@/utils/axios/auth-axios";
-const API_ENDPOINT = ENDPOINTS.FETCH_AGENTS_LIST;
-
-
+import {ENDPOINTS} from "@/config/config"
+import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service"
+import { app_name } from "@/constants/constants"
 
 interface getAgentsListParams {
-    retry?: boolean;
-    successTask: (agentDetails: string[]) => void;
-    failureTask: () => void;
-    errorTask: () => void;
+    retry?: boolean
+    successTask: (agentDetails: string[]) => void
+    failureTask: () => void
+    errorTask: () => void
 }
+
 export const getAgentsList = async ({successTask, failureTask, errorTask, retry = false}: getAgentsListParams) => {
     try {
         if (retry) {
-            console.log("Refreshing access token");
-            await refreshAccessToken({failureTask, errorTask});
+            console.log("Refreshing access token")
+            await refreshAccessToken({failureTask, errorTask})
         }
-        const response = await fetch(API_ENDPOINT, {
+        const token = localStorage.getItem('access_token')
+        const response = await fetch(ENDPOINTS.FETCH_AGENTS_LIST, {
             method: 'GET',
-            headers: buildHeaderJSON(false),
-        });
-        console.log(response);
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+        })
+        console.log(response)
         if (response.status == 401) {
             if (retry) {
-                console.log("Redirecting to login page");
-                const login_url = await fetchLoginURL({
-                    errorTask: errorTask
-                });
-                if (login_url) {
-                    window.location.replace(login_url);
-                } else {
-                    errorTask();
-                }
+                reauthenticationStep(() => {
+                    console.log("Error encountered while fetching login URL")
+                })
             } else {
                 await getAgentsList({
                     retry: true, 
                     successTask,
                     failureTask,
                     errorTask
-                });
+                })
             }
         } else if (response.status == 200) {
-            const agentsList = await response.json();
+            const agentsList = await response.json()
             if (agentsList.errors && agentsList.errors.length > 0) {
-                throw new Error(`Failed to fetch agents list due to these error(s): ${agentsList.errors.join(', ')}`); 
+                throw new Error(`Failed to fetch agents list due to these error(s): ${agentsList.errors.join(', ')}`)
             } else {
-                successTask(agentsList.data.agents);
+                successTask(agentsList.data.agents)
             }
         } else {
-            console.error("Failed to fetch agents list with status code:", response.status);
-            failureTask();
+            console.error("Failed to fetch agents list with status code:", response.status)
+            failureTask()
         }
     } catch (error) {
-        console.error("Failed to fetch agents list:", error);
-        errorTask();
+        console.error("Failed to fetch agents list:", error)
+        errorTask()
     }
 }

@@ -1,6 +1,6 @@
-import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios.ts";
+import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios";
 import apiClient from "@/utils/axios/api-client";
-import {ENDPOINTS} from "@/config/config.ts";
+import {ENDPOINTS} from "@/config/config";
 import {
     Team,
     TeamConfiguratorProps,

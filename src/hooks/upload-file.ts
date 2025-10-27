@@ -1,9 +1,8 @@
-import axiosAuthServices, {axiosAuthUploadServices, buildFileHeader, buildHeader} from "@/utils/axios/auth-axios.ts";
-import {ENDPOINTS} from "@/config/config.ts";
+import axiosAuthServices, {axiosAuthUploadServices, buildFileHeader, buildHeader} from "@/utils/axios/auth-axios";
+import {ENDPOINTS} from "@/config/config";
 import {FileDetails, FileUploadResponse, UserProfileImageUploadResponse} from "@/types";
-import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service.ts";
+import {fetchLoginURL, reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 import { app_name } from "@/constants/constants";
-import { iam_login_url } from "@/constants/iam-uri";
 
 interface UploadFilesApiParams {
     retry?: boolean;
