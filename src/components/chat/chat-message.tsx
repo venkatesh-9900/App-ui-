@@ -80,7 +80,7 @@ export function ChatMessage({ role, content, timestamp, attachments }: ChatMessa
               <FileAttachments
                 attachments={attachments}
               />
-              <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{cleanContent}</p>
+              <p className="text-sm leading-7 break-words whitespace-pre-wrap">{cleanContent}</p>
             </Card>
             {/* Copy button - visible on hover only for user messages */}
             <Button
@@ -125,7 +125,7 @@ export function ChatMessage({ role, content, timestamp, attachments }: ChatMessa
                 <MarkdownHTMLRenderer content={cleanContent} /> 
               ) : (
                 // Render markdown content
-                <div className="text-sm leading-relaxed break-words prose prose-sm dark:prose-invert max-w-none prose-p:m-0 prose-headings:my-1">
+                <div className="text-sm leading-7 break-words prose prose-sm dark:prose-invert max-w-none prose-p:m-0 prose-headings:my-1">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                   >

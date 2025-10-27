@@ -37,7 +37,7 @@ export default function LandingPage() {
           <Button 
             onClick={handleSSOLogin}
             size="lg"
-            className="w-full sm:w-auto"
+            className="cursor-pointer w-full sm:w-auto"
             
           >
           Enterprise Single Sign-On<ArrowRight className="w-4 h-4" />

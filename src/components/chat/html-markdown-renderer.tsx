@@ -61,7 +61,7 @@ export default function MarkdownWithD3IframeRenderer({ content }: { content: str
   };
 
   return (
-    <div className="text-sm leading-relaxed break-words prose prose-sm dark:prose-invert max-w-none prose-p:m-0 prose-headings:my-1">
+    <div className="text-sm leading-7 break-words prose prose-sm dark:prose-invert max-w-none prose-p:m-0 prose-headings:my-1">
       <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]} components={components}>
         {content}
       </ReactMarkdown>
