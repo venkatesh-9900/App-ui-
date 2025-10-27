@@ -99,6 +99,7 @@ export default function ChatPage() {
                 role: msg.author === "user" ? "user" : "assistant",
                 content: msg.content,
                 timestamp: new Date(msg.timestamp),
+                attachments: msg.attachments || [],
             }))
 
             console.log('Converted messages count:', convertedMessages.length)
@@ -116,7 +117,7 @@ export default function ChatPage() {
             author: msg.role === "user" ? "user" : "assistant",
             content: msg.content,
             timestamp: msg.timestamp.toISOString(),
-            attachments: [],
+            attachments: msg.attachments || [],
         }))
 
         // Add user message
@@ -135,6 +136,7 @@ export default function ChatPage() {
             role: msg.author === "user" ? "user" : "assistant",
             content: msg.content,
             timestamp: new Date(msg.timestamp),
+            attachments: msg.attachments || [],
         }))
         setMessages(displayMessages)
         setIsLoading(true)
@@ -153,6 +155,7 @@ export default function ChatPage() {
                         role: msg.author === "user" ? "user" : "assistant",
                         content: msg.content,
                         timestamp: new Date(msg.timestamp),
+                        attachments: msg.attachments || [],
                     }))
                     setMessages(convertedMessages)
                 },

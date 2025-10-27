@@ -5,12 +5,14 @@ import { useEffect, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Loader2 } from "lucide-react"
 import { ChatMessage } from "./chat-message"
+import { FileDetails } from "@/types/files"
 
 export interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   timestamp: Date
+  attachments: FileDetails[]
 }
 
 interface ChatMessagesProps {
@@ -52,6 +54,7 @@ export function ChatMessages({ messages, isLoading = false, isLoadingSession = f
               role={message.role}
               content={message.content}
               timestamp={message.timestamp}
+              attachments={message.attachments}
             />
           ))}
 

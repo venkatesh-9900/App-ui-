@@ -12,14 +12,17 @@ import { Copy } from "lucide-react"
 import { extractRenderVizUrls, stripRenderVizUrls } from "@/utils/utils"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
+import { FileDetails } from "@/types/files"
+import { FileAttachments } from "./file-attachments"
 
 interface ChatMessageProps {
   role: "user" | "assistant"
   content: string
   timestamp?: Date
+  attachments?: FileDetails[]
 }
 
-export function ChatMessage({ role, content, timestamp }: ChatMessageProps) {
+export function ChatMessage({ role, content, timestamp, attachments }: ChatMessageProps) {
   const { userInfo } = useAuth()
   const isUser = role === "user"
   const vizUrls = extractRenderVizUrls(content)
@@ -68,11 +71,14 @@ export function ChatMessage({ role, content, timestamp }: ChatMessageProps) {
   if (isUser) {
     return (
       <div className="flex gap-3 mb-3 justify-end px-3 group">
-        <div className="flex flex-col items-end gap-1 max-w-lg">
+        <div className="flex flex-col items-end gap-1 max-w-3xl">
           <div className="flex items-end gap-2">
             <Card
               className="w-fit px-4 py-3 bg-primary text-primary-foreground rounded-2xl rounded-tr-sm shadow-md"
             >
+              <FileAttachments
+                attachments={attachments}
+              />
               <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{cleanContent}</p>
             </Card>
             {/* Copy button - visible on hover only for user messages */}
