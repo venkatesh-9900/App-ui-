@@ -86,7 +86,7 @@ export function ChatNavbar({
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-background">
       <div className="flex items-center gap-2">
-        <p className="text-xs text-muted-foreground">Conversation with Argus Intelligence</p>
+        <p className="text-xs text-muted-foreground"><span className="hidden md:inline">Conversation with </span>Argus Intelligence</p>
         <div className="h-2 w-2 rounded-full bg-green-500"></div>
       </div>
 
