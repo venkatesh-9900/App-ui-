@@ -25,7 +25,7 @@ export default function ChatPage() {
     const [hasLoadedInitialSession, setHasLoadedInitialSession] = useState(false)
 
     useEffect(() => {
-        // Get params
+        // Get params here
         const session = searchParams.get('sessionId')
         const prompt = searchParams.get('prompt')
         const isNew = searchParams.get('new')
