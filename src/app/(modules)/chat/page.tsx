@@ -29,16 +29,17 @@ export default function ChatPage() {
         const session = searchParams.get('sessionId')
         const prompt = searchParams.get('prompt')
         const isNew = searchParams.get('new')
+        const userid = searchParams.get('userid')
         
-        console.log('ChatPage useEffect - sessionId:', session, 'prompt:', prompt, 'isNew:', isNew)
+        console.log('ChatPage useEffect - sessionId:', session, 'prompt:', prompt, 'isNew:', isNew, 'userid:', userid)
         
         if (session) {
             // Loading an existing session
-            console.log('Loading existing session:', session)
+            console.log('Loading existing session:', session, 'with userid:', userid)
             setSessionId(session)
             setMessages([])
             setInitialMessage("")
-            loadExistingSession(session)
+            loadExistingSession(session, userid)
             setHasLoadedInitialSession(true)
         } else if (isNew === 'true') {
             console.log('Fresh new chat')
@@ -59,30 +60,37 @@ export default function ChatPage() {
             setInitialMessage("")
             setHasLoadedInitialSession(true)
         }
-    }, [searchParams.get('sessionId'), searchParams.get('prompt'), searchParams.get('new'), hasLoadedInitialSession])
+    }, [searchParams.get('sessionId'), searchParams.get('prompt'), searchParams.get('new'), searchParams.get('userid'), hasLoadedInitialSession])
 
-    const loadExistingSession = async (id: string) => {
+    const loadExistingSession = async (id: string, userid?: string | null) => {
         setIsLoadingSession(true)
         try {
+                        // Fetch session details to get share status (only for personal sessions)
+                        // For shared sessions, skip this as the viewer may not have permission
+                        if (!userid) {
+                            await fetchSessionDetails({
+                                sessionId: id,
+                                successTask: (is_sharable: boolean, sharable_link: string) => {
+                                    setIsShared(is_sharable)
+                                    setShareableLink(sharable_link || "")
+                                },
+                                failureTask: () => {
+                                    console.error("Failed to fetch session details")
+                                },
+                                errorTask: () => {
+                                    console.error("Error fetching session details")
+                                },
+                            })
+                        } else {
+                            // For shared sessions, mark as shared
+                            console.log('Loading shared session, skipping session details fetch')
+                            setIsShared(true)
+                        }
 
-                        // Fetch session details to get share status
-                        await fetchSessionDetails({
-                            sessionId: id,
-                            successTask: (is_sharable: boolean, sharable_link: string) => {
-                                setIsShared(is_sharable)
-                                setShareableLink(sharable_link || "")
-                            },
-                            failureTask: () => {
-                                console.error("Failed to fetch session details")
-                            },
-                            errorTask: () => {
-                                console.error("Error fetching session details")
-                            },
-                        })
-
-            console.log('Fetching chat messages for session:', id)
+            console.log('Fetching chat messages for session:', id, 'userid:', userid)
             const chatData = await loadChatMessages({
                 sessionId: id,
+                userid: userid || undefined,
                 failureTask: () => {
                     console.error("Failed to load messages")
                 },

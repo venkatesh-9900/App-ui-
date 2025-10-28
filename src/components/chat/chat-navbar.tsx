@@ -35,11 +35,11 @@ export function ChatNavbar({
   sessionId,
 }: ChatNavbarProps) {
   const [isToggling, setIsToggling] = useState(false)
-  const { isShared, setIsShared, shareableLink, setShareableLink } = useContext(ChatContext)
+  const { isShared, setIsShared, shareableLink, setShareableLink, isSharedByOther } = useContext(ChatContext)
 
   const handleToggleShare = async () => {
-    if (!sessionId) {
-      console.error("No session ID available")
+    if (!sessionId || isSharedByOther) {
+      console.error("No session ID available or this is a shared session")
       return
     }
 
@@ -99,12 +99,12 @@ export function ChatNavbar({
         />
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild className="cursor-pointer">
+          <DropdownMenuTrigger asChild className={isSharedByOther ? "cursor-not-allowed" : "cursor-pointer"}>
             <Button 
               variant="outline" 
               size="icon" 
-              disabled={!sessionId || isToggling}
-              className={isShared ? "!text-white !bg-green-500 !hover:bg-green-600 !border-green-500 dark:!bg-green-600 dark:!hover:bg-green-700" : ""}
+              disabled={!sessionId || isToggling || isSharedByOther}
+              className={"!text-white !bg-green-500 !hover:bg-green-600 !border-green-500 dark:!bg-green-600 dark:!hover:bg-green-700"}
             >
               <Share2 className="h-4 w-4" />
             </Button>
@@ -114,7 +114,7 @@ export function ChatNavbar({
             <DropdownMenuItem 
               onClick={handleToggleShare} 
               className="cursor-pointer"
-              disabled={isToggling}
+              disabled={isToggling || isSharedByOther}
             >
               {isShared ? (
                 <>

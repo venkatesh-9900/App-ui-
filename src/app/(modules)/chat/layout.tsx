@@ -23,7 +23,9 @@ export default function ChatLayout({
   const [isLoadingAgents, setIsLoadingAgents] = useState(true)
   const [isShared, setIsShared] = useState(false)
   const [shareableLink, setShareableLink] = useState("")
+  const [isSharedByOther, setIsSharedByOther] = useState(false)
   const sessionId = searchParams.get('sessionId')
+  const userid = searchParams.get('userid')
 
   useEffect(() => {
     getAgentsList({
@@ -53,8 +55,13 @@ export default function ChatLayout({
     setIsLoadingAgents(false)
   }, [])
 
+  useEffect(() => {
+    // Set if this is a shared session by another user
+    setIsSharedByOther(!!userid)
+  }, [userid])
+
   return (
-    <ChatContext.Provider value={{ selectedModel, setSelectedModel, isShared, setIsShared, shareableLink, setShareableLink }}>
+    <ChatContext.Provider value={{ selectedModel, setSelectedModel, isShared, setIsShared, shareableLink, setShareableLink, isSharedByOther, setIsSharedByOther }}>
       <div className="flex flex-col h-screen">
         <ChatNavbar
           selectedModel={selectedModel}

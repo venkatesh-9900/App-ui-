@@ -9,6 +9,8 @@ export const ChatContext = createContext<{
   setIsShared: (isShared: boolean) => void
   shareableLink: string
   setShareableLink: (link: string) => void
+  isSharedByOther: boolean
+  setIsSharedByOther: (isSharedByOther: boolean) => void
 }>({
   selectedModel: "default",
   setSelectedModel: () => {},
@@ -16,4 +18,6 @@ export const ChatContext = createContext<{
   setIsShared: () => {},
   shareableLink: "",
   setShareableLink: () => {},
+  isSharedByOther: false,
+  setIsSharedByOther: () => {},
 })
