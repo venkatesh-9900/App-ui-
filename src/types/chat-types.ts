@@ -3,7 +3,7 @@
  * @description Type definitions for chat-related components and functionality.
  */
 
-import {FileDetails, FileUploadResponse} from "@/types/files.ts";
+import {FileDetails, FileUploadResponse} from "@/types/files";
 
 /**
  * Type for complex message content like code or charts
