@@ -172,6 +172,48 @@ export const removeAttachedFile = async ({fileId, currentChatId, successTask, fa
     }
 }
 
+export const getPresignedURLForFileRead = async (fileId: string, sessionId: string, retry: boolean = false): Promise<{presigned_url: string | null, error: string | null}> => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask: () => {
+                console.log("Failed to refresh token")
+            }, 
+            errorTask: () => {
+                console.log("Error encountered while refreshing token")
+            }});
+        }
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.GET_PRESIGNED_URL + `?file_id=${fileId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': `application/json`,
+                'x-app-name': app_name,
+                'x-session-id': sessionId
+            }
+        })
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(() => {
+                    console.log("Error encountered while fetching login URL");
+                });
+                return {presigned_url: null, error: "Error in authentication"};
+            } else {
+                return await getPresignedURLForFileRead(fileId, sessionId, true);
+            }
+        } else if (response.status == 200) {
+            const response_data = await response.json();
+            return response_data
+        } else {
+            console.log("Failed to fetch presigned URL for the given file id with status code:", response.status);
+        }
+    } catch (error) {
+        console.error("Failed to fetch presigned URL for the given file id:", error);
+    }
+    return {presigned_url: null, error: "Failed to fetch presigned URL"}
+}
+
 export async function uploadProfileImageToServer(file: File): Promise<UserProfileImageUploadResponse> {
     const formData = new FormData();
     formData.append("file", file);

@@ -21,9 +21,10 @@ interface ChatMessageProps {
   content: string
   timestamp?: Date
   attachments?: FileDetails[]
+  sessionId: string | null
 }
 
-export function ChatMessage({ role, content, timestamp, attachments }: ChatMessageProps) {
+export function ChatMessage({ role, content, timestamp, attachments, sessionId }: ChatMessageProps) {
   const { userInfo } = useAuth()
   const isUser = role === "user"
   const vizUrls = extractRenderVizUrls(content)
@@ -79,6 +80,7 @@ export function ChatMessage({ role, content, timestamp, attachments }: ChatMessa
             >
               <FileAttachments
                 attachments={attachments}
+                sessionId={sessionId}
               />
               <p className="text-sm leading-7 break-words whitespace-pre-wrap">{cleanContent}</p>
             </Card>

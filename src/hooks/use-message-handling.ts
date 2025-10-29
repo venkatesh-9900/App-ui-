@@ -80,13 +80,13 @@ export const useMessageHandling = ({
         const sessionId = isNewSessionClient  ? '' : sessionIdRaw;
         if (text.trim() || image) {
             const timestamp = new Date().toISOString();
-            const userMessage: ChatMessage = { author: 'user', content: text, timestamp: timestamp, attachments: attachedFiles };
+            const userMessage: ChatMessage = { author: 'user', content: text, timestamp: timestamp, attached_files: attachedFiles };
             const newMessages = [...messages, userMessage];
             const botMessage: ChatMessage = {
                 author: 'model',
                 content: '',
                 timestamp: new Date().toISOString(),
-                attachments: []
+                attached_files: null
             };
 
             const updatedMessages = [...messages, userMessage, botMessage];

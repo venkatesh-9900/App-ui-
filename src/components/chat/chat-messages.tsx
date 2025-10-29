@@ -20,9 +20,10 @@ interface ChatMessagesProps {
   messages: Message[]
   isLoading?: boolean
   isLoadingSession?: boolean
+  sessionId: string | null
 }
 
-export function ChatMessages({ messages, isLoading = false, isLoadingSession = false }: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading = false, isLoadingSession = false, sessionId }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export function ChatMessages({ messages, isLoading = false, isLoadingSession = f
               content={message.content}
               timestamp={message.timestamp}
               attachments={message.attachments}
+              sessionId={sessionId}
             />
           ))}
 

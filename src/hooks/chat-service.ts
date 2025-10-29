@@ -156,36 +156,36 @@ export async function loadChatMessages({sessionId, userid, failureTask, errorTas
         const apiData = (userid == null || userid == undefined) ? await fetchChatMessages({sessionId, failureTask, errorTask}) : await fetchSharedUserInteraction({sessionId, userid, failureTask, errorTask});
         const { readonly, conversations: rawConversations } = apiData;
 
-        const mappedMessages: ChatMessage[] = await Promise.all(rawConversations.map(async (msg: ChatMessage) => {
-            if (msg.author == "user") {
-                const { message: message, attachedFiles: attachmentsPublicURL } = extractAttachedFilesPublicLinks(msg.content);
-                if (attachmentsPublicURL.length > 0) {
-                    const attachmentDetails = await getFileDetailsFromURL(attachmentsPublicURL, sessionId, userid, retry);
-                    return {
-                        author: msg.author,
-                        content: message,
-                        timestamp: msg.timestamp,
-                        attachments: attachmentDetails
-                    };
-                } else {
-                    return {
-                        author: msg.author,
-                        content: message,
-                        timestamp: msg.timestamp,
-                        attachments: []
-                    };
-                }
-            } else {
-                return {
-                    author: msg.author,
-                    content: msg.content,
-                    timestamp: msg.timestamp,
-                    attachments: []
-                }
-            }
-        }));
-        console.log(mappedMessages);
-        const finalChatList = mappedMessages.filter((msg) => msg.author == "user" || msg.content.length > 0);
+        // const mappedMessages: ChatMessage[] = await Promise.all(rawConversations.map(async (msg: ChatMessage) => {
+        //     if (msg.author == "user") {
+        //         // const { message: message, attachedFiles: attachmentsPublicURL } = extractAttachedFilesPublicLinks(msg.content);
+        //         if (attachmentsPublicURL.length > 0) {
+        //             const attachmentDetails = await getFileDetailsFromURL(attachmentsPublicURL, sessionId, userid, retry);
+        //             return {
+        //                 author: msg.author,
+        //                 content: message,
+        //                 timestamp: msg.timestamp,
+        //                 attached: attachmentDetails
+        //             };
+        //         } else {
+        //             return {
+        //                 author: msg.author,
+        //                 content: message,
+        //                 timestamp: msg.timestamp,
+        //                 attachments: []
+        //             };
+        //         }
+        //     } else {
+        //         return {
+        //             author: msg.author,
+        //             content: msg.content,
+        //             timestamp: msg.timestamp,
+        //             attachments: []
+        //         }
+        //     }
+        // }));
+        console.log(rawConversations);
+        const finalChatList = rawConversations.filter((msg) => msg.author == "user" || msg.content.length > 0);
         return { readonly, conversations: finalChatList };
     } catch (error) {
         console.error(`Failed to load messages for chatId=${sessionId}`, error);

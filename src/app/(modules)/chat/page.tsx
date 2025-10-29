@@ -107,7 +107,7 @@ export default function ChatPage() {
                 role: msg.author === "user" ? "user" : "assistant",
                 content: msg.content,
                 timestamp: new Date(msg.timestamp),
-                attachments: msg.attachments || [],
+                attachments: msg.attached_files || [],
             }))
 
             console.log('Converted messages count:', convertedMessages.length)
@@ -125,7 +125,7 @@ export default function ChatPage() {
             author: msg.role === "user" ? "user" : "assistant",
             content: msg.content,
             timestamp: msg.timestamp.toISOString(),
-            attachments: msg.attachments || [],
+            attached_files: msg.role === "user" ? msg.attachments || [] : null,
         }))
 
         // Add user message
@@ -133,7 +133,7 @@ export default function ChatPage() {
             author: "user",
             content,
             timestamp: new Date().toISOString(),
-            attachments: attachedFiles,
+            attached_files: attachedFiles,
         }
 
         const newMessages = [...chatMessages, userChatMessage]
@@ -144,7 +144,7 @@ export default function ChatPage() {
             role: msg.author === "user" ? "user" : "assistant",
             content: msg.content,
             timestamp: new Date(msg.timestamp),
-            attachments: msg.attachments || [],
+            attachments: msg.attached_files || [],
         }))
         setMessages(displayMessages)
         setIsLoading(true)
@@ -163,7 +163,7 @@ export default function ChatPage() {
                         role: msg.author === "user" ? "user" : "assistant",
                         content: msg.content,
                         timestamp: new Date(msg.timestamp),
-                        attachments: msg.attachments || [],
+                        attachments: msg.attached_files || [],
                     }))
                     setMessages(convertedMessages)
                 },
@@ -201,7 +201,7 @@ export default function ChatPage() {
                         <p className="text-sm text-muted-foreground">Loading chat session...</p>
                     </div>
                 )}
-                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} />
+                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} />
                 <ChatInput 
                     key={`${sessionId || 'new'}-${initialMessage}`}
                     onSend={handleSendMessage} 
