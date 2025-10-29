@@ -7,11 +7,12 @@ import { toast } from "sonner"
 import { getPresignedURLForFileRead } from "@/hooks/upload-file"
 
 interface FileAttachmentProps {
-  file: FileDetails,
+  file: FileDetails
   sessionId: string | null
+  readOnly: boolean
 }
 
-export function FileAttachment({ file, sessionId }: FileAttachmentProps) {
+export function FileAttachment({ file, sessionId, readOnly }: FileAttachmentProps) {
   const [isDownloading, setIsDownloading] = useState(false)
 
   const getFileIcon = (fileType: string) => {
@@ -95,7 +96,7 @@ export function FileAttachment({ file, sessionId }: FileAttachmentProps) {
           {(file.file_size / 1024).toFixed(1)} KB
         </p>
       </div>
-      <div className="flex items-center gap-1 flex-shrink-0">
+      {!readOnly && <div className="flex items-center gap-1 flex-shrink-0">
         <button
           onClick={handlePreview}
           className="cursor-pointer p-1 rounded hover:bg-secondary-foreground/10 transition-colors"
@@ -117,7 +118,7 @@ export function FileAttachment({ file, sessionId }: FileAttachmentProps) {
             <Download className="h-3.5 w-3.5 text-secondary-foreground/40 hover:text-secondary-foreground/70 transition-colors" />
           )}
         </button>
-      </div>
+      </div>}
     </div>
   )
 }

@@ -2,7 +2,6 @@ import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config";
 import { app_name } from "@/constants/constants";
 import {FileDetails } from "@/types";
 import { ChatMessage } from "@/types/chat-types";
-import { addAttachedFilesPublicLinks } from "@/utils/utils";
 import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 export async function handleStreamMessage({
                                               retry = false,

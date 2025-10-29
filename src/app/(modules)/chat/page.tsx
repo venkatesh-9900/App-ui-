@@ -23,6 +23,7 @@ export default function ChatPage() {
     const [sessionId, setSessionId] = useState<string | null>(null)
     const [isLoadingSession, setIsLoadingSession] = useState(false)
     const [hasLoadedInitialSession, setHasLoadedInitialSession] = useState(false)
+    const [readOnly, setReadOnly] = useState(false)
 
     useEffect(() => {
         // Get params here
@@ -98,7 +99,7 @@ export default function ChatPage() {
                     console.error("Error loading messages")
                 },
             })
-
+            setReadOnly(chatData.readonly)
             console.log('Loaded chat data:', chatData)
 
             // Convert ChatMessage[] to Message[]
@@ -201,14 +202,14 @@ export default function ChatPage() {
                         <p className="text-sm text-muted-foreground">Loading chat session...</p>
                     </div>
                 )}
-                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} />
-                <ChatInput 
+                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} readOnly={readOnly}/>
+                {!readOnly && <ChatInput 
                     key={`${sessionId || 'new'}-${initialMessage}`}
                     onSend={handleSendMessage} 
                     isLoading={isLoading} 
                     initialValue={initialMessage}
                     currentChatId={sessionId}
-                />
+                />}
             </div>
         </ProtectedRoute>
     )
