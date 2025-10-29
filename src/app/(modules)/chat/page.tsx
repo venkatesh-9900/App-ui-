@@ -23,6 +23,7 @@ export default function ChatPage() {
     const [sessionId, setSessionId] = useState<string | null>(null)
     const [isLoadingSession, setIsLoadingSession] = useState(false)
     const [hasLoadedInitialSession, setHasLoadedInitialSession] = useState(false)
+    const [readOnly, setReadOnly] = useState(false)
 
     useEffect(() => {
         // Get params here
@@ -98,7 +99,7 @@ export default function ChatPage() {
                     console.error("Error loading messages")
                 },
             })
-
+            setReadOnly(chatData.readonly)
             console.log('Loaded chat data:', chatData)
 
             // Convert ChatMessage[] to Message[]
@@ -107,7 +108,7 @@ export default function ChatPage() {
                 role: msg.author === "user" ? "user" : "assistant",
                 content: msg.content,
                 timestamp: new Date(msg.timestamp),
-                attachments: msg.attachments || [],
+                attachments: msg.attached_files || [],
             }))
 
             console.log('Converted messages count:', convertedMessages.length)
@@ -125,7 +126,7 @@ export default function ChatPage() {
             author: msg.role === "user" ? "user" : "assistant",
             content: msg.content,
             timestamp: msg.timestamp.toISOString(),
-            attachments: msg.attachments || [],
+            attached_files: msg.role === "user" ? msg.attachments || [] : null,
         }))
 
         // Add user message
@@ -133,7 +134,7 @@ export default function ChatPage() {
             author: "user",
             content,
             timestamp: new Date().toISOString(),
-            attachments: attachedFiles,
+            attached_files: attachedFiles,
         }
 
         const newMessages = [...chatMessages, userChatMessage]
@@ -144,7 +145,7 @@ export default function ChatPage() {
             role: msg.author === "user" ? "user" : "assistant",
             content: msg.content,
             timestamp: new Date(msg.timestamp),
-            attachments: msg.attachments || [],
+            attachments: msg.attached_files || [],
         }))
         setMessages(displayMessages)
         setIsLoading(true)
@@ -163,7 +164,7 @@ export default function ChatPage() {
                         role: msg.author === "user" ? "user" : "assistant",
                         content: msg.content,
                         timestamp: new Date(msg.timestamp),
-                        attachments: msg.attachments || [],
+                        attachments: msg.attached_files || [],
                     }))
                     setMessages(convertedMessages)
                 },
@@ -201,14 +202,14 @@ export default function ChatPage() {
                         <p className="text-sm text-muted-foreground">Loading chat session...</p>
                     </div>
                 )}
-                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} />
-                <ChatInput 
+                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} readOnly={readOnly}/>
+                {!readOnly && <ChatInput 
                     key={`${sessionId || 'new'}-${initialMessage}`}
                     onSend={handleSendMessage} 
                     isLoading={isLoading} 
                     initialValue={initialMessage}
                     currentChatId={sessionId}
-                />
+                />}
             </div>
         </ProtectedRoute>
     )
