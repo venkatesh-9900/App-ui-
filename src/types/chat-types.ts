@@ -161,5 +161,5 @@ export interface ChatMessage {
     author: string;
     content: string;
     timestamp: string;
-    attachments: FileDetails[];
+    attached_files: FileDetails[] | null;
 }

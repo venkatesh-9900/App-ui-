@@ -72,14 +72,14 @@ export const getTextWithoutReasoning = (text: string): string => {
     return final_text;
 }
 
-export const addAttachedFilesPublicLinks = (text: string, attachedFiles: FileDetails[]) : string => {
-    if (attachedFiles.length > 0) {
-        const public_url_lists = attachedFiles.map((e) => e.public_link).join(",\n");
-        return `${text}${file_attachments_delimiter}${public_url_lists}`
-    } else {
-        return text;
-    }
-}
+// export const addAttachedFilesPublicLinks = (text: string, attachedFiles: FileDetails[]) : string => {
+//     if (attachedFiles.length > 0) {
+//         const public_url_lists = attachedFiles.map((e) => e.public_link).join(",\n");
+//         return `${text}${file_attachments_delimiter}${public_url_lists}`
+//     } else {
+//         return text;
+//     }
+// }
 
 export const extractAttachedFilesPublicLinks = (text: string) : { message: string, attachedFiles: string[] } => {
     const message_body = text.split(file_attachments_delimiter);

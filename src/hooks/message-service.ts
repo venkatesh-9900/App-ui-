@@ -2,7 +2,6 @@ import {SELECTED_ENDPOINT, ENDPOINTS} from "@/config/config";
 import { app_name } from "@/constants/constants";
 import {FileDetails } from "@/types";
 import { ChatMessage } from "@/types/chat-types";
-import { addAttachedFilesPublicLinks } from "@/utils/utils";
 import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 export async function handleStreamMessage({
                                               retry = false,
@@ -35,11 +34,11 @@ export async function handleStreamMessage({
     }
     const interactionMode = SELECTED_ENDPOINT;
     console.log('selectedAgent:', selectedAgent);
-    let messageText = text;
+    let attached_file_ids = [];
     if (attachedFiles.length > 0) {
-        messageText = addAttachedFilesPublicLinks(text, attachedFiles);
+        attached_file_ids = attachedFiles.map((file: FileDetails) => file.file_id);
     }
-    const payload = { query: messageText, agent: selectedAgent };
+    const payload = { query: text, agent: selectedAgent, attached_file_ids: attached_file_ids};
     const newChatId: string = window.crypto.randomUUID() + '-' + new Date().toISOString();
     setIsThinking(true);
     try {
@@ -101,7 +100,7 @@ export async function handleStreamMessage({
             author: 'model',
             content: '',
             timestamp: new Date().toISOString(),
-            attachments: []
+            attached_files: null
         };
         const updatedMessages = [...newMessages, botMessage];
         setMessages(updatedMessages);
