@@ -26,7 +26,6 @@ export interface UserProfileImageUploadResponse {
 export interface FileDetails {
     file_id: string;
     original_file_name: string;
-    public_link: string;
     file_type: string;
     file_size: number;
 }
