@@ -14,6 +14,7 @@ import { useState, useContext } from "react"
 import { toggleChatSharability } from "@/hooks/chat-service"
 import { ChatContext } from "@/contexts"
 import { toast } from "sonner"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 interface ChatNavbarProps {
   chatTitle?: string
@@ -85,9 +86,14 @@ export function ChatNavbar({
 
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-background">
+      
+      <div className="flex items-center gap-2 md:hidden">
+        <SidebarTrigger/>
+      </div>
+      
       <div className="flex items-center gap-2">
-        <p className="text-xs text-muted-foreground"><span className="hidden md:inline">Conversation with </span>Argus Intelligence</p>
-        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+        <p className="text-xs text-muted-foreground hidden md:inline">Conversation with Argus Intelligence</p>
+        <div className="h-2 w-2 rounded-full bg-green-500 hidden md:inline"></div>
       </div>
 
       <div className="flex items-center gap-3 cursor-pointer">
