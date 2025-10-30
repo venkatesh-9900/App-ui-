@@ -3,6 +3,7 @@
 import { ProtectedRoute } from '@/components/protected-route';
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const prompts = [
     {
@@ -35,6 +36,9 @@ const prompts = [
 export default function HomePage() {
     return (
         <ProtectedRoute>
+            <div className="flex items-center gap-2 md:hidden">
+                <SidebarTrigger/>
+            </div>
             <div className="flex flex-col items-center justify-start py-16 px-6">
                 {/* Heading */}
                 <h1 className="text-3xl font-semibold mb-12">
