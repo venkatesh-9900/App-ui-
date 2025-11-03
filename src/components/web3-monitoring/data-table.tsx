@@ -136,8 +136,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const hash = row.original.txn_hash
       if (!hash) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="font-mono text-sm truncate max-w-xs">
-          {hash.substring(0, 10)}...{hash.substring(hash.length - 8)}
+        <div className="font-mono text-sm">
+          {hash}
         </div>
       )
     },
@@ -159,8 +159,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const address = row.original.from_address
       if (!address) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="font-mono text-sm truncate max-w-xs">
-          {address.substring(0, 6)}...{address.substring(address.length - 4)}
+        <div className="font-mono text-sm">
+          {address}
         </div>
       )
     },
@@ -178,8 +178,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         )
       }
       return (
-        <div className="font-mono text-sm truncate max-w-xs">
-          {address.substring(0, 6)}...{address.substring(address.length - 4)}
+        <div className="font-mono text-sm">
+          {address}
         </div>
       )
     },
@@ -267,6 +267,7 @@ export function DataTable({
   data: z.infer<typeof schema>[]
 }) {
   const [data, setData] = React.useState(() => initialData)
+  const [error, setError] = React.useState<string | null>(null)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -292,7 +293,20 @@ export function DataTable({
   )
 
   const handleSearchResults = (response: any) => {
+    // Check if response has errors
+    if (response && response.errors && response.errors.length > 0) {
+      console.log("Response errors:", response.errors)
+      setError(response.errors[0])
+      setData([])
+      setRowSelection({})
+      setPagination({ pageIndex: 0, pageSize: 15 })
+      previousPageRef.current = 0
+      return
+    }
+
+    // Clear error and set data if successful
     if (response && response.txns) {
+      setError(null)
       const txns = response.txns.map(
         (txn: any, index: number) => ({
           ...txn,
@@ -395,7 +409,23 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
+                {error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-32 text-center"
+                    >
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="text-destructive font-medium">
+                          Error
+                        </div>
+                        <div className="text-muted-foreground text-sm">
+                          {error}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows?.length ? (
                   <SortableContext
                     items={dataIds}
                     strategy={verticalListSortingStrategy}

@@ -2,6 +2,7 @@
 
 import { ENDPOINTS } from "@/config/config"
 import { app_name } from "@/constants/constants"
+import { reauthenticationStep, refreshAccessToken } from "./auth-service"
 
 interface SearchTxnParams {
   chainId: number
@@ -59,6 +60,12 @@ export async function searchBlockchainTransaction({
   retry = false,
 }: SearchTxnApiParams) {
   try {
+
+    if (retry) {
+        console.log("Refreshing access token");
+        await refreshAccessToken({failureTask, errorTask});
+    }
+    
     const token = localStorage.getItem("access_token")
 
     const payload = {
@@ -86,7 +93,7 @@ export async function searchBlockchainTransaction({
 
     if (response.status === 401) {
       if (retry) {
-        errorTask()
+        reauthenticationStep(errorTask);
       } else {
         await searchBlockchainTransaction({
           chainId,
@@ -105,19 +112,10 @@ export async function searchBlockchainTransaction({
       }
     } else if (response.status === 200) {
       const responseData = await response.json()
-      const { data, errors: responseErrors } = responseData
-
-      if (responseErrors && responseErrors.length > 0) {
-        throw new Error(
-          `Failed to search blockchain data due to these error(s): ${responseErrors.join(", ")}`
-        )
-      }
-
-      if (data) {
-        successTask(data)
-      } else {
-        failureTask()
-      }
+      
+      // Pass the full response including errors to successTask
+      // Let the component decide how to handle errors
+      successTask(responseData)
     } else {
       console.error(
         "Failed to search blockchain data with status code:",
