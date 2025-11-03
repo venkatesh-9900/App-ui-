@@ -25,7 +25,7 @@ interface SearchParams {
 }
 
 interface SearchResultsData {
-  txns: Array<{
+  txns?: Array<{
     txn_hash: string
     block_number: number
     block_hash: string
@@ -39,6 +39,7 @@ interface SearchResultsData {
     status: string
     nonce: number
   }>
+  errors?: string[]
 }
 
 export function BlockchainSearch({ onSearchResults }: BlockchainSearchProps) {
@@ -59,10 +60,22 @@ export function BlockchainSearch({ onSearchResults }: BlockchainSearchProps) {
       page: 1,
       offset: 100,
       successTask: (response) => {
+        const apiResponse = response as any
+        
+        // Check if response has errors
+        if (apiResponse.errors && apiResponse.errors.length > 0) {
+          toast.error(apiResponse.errors[0])
+          const mappedData: SearchResultsData = {
+            errors: apiResponse.errors,
+          }
+          onSearchResults?.(mappedData, { chainId: parseInt(chainId), txhash: txnHash, address: address })
+          return
+        }
+
+        // Success case
         toast.success("Search completed successfully")
-        // Map the response to the expected format
         const mappedData: SearchResultsData = {
-          txns: (response as any).txns || [],
+          txns: apiResponse.data?.txns || [],
         }
         onSearchResults?.(mappedData, { chainId: parseInt(chainId), txhash: txnHash, address: address })
       },
