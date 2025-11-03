@@ -99,6 +99,9 @@ export const ENDPOINTS = {
     TOGGLE_CHAT_SHARABILITY: `/api/interaction/toggle-session-sharability`,
     UPDATE_SESSION_ID_TO_ATTACHED_FILES: `/api/interaction/update-session-id-to-uploaded-files`,
     GET_FILE_DETAILS_FROM_URL: `/api/interaction/get-file-objects-from-public-links`,
+    WEB3_MONITORING: {
+        SEARCH_TXN: `/api/monitoring/search-txn`,
+    },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`
 };
 export const SELECTED_ENDPOINT =
