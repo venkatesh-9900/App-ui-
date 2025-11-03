@@ -2,7 +2,7 @@
 
 import { ENDPOINTS } from "@/config/config"
 import { app_name } from "@/constants/constants"
-import { reauthenticationStep } from "./auth-service"
+import { reauthenticationStep, refreshAccessToken } from "./auth-service"
 
 interface SearchTxnParams {
   chainId: number
@@ -60,6 +60,12 @@ export async function searchBlockchainTransaction({
   retry = false,
 }: SearchTxnApiParams) {
   try {
+
+    if (retry) {
+        console.log("Refreshing access token");
+        await refreshAccessToken({failureTask, errorTask});
+    }
+    
     const token = localStorage.getItem("access_token")
 
     const payload = {
