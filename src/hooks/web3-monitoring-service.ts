@@ -2,6 +2,7 @@
 
 import { ENDPOINTS } from "@/config/config"
 import { app_name } from "@/constants/constants"
+import { reauthenticationStep } from "./auth-service"
 
 interface SearchTxnParams {
   chainId: number
@@ -86,7 +87,7 @@ export async function searchBlockchainTransaction({
 
     if (response.status === 401) {
       if (retry) {
-        errorTask()
+        reauthenticationStep(errorTask);
       } else {
         await searchBlockchainTransaction({
           chainId,
