@@ -136,8 +136,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const hash = row.original.txn_hash
       if (!hash) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="font-mono text-sm truncate max-w-xs">
-          {hash.substring(0, 10)}...{hash.substring(hash.length - 8)}
+        <div className="font-mono text-sm">
+          {hash}
         </div>
       )
     },
@@ -159,8 +159,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const address = row.original.from_address
       if (!address) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="font-mono text-sm truncate max-w-xs">
-          {address.substring(0, 6)}...{address.substring(address.length - 4)}
+        <div className="font-mono text-sm">
+          {address}
         </div>
       )
     },
@@ -178,8 +178,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         )
       }
       return (
-        <div className="font-mono text-sm truncate max-w-xs">
-          {address.substring(0, 6)}...{address.substring(address.length - 4)}
+        <div className="font-mono text-sm">
+          {address}
         </div>
       )
     },
