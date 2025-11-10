@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Bell, UserPlus, Settings } from "lucide-react"
+import { ChevronRight, Bell, UserPlus, Settings, Users } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -21,6 +21,11 @@ const menuItems = [
     name: "Subscribe",
     url: "/notifications/subscribe-consent",
     icon: UserPlus,
+  },
+  {
+    name: "Groups",
+    url: "/notifications/groups",
+    icon: Users,
   },
   {
     name: "Preferences",

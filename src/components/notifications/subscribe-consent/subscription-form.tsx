@@ -149,13 +149,13 @@ export function SubscriptionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <CheckCircle2 className="w-4 h-4 text-green-500" />
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-4">
+        <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
         <span>Please fill in your details below</span>
       </div>
 
       {/* Name Fields */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
           <Input

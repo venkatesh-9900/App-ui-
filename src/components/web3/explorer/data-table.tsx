@@ -83,7 +83,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 
-import { BlockchainSearch } from "@/components/web3-monitoring/blockchain-search"
+import { BlockchainSearch } from "@/components/web3/explorer/blockchain-search"
 import { searchBlockchainTransaction } from "@/hooks/web3-monitoring-service"
 import { toast } from "sonner"
 

@@ -9,6 +9,8 @@ import { CreateSubscriberRequest, NotificationSubscriber } from '@/types/subscri
 import { ConsentToggles } from '@/components/notifications/subscribe-consent/consent-toggles'
 import { SubscriptionForm } from '@/components/notifications/subscribe-consent/subscription-form'
 import { EmptyState } from '@/components/notifications/subscribe-consent/empty-state'
+import { ProtectedRoute } from "@/components/protected-route"
+import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 
 export default function SubscribeConsentPage() {
   // Page-level state management
@@ -32,11 +34,11 @@ export default function SubscribeConsentPage() {
             // Get the first subscriber (most recent or active one)
             const subscriber = data.data[0]
             setExistingSubscriber(subscriber)
-            
+
             // Set consent toggles based on saved preferences
             setEmailConsent(subscriber.email_preference)
             setSmsConsent(subscriber.sms_preference)
-            
+
             toast.info('Existing subscription found', {
               description: 'Your saved preferences have been loaded.',
             })
@@ -126,7 +128,7 @@ export default function SubscribeConsentPage() {
         toast.success('Unsubscribed successfully', {
           description: 'You have been unsubscribed from all notifications.',
         })
-        
+
         // Reset state
         setExistingSubscriber(null)
         setEmailConsent(false)
@@ -149,54 +151,57 @@ export default function SubscribeConsentPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 px-4">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Bell className="w-6 h-6 text-primary" />
+    <ProtectedRoute>
+      <DashboardNavbar />
+      <div className="container max-w-2xl mx-auto py-4 sm:py-8 px-4 sm:px-6">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-xl sm:text-2xl">Notification Preferences</CardTitle>
+                <CardDescription className="mt-1 sm:mt-1.5 text-sm">
+                  Choose how you&apos;d like to receive notifications from us
+                </CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-2xl">Notification Preferences</CardTitle>
-              <CardDescription className="mt-1.5">
-                Choose how you&apos;d like to receive notifications from us
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
 
-        <CardContent className="space-y-6">
-          {/* Consent Toggles */}
-          <ConsentToggles
-            emailConsent={emailConsent}
-            smsConsent={smsConsent}
-            onEmailConsentChange={setEmailConsent}
-            onSmsConsentChange={setSmsConsent}
-            emailDisabled={existingSubscriber?.email_preference || false}
-            smsDisabled={existingSubscriber?.sms_preference || false}
-          />
-
-          {/* Subscription Form or Empty State */}
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : showForm ? (
-            <SubscriptionForm
+          <CardContent className="space-y-6">
+            {/* Consent Toggles */}
+            <ConsentToggles
               emailConsent={emailConsent}
               smsConsent={smsConsent}
-              isSubmitting={isSubmitting}
-              isSuccess={isSuccess}
-              existingSubscriber={existingSubscriber}
-              onSubmit={handleSubscriberCreation}
-              onUnsubscribe={handleUnsubscribe}
-              isUnsubscribing={isUnsubscribing}
+              onEmailConsentChange={setEmailConsent}
+              onSmsConsentChange={setSmsConsent}
+              emailDisabled={existingSubscriber?.email_preference || false}
+              smsDisabled={existingSubscriber?.sms_preference || false}
             />
-          ) : (
-            <EmptyState />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+            {/* Subscription Form or Empty State */}
+            {isLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : showForm ? (
+              <SubscriptionForm
+                emailConsent={emailConsent}
+                smsConsent={smsConsent}
+                isSubmitting={isSubmitting}
+                isSuccess={isSuccess}
+                existingSubscriber={existingSubscriber}
+                onSubmit={handleSubscriberCreation}
+                onUnsubscribe={handleUnsubscribe}
+                isUnsubscribing={isUnsubscribing}
+              />
+            ) : (
+              <EmptyState />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute>
   )
 }
