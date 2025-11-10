@@ -18,13 +18,13 @@ import { usePathname } from "next/navigation"
 
 const menuItems = [
   {
-    name: "On-Chain Activity",
-    url: "/web3/activity",
+    name: "Explorer",
+    url: "/web3/explorer",
     icon: Activity,
   },
   {
-    name: "Market Trends",
-    url: "/web3/trends",
+    name: "Monitoring",
+    url: "/web3/monitoring",
     icon: TrendingUp,
   },
 ]
@@ -34,10 +34,10 @@ export function Web3Monitoring() {
   const pathname = usePathname()
 
   const isActive = (url: string) => {
-    if (url === "/web3/activity" && pathname === "/web3/activity") {
+    if (url === "/web3/explorer" && pathname === "/web3/explorer") {
       return true
     }
-    if (url === "/web3/trends" && pathname === "/web3/trends") {
+    if (url === "/web3/monitoring" && pathname === "/web3/monitoring") {
       return true
     }
     return false
