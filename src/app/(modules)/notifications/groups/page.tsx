@@ -20,6 +20,13 @@ export default function NotificationGroupsPage() {
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create')
     const [selectedGroup, setSelectedGroup] = useState<NotificationGroup | null>(null)
 
+    // Guard onOpenChange to prevent infinite loops
+    const handleDialogOpenChange = React.useCallback((next: boolean) => {
+        if (dialogOpen !== next) {
+            setDialogOpen(next)
+        }
+    }, [dialogOpen])
+
     // Fetch groups on mount
     useEffect(() => {
         fetchGroups()
@@ -93,7 +100,10 @@ export default function NotificationGroupsPage() {
         } else if (selectedGroup) {
             await updateTopic({
                 topicKey: selectedGroup.novu_topic_key,
-                request: { name: formData.name },
+                request: { 
+                    name: formData.name,
+                    description: formData.description 
+                },
                 successTask: (data) => {
                     toast.success('Group updated successfully!', {
                         description: `${formData.name} has been updated.`,
@@ -166,7 +176,7 @@ export default function NotificationGroupsPage() {
                                             <CardTitle className="text-sm sm:text-2xl">Notification Groups</CardTitle>
                                         </div>
                                     </div>
-                                    <Button onClick={handleCreateGroup} size="lg">
+                                    <Button onClick={handleCreateGroup} size="lg" className="cursor-pointer">
                                         <Plus className="w-4 h-4 mr-2" />
                                         Create Group
                                     </Button>
@@ -192,13 +202,17 @@ export default function NotificationGroupsPage() {
                         {/* Create/Edit Dialog */}
                         <GroupFormDialog
                             open={dialogOpen}
-                            onOpenChange={setDialogOpen}
+                            onOpenChange={handleDialogOpenChange}
                             onSubmit={handleFormSubmit}
                             isSubmitting={isSubmitting}
                             mode={dialogMode}
                             initialData={
                                 selectedGroup
-                                    ? { name: selectedGroup.name, description: '' }
+                                    ? { 
+                                        name: selectedGroup.name, 
+                                        description: selectedGroup.description || '',
+                                        topicKey: selectedGroup.novu_topic_key
+                                      }
                                     : undefined
                             }
                         />

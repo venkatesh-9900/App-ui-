@@ -121,4 +121,13 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Sonner toast description styling */
+  [data-sonner-toast] [data-description] {
+    color: var(--muted-foreground) !important;
+  }
+  
+  .dark [data-sonner-toast] [data-description] {
+    color: var(--muted-foreground) !important;
+  }
 }

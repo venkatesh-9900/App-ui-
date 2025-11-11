@@ -7,6 +7,7 @@ export interface CreateTopicRequest {
 
 export interface UpdateTopicRequest {
   name?: string;
+  description?: string;
 }
 
 export interface Topic {

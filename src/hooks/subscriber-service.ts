@@ -13,11 +13,12 @@ import { refreshAccessToken, reauthenticationStep } from "@/hooks/auth-service";
 // API Endpoints for subscriber management
 const SUBSCRIBER_ENDPOINTS = {
     CREATE: '/api/subscribers',
-    GET: (subscriberId: string) => `/api/subscribers/${encodeURIComponent(subscriberId)}`,
-    UPDATE: (subscriberId: string) => `/api/subscribers/${encodeURIComponent(subscriberId)}`,
-    DELETE: (subscriberId: string) => `/api/subscribers/${encodeURIComponent(subscriberId)}`,
+    GET: (subscriberId: string) => `/api/subscribers/retrieve?subscriberId=${encodeURIComponent(subscriberId)}`,
+    UPDATE: (subscriberId: string) => `/api/subscribers/update?subscriberId=${encodeURIComponent(subscriberId)}`,
+    DELETE: (subscriberId: string) => `/api/subscribers/delete?subscriberId=${encodeURIComponent(subscriberId)}`,
     SEARCH: '/api/subscribers',
     GET_ME: '/api/subscribers/me',
+    GET_ACTIVE_HUMANS: '/api/subscribers/active-human-subscribers',
 };
 
 interface BaseServiceParams {
@@ -356,6 +357,51 @@ export const getCurrentUserSubscriber = async ({
         }
     } catch (error) {
         console.error("Failed to get current user subscriber:", error);
+        errorTask();
+    }
+};
+
+/**
+ * Get all active human subscribers with retry logic for 401 errors
+ */
+export const getActiveHumanSubscribers = async ({
+    successTask,
+    failureTask,
+    errorTask,
+    retry = false
+}: BaseServiceParams) => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const response = await fetch(SUBSCRIBER_ENDPOINTS.GET_ACTIVE_HUMANS, {
+            method: 'GET',
+            headers: buildHeaderJSON(false),
+        });
+
+        if (response.status === 401) {
+            if (retry) {
+                console.log("Redirecting to login page");
+                await reauthenticationStep(errorTask);
+            } else {
+                await getActiveHumanSubscribers({
+                    retry: true,
+                    successTask,
+                    failureTask,
+                    errorTask
+                });
+            }
+        } else if (response.status === 200) {
+            const data = await response.json();
+            successTask(data);
+        } else {
+            console.error("Failed to get active human subscribers with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to get active human subscribers:", error);
         errorTask();
     }
 };

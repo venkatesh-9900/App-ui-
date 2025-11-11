@@ -229,7 +229,7 @@ export function SubscriptionForm({
       <div className="pt-4">
         <Button
           type="submit"
-          className="w-full"
+          className="w-full cursor-pointer"
           disabled={isSubmitting || isSuccess}
           size="lg"
         >
@@ -246,7 +246,7 @@ export function SubscriptionForm({
           ) : (
             <>
               <Bell className="w-4 h-4 mr-2" />
-              Subscribe to Notifications
+              Update notification preferences
             </>
           )}
         </Button>
@@ -257,7 +257,7 @@ export function SubscriptionForm({
             <Button
               type="button"
               variant="destructive"
-              className="w-full"
+              className="w-full cursor-pointer"
               onClick={onUnsubscribe}
               disabled={isUnsubscribing}
               size="lg"

@@ -32,12 +32,29 @@ interface ListTopicsParams extends BaseServiceParams {
     key?: string;
 }
 
+interface AddSubscriptionsParams extends BaseServiceParams {
+    topicKey: string;
+    subscriberIds: string[];
+}
+
+interface RemoveSubscriptionsParams extends BaseServiceParams {
+    topicKey: string;
+    subscriberIds: string[];
+}
+
+interface ListSubscriptionsParams extends BaseServiceParams {
+    topicKey: string;
+}
+
 const TOPIC_ENDPOINTS = {
     CREATE: '/api/topics',
-    GET: (topicKey: string) => `/api/topics/${encodeURIComponent(topicKey)}`,
-    UPDATE: (topicKey: string) => `/api/topics/${encodeURIComponent(topicKey)}`,
-    DELETE: (topicKey: string) => `/api/topics/${encodeURIComponent(topicKey)}`,
+    GET: (topicKey: string) => `/api/topics/retrieve?topicKey=${encodeURIComponent(topicKey)}`,
+    UPDATE: (topicKey: string) => `/api/topics/update?topicKey=${encodeURIComponent(topicKey)}`,
+    DELETE: (topicKey: string) => `/api/topics/delete?topicKey=${encodeURIComponent(topicKey)}`,
     LIST: '/api/topics',
+    ADD_SUBSCRIPTIONS: (topicKey: string) => `/api/topics/subscriptions/create?topicKey=${encodeURIComponent(topicKey)}`,
+    REMOVE_SUBSCRIPTIONS: (topicKey: string) => `/api/topics/subscriptions/delete?topicKey=${encodeURIComponent(topicKey)}`,
+    LIST_SUBSCRIPTIONS: (topicKey: string) => `/api/topics/subscriptions?topicKey=${encodeURIComponent(topicKey)}`,
 };
 
 /**
@@ -286,6 +303,153 @@ export const listTopics = async ({
         }
     } catch (error) {
         console.error("Failed to list topics:", error);
+        errorTask();
+    }
+};
+
+/**
+ * Add subscribers to a topic/group
+ */
+export const addSubscriptionsToTopic = async ({
+    topicKey,
+    subscriberIds,
+    successTask,
+    failureTask,
+    errorTask,
+    retry = false
+}: AddSubscriptionsParams) => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const response = await fetch(TOPIC_ENDPOINTS.ADD_SUBSCRIPTIONS(topicKey), {
+            method: 'POST',
+            headers: buildHeaderJSON(false),
+            body: JSON.stringify({ subscriberIds }),
+        });
+
+        if (response.status === 401) {
+            if (retry) {
+                console.log("Redirecting to login page");
+                await reauthenticationStep(errorTask);
+            } else {
+                await addSubscriptionsToTopic({
+                    retry: true,
+                    topicKey,
+                    subscriberIds,
+                    successTask,
+                    failureTask,
+                    errorTask
+                });
+            }
+        } else if (response.status === 201 || response.status === 200) {
+            const data = await response.json();
+            successTask(data);
+        } else {
+            console.error("Failed to add subscriptions to topic with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+            console.error("Failed to add subscriptions to topic:", error);
+        errorTask();
+    }
+};
+
+/**
+ * List subscriptions for a topic/group
+ */
+export const listTopicSubscriptions = async ({
+    topicKey,
+    successTask,
+    failureTask,
+    errorTask,
+    retry = false
+}: ListSubscriptionsParams) => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const response = await fetch(TOPIC_ENDPOINTS.LIST_SUBSCRIPTIONS(topicKey), {
+            method: 'GET',
+            headers: buildHeaderJSON(false),
+        });
+
+        if (response.status === 401) {
+            if (retry) {
+                console.log("Redirecting to login page");
+                await reauthenticationStep(errorTask);
+            } else {
+                await listTopicSubscriptions({
+                    retry: true,
+                    topicKey,
+                    successTask,
+                    failureTask,
+                    errorTask
+                });
+            }
+        } else if (response.status === 200) {
+            const data = await response.json();
+            successTask(data);
+        } else {
+            console.error("Failed to list topic subscriptions with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to list topic subscriptions:", error);
+        errorTask();
+    }
+};
+
+/**
+ * Remove subscribers from a topic/group
+ */
+export const removeSubscriptionsFromTopic = async ({
+    topicKey,
+    subscriberIds,
+    successTask,
+    failureTask,
+    errorTask,
+    retry = false
+}: RemoveSubscriptionsParams) => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const response = await fetch(TOPIC_ENDPOINTS.REMOVE_SUBSCRIPTIONS(topicKey), {
+            method: 'DELETE',
+            headers: buildHeaderJSON(false),
+            body: JSON.stringify({ subscriberIds }),
+        });
+
+        if (response.status === 401) {
+            if (retry) {
+                console.log("Redirecting to login page");
+                await reauthenticationStep(errorTask);
+            } else {
+                await removeSubscriptionsFromTopic({
+                    retry: true,
+                    topicKey,
+                    subscriberIds,
+                    successTask,
+                    failureTask,
+                    errorTask
+                });
+            }
+        } else if (response.status === 200 || response.status === 204) {
+            const data = response.status === 200 ? await response.json() : { message: 'Success' };
+            successTask(data);
+        } else {
+            console.error("Failed to remove subscriptions from topic with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to remove subscriptions from topic:", error);
         errorTask();
     }
 };
