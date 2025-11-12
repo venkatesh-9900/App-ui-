@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Activity, Group } from "lucide-react"
+import { ChevronRight, Activity, Group, Network } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -33,6 +33,11 @@ const menuItems = [
     url: "/web3/address-group",
     icon: Group,
   },
+  {
+    name: "Address Analytics",
+    url: "/web3/address",
+    icon: Network
+  }
 ]
 
 export function Web3Monitoring() {

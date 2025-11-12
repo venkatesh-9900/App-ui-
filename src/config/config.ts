@@ -101,6 +101,7 @@ export const ENDPOINTS = {
     GET_FILE_DETAILS_FROM_URL: `/api/interaction/get-file-objects-from-public-links`,
     WEB3_MONITORING: {
         SEARCH_TXN: `/api/monitoring/search-txn`,
+        GET_NEIGHBOURS: `/api/monitoring/get-neighbours`,
     },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`
 };

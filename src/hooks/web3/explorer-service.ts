@@ -3,6 +3,7 @@
 import { ENDPOINTS } from "@/config/config"
 import { app_name } from "@/constants/constants"
 import { reauthenticationStep, refreshAccessToken } from "../auth-service"
+import { SearchAddressResponse } from "@/types/blockchain"
 
 interface SearchTxnParams {
   chainId: number
@@ -13,6 +14,17 @@ interface SearchTxnParams {
   page?: number
   offset?: number
   sort?: "asc" | "desc"
+}
+
+interface SearchAddressParams {
+  chainId: number
+  address: string
+  startTime: number
+  depth: number
+  retry?: boolean
+  successTask: (response: SearchAddressResponse) => void
+  failureTask: () => void
+  errorTask: () => void
 }
 
 interface TransactionData {
@@ -26,6 +38,13 @@ interface TransactionData {
   gasUsed: string
   gasPrice: string
   [key: string]: unknown
+}
+
+interface SearchTxnResponse {
+  data: TransactionData[]
+  total: number
+  page: number
+  offset: number
 }
 
 interface SearchTxnResponse {
@@ -115,6 +134,71 @@ export async function searchBlockchainTransaction({
       
       // Pass the full response including errors to successTask
       // Let the component decide how to handle errors
+      successTask(responseData)
+    } else {
+      console.error(
+        "Failed to search blockchain data with status code:",
+        response.status
+      )
+      failureTask()
+    }
+  } catch (error) {
+    console.error(`Failed to search blockchain transaction:`, error)
+    errorTask()
+  }
+}
+
+export async function blockchainAddressLookup({
+  chainId,
+  address,
+  startTime,
+  depth,
+  successTask,
+  failureTask,
+  errorTask,
+  retry = false,
+}: SearchAddressParams) {
+  try {
+    if (retry) {
+        console.log("Refreshing access token");
+        await refreshAccessToken({failureTask, errorTask});
+    }
+    const token = localStorage.getItem("access_token")
+    const payload = {
+      chain_id: chainId,
+      address: address,
+      depth: depth,
+      start_timestamp: startTime
+    }
+    const response = await fetch(ENDPOINTS.WEB3_MONITORING.GET_NEIGHBOURS, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+        "x-app-name": app_name,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    console.log("Web3 Monitoring Search Response:", response)
+
+    if (response.status === 401) {
+      if (retry) {
+        reauthenticationStep(errorTask);
+      } else {
+        await blockchainAddressLookup({
+          chainId,
+          address,
+          startTime,
+          depth,
+          successTask,
+          failureTask,
+          errorTask,
+          retry: true
+        })
+      }
+    } else if (response.status === 200) {
+      const responseData = await response.json()
       successTask(responseData)
     } else {
       console.error(
