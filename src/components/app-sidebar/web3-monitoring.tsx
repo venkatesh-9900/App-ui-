@@ -57,6 +57,9 @@ export function Web3Monitoring() {
     if (url === "/web3/address-group" && pathname === "/web3/address-group") {
       return true
     }
+    if (url === "/web3/address" && pathname === "/web3/address") {
+      return true
+    }
     return false
   }
   const isAnySubmenuActive = menuItems.some(item => isActive(item.url));
