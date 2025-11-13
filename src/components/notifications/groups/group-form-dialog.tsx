@@ -191,7 +191,9 @@ export function GroupFormDialog({
         setSelectedSubscribers([])
         
         // Reload existing subscriptions to get the latest state
-        loadExistingSubscriptions(initialData.topicKey)
+        if (initialData?.topicKey) {
+          loadExistingSubscriptions(initialData.topicKey)
+        }
         
         setAddingSubscriptions(false)
       },
@@ -223,7 +225,9 @@ export function GroupFormDialog({
         setExistingSubscriberIds(prev => prev.filter(id => id !== subscriberId))
         
         // Reload existing subscriptions to get the latest state
-        loadExistingSubscriptions(initialData.topicKey)
+        if (initialData?.topicKey) {
+          loadExistingSubscriptions(initialData.topicKey)
+        }
         
         setRemovingSubscriberId(null)
       },
