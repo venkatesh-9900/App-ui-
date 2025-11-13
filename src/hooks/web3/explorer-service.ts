@@ -2,7 +2,7 @@
 
 import { ENDPOINTS } from "@/config/config"
 import { app_name } from "@/constants/constants"
-import { reauthenticationStep, refreshAccessToken } from "./auth-service"
+import { reauthenticationStep, refreshAccessToken } from "../auth-service"
 
 interface SearchTxnParams {
   chainId: number

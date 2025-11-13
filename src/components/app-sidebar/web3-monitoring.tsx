@@ -23,9 +23,9 @@ const menuItems = [
     icon: Activity,
   },
   {
-    name: "Monitoring",
-    url: "/web3/monitoring",
-    icon: TrendingUp,
+    name: "Address Activity",
+    url: "/web3/address-activity",
+    icon: Activity,
   },
 ]
 
@@ -38,6 +38,9 @@ export function Web3Monitoring() {
       return true
     }
     if (url === "/web3/monitoring" && pathname === "/web3/monitoring") {
+      return true
+    }
+    if (url === "/web3/address-activity" && pathname === "/web3/address-activity") {
       return true
     }
     return false
