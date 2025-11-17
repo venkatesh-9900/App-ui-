@@ -26,12 +26,7 @@ const menuItems = [
     name: "Groups",
     url: "/notifications/groups",
     icon: Users,
-  },
-  {
-    name: "Preferences",
-    url: "/notifications/preferences",
-    icon: Settings,
-  },
+  }
 ]
 
 export function NotificationsMenu() {
