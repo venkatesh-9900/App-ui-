@@ -1,5 +1,5 @@
-import { DataTable } from "@/components/web3-monitoring/data-table"
-import { DashboardNavbar } from "@/components/web3-monitoring/dashboard-navbar"
+import { DataTable } from "@/components/web3/explorer/data-table"
+import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { ProtectedRoute } from "@/components/protected-route"
 
 export default function Page() {

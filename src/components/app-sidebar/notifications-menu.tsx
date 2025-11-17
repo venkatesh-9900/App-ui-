@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Activity, TrendingUp } from "lucide-react"
+import { ChevronRight, Bell, UserPlus, Settings, Users } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -18,32 +18,27 @@ import { usePathname } from "next/navigation"
 
 const menuItems = [
   {
-    name: "Explorer",
-    url: "/web3/explorer",
-    icon: Activity,
+    name: "Subscribe",
+    url: "/notifications/subscribe-consent",
+    icon: UserPlus,
   },
   {
-    name: "Address Activity",
-    url: "/web3/address-activity",
-    icon: Activity,
+    name: "Groups",
+    url: "/notifications/groups",
+    icon: Users,
+  },
+  {
+    name: "Preferences",
+    url: "/notifications/preferences",
+    icon: Settings,
   },
 ]
 
-export function Web3Monitoring() {
-
+export function NotificationsMenu() {
   const pathname = usePathname()
 
   const isActive = (url: string) => {
-    if (url === "/web3/explorer" && pathname === "/web3/explorer") {
-      return true
-    }
-    if (url === "/web3/monitoring" && pathname === "/web3/monitoring") {
-      return true
-    }
-    if (url === "/web3/address-activity" && pathname === "/web3/address-activity") {
-      return true
-    }
-    return false
+    return pathname === url
   }
 
   return (
@@ -53,9 +48,9 @@ export function Web3Monitoring() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Web3 Monitoring" className="cursor-pointer">
-            <Activity className="h-4 w-4" />
-            <span>Web3 Monitoring</span>
+          <SidebarMenuButton tooltip="Notifications" className="cursor-pointer">
+            <Bell className="h-4 w-4" />
+            <span>Notifications</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -77,3 +72,4 @@ export function Web3Monitoring() {
     </Collapsible>
   )
 }
+
