@@ -110,7 +110,10 @@ export function ChatNavbar({
               variant="outline" 
               size="icon" 
               disabled={!sessionId || isToggling || isSharedByOther}
-              className={"!text-white !bg-green-500 !hover:bg-green-600 !border-green-500 dark:!bg-green-600 dark:!hover:bg-green-700"}
+              className={isShared 
+                ? "!text-white !bg-green-500 !hover:bg-green-600 !border-green-500 dark:!bg-green-600 dark:!hover:bg-green-700" 
+                : ""
+              }
             >
               <Share2 className="h-4 w-4" />
             </Button>

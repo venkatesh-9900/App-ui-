@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { searchBlockchainTransaction } from "@/hooks/web3-monitoring-service"
+import { searchBlockchainTransaction } from "@/hooks/web3/explorer-service"
 import { toast } from "sonner"
 
 interface BlockchainSearchProps {
