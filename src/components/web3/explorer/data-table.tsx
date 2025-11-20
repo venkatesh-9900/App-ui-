@@ -26,6 +26,7 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconCircleCheckFilled,
+  IconCopy,
   IconGripVertical,
   IconLoader,
 } from "@tabler/icons-react"
@@ -49,6 +50,7 @@ import { z } from "zod"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { IconCheck } from "@tabler/icons-react"
 import {
   Checkbox,
 } from "@/components/ui/checkbox"
@@ -86,11 +88,30 @@ import {
 import { BlockchainSearch } from "@/components/web3/explorer/blockchain-search"
 import { searchBlockchainTransaction } from "@/hooks/web3/explorer-service"
 import { toast } from "sonner"
+import { truncateText } from "@/utils/formatting"
 
 interface SearchParams {
   chainId: number
-  txhash?: string
+  tnxHash?: string
   address?: string
+}
+
+interface SearchResultsData {
+  txns?: Array<{
+    txn_hash: string
+    block_number: number
+    block_hash: string
+    timestamp: string
+    from_address: string
+    to_address: string
+    value: number
+    gas: number
+    gas_price: number
+    gas_used: number
+    status: string
+    nonce: number
+  }>
+  errors?: string[]
 }
 
 export const schema = z.object({
@@ -128,6 +149,35 @@ function DragHandle({ id }: { id: number }) {
   )
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = React.useState(false)
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation() // avoid triggering row click/drag
+    try {
+      await navigator.clipboard.writeText(text ?? "")
+      setCopied(true)
+      toast.success("Copied to clipboard")
+      // reset icon after short delay
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      toast.error("Failed to copy")
+    }
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      aria-label="Copy"
+      title="Copy"
+      className="ml-2 inline-flex h-7 w-7 items-center justify-center rounded px-1 text-sm hover:bg-muted/50 focus:outline-none cursor-pointer"
+    >
+      {copied ? <IconCheck className="size-4" /> : <IconCopy className="size-4" />}
+    </button>
+  )
+}
+
+
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "txn_hash",
@@ -136,8 +186,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const hash = row.original.txn_hash
       if (!hash) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="font-mono text-sm">
-          {hash}
+        <div className="flex items-center gap-2 min-w-0 group">
+          <div className="font-mono text-sm max-w-[170px] min-w-0 truncate">
+            {truncateText(hash)}
+          </div>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <CopyButton text={hash} />
+          </div>
         </div>
       )
     },
@@ -159,8 +214,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const address = row.original.from_address
       if (!address) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="font-mono text-sm">
-          {address}
+        <div className="flex items-center gap-2 min-w-0 group">
+          <div className="font-mono text-sm max-w-[200px] min-w-0 truncate">
+            {truncateText(address)}
+          </div>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <CopyButton text={address} />
+          </div>
         </div>
       )
     },
@@ -178,8 +238,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         )
       }
       return (
-        <div className="font-mono text-sm">
-          {address}
+        <div className="flex items-center gap-2 min-w-0 group">
+          <div className="font-mono text-sm max-w-[200px] min-w-0 truncate">
+            {truncateText(address)}
+          </div>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <CopyButton text={address} />
+          </div>
         </div>
       )
     },
@@ -282,8 +347,10 @@ export function DataTable({
   const [searchParams, setSearchParams] = React.useState<SearchParams | null>(
     null
   )
+  const [loading, setLoading] = React.useState<boolean>(false)
   const sortableId = React.useId()
   const previousPageRef = React.useRef<number>(0)
+  const previousPageSizeRef = React.useRef<number>(15)
 
   const handlePaginationChange = React.useCallback(
     (paginationState: any) => {
@@ -293,14 +360,13 @@ export function DataTable({
   )
 
   const handleSearchResults = (response: any) => {
+    setLoading(false);
     // Check if response has errors
     if (response && response.errors && response.errors.length > 0) {
       console.log("Response errors:", response.errors)
       setError(response.errors[0])
       setData([])
       setRowSelection({})
-      setPagination({ pageIndex: 0, pageSize: 15 })
-      previousPageRef.current = 0
       return
     }
 
@@ -315,14 +381,15 @@ export function DataTable({
       )
       setData(txns)
       setRowSelection({})
-      setPagination({ pageIndex: 0, pageSize: 15 })
-      previousPageRef.current = 0
     }
   }
 
   const handleSearchResultsWithParams = (response: any, params: SearchParams) => {
     setSearchParams(params)
     handleSearchResults(response)
+    previousPageRef.current = 0
+    previousPageSizeRef.current = 15
+    setPagination({ pageIndex: 0, pageSize: pagination.pageSize })
   }
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
@@ -335,6 +402,57 @@ export function DataTable({
     [data]
   )
 
+  React.useEffect(() => {
+    const fetchData = async () => {
+      if (!searchParams) return
+      const { chainId, tnxHash, address } = searchParams
+      if (!tnxHash && !address) {
+            toast.error("Please enter a transaction hash or address")
+            return
+          }
+          setLoading(true);
+      
+          await searchBlockchainTransaction({
+            chainId: chainId,
+            txhash: tnxHash,
+            address: address,
+            page: pagination.pageIndex + 1,
+            offset: pagination.pageSize,
+            successTask: (response) => {
+              const apiResponse = response as any
+              
+              // Check if response has errors
+              if (apiResponse.errors && apiResponse.errors.length > 0) {
+                toast.error(apiResponse.errors[0])
+                const mappedData: SearchResultsData = {
+                  errors: apiResponse.errors,
+                }
+                handleSearchResults(mappedData);
+                return
+              }
+      
+              // Success case
+              const mappedData: SearchResultsData = {
+                txns: apiResponse.data?.txns || [],
+              }
+               handleSearchResults(mappedData);
+            },
+            failureTask: () => {
+              toast.error("Search failed")
+            },
+            errorTask: () => {
+              toast.error("An error occurred during search")
+            },
+          })
+    }
+    // Only fetch data if page index has changed
+    if (previousPageRef.current !== pagination.pageIndex || previousPageSizeRef.current !== pagination.pageSize) {
+      fetchData()
+      previousPageRef.current = pagination.pageIndex
+      previousPageSizeRef.current = pagination.pageSize
+    }
+  }, [pagination])
+
   const table = useReactTable({
     data,
     columns,
@@ -345,6 +463,7 @@ export function DataTable({
       columnFilters,
       pagination,
     },
+    manualPagination: true,
     getRowId: (_, index) => index.toString(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -380,7 +499,7 @@ export function DataTable({
         value="outline"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
-        <BlockchainSearch onSearchResults={handleSearchResultsWithParams} />
+        <BlockchainSearch onSearchResults={handleSearchResultsWithParams} setLoading={setLoading}/>
         <div className="overflow-hidden rounded-lg border relative">
           <DndContext
             collisionDetection={closestCenter}
@@ -409,7 +528,19 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {error ? (
+                {loading ? (
+                  <>
+                    {Array.from({ length: pagination.pageSize }).map((_, i) => (
+                      <TableRow key={`shimmer-${i}`} className="animate-pulse">
+                        {columns.map((_, idx) => (
+                          <TableCell key={idx} className="py-3">
+                            <div className="h-4 w-full rounded bg-neutral-300 dark:bg-neutral-700" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </>
+                ) : error ? (
                   <TableRow>
                     <TableCell
                       colSpan={columns.length}
@@ -462,6 +593,7 @@ export function DataTable({
                 onValueChange={(value) => {
                   table.setPageSize(Number(value))
                 }}
+                disabled={searchParams === null}
               >
                 <SelectTrigger size="sm" className="w-20 cursor-pointer" id="rows-per-page">
                   <SelectValue
@@ -477,19 +609,34 @@ export function DataTable({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+            <div className="flex w-fit items-center justify-center text-sm font-medium gap-2">
+              <span>Page</span>
+
+              {/* Page Jump Input */}
+              <Input
+                type="number"
+                value={table.getState().pagination.pageIndex + 1}
+                onChange={(e) => {
+                  const value = Number(e.target.value)
+
+                  if (!Number.isNaN(value)) {
+                    // Page numbers are 1-based for user, 0-based for table
+                    const page = Math.max(1, value)
+                    table.setPageIndex(page - 1)
+                  }
+                }}
+                onBlur={(e) => {
+                  // Ensure value stays valid on blur
+                  const value = Number(e.target.value)
+                  if (value < 1) {
+                    e.target.value = String(table.getState().pagination.pageIndex + 1)
+                  }
+                }}
+                className="w-16 h-8 text-center"
+                disabled={searchParams === null}
+              />
             </div>
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="cursor-pointer hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
               <Button
                 variant="outline"
                 className="cursor-pointer size-8"
@@ -507,15 +654,6 @@ export function DataTable({
               >
                 <span className="sr-only">Go to next page</span>
                 <IconChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="cursor-pointer hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
               </Button>
             </div>
           </div>
