@@ -88,6 +88,7 @@ import {
 import { BlockchainSearch } from "@/components/web3/explorer/blockchain-search"
 import { searchBlockchainTransaction } from "@/hooks/web3/explorer-service"
 import { toast } from "sonner"
+import { truncateText } from "@/utils/formatting"
 
 interface SearchParams {
   chainId: number
@@ -169,7 +170,7 @@ function CopyButton({ text }: { text: string }) {
       onClick={handleCopy}
       aria-label="Copy"
       title="Copy"
-      className="ml-2 inline-flex h-7 w-7 items-center justify-center rounded px-1 text-sm hover:bg-muted/50 focus:outline-none"
+      className="ml-2 inline-flex h-7 w-7 items-center justify-center rounded px-1 text-sm hover:bg-muted/50 focus:outline-none cursor-pointer"
     >
       {copied ? <IconCheck className="size-4" /> : <IconCopy className="size-4" />}
     </button>
@@ -185,11 +186,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const hash = row.original.txn_hash
       if (!hash) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="font-mono text-sm max-w-[170px] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-            {hash}
+        <div className="flex items-center gap-2 min-w-0 group">
+          <div className="font-mono text-sm max-w-[170px] min-w-0 truncate">
+            {truncateText(hash)}
           </div>
-          <CopyButton text={hash} />
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <CopyButton text={hash} />
+          </div>
         </div>
       )
     },
@@ -211,11 +214,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       const address = row.original.from_address
       if (!address) return <div className="text-muted-foreground">-</div>
       return (
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="font-mono text-sm max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-            {address}
+        <div className="flex items-center gap-2 min-w-0 group">
+          <div className="font-mono text-sm max-w-[200px] min-w-0 truncate">
+            {truncateText(address)}
           </div>
-          <CopyButton text={address} />
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <CopyButton text={address} />
+          </div>
         </div>
       )
     },
@@ -233,11 +238,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         )
       }
       return (
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="font-mono text-sm max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-            {address}
+        <div className="flex items-center gap-2 min-w-0 group">
+          <div className="font-mono text-sm max-w-[200px] min-w-0 truncate">
+            {truncateText(address)}
           </div>
-          <CopyButton text={address} />
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <CopyButton text={address} />
+          </div>
         </div>
       )
     },
@@ -425,7 +432,6 @@ export function DataTable({
               }
       
               // Success case
-              toast.success("Search completed successfully")
               const mappedData: SearchResultsData = {
                 txns: apiResponse.data?.txns || [],
               }

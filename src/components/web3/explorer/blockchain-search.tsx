@@ -74,7 +74,6 @@ export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearc
         }
 
         // Success case
-        toast.success("Search completed successfully")
         const mappedData: SearchResultsData = {
           txns: apiResponse.data?.txns || [],
         }
