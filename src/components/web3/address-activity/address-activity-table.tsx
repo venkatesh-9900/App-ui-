@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause } from 'lucide-react'
 import { AddressActivity } from '@/types/address-activity'
 import { format } from 'date-fns'
+import { truncateText } from '@/utils/formatting'
 
 interface AddressActivityTableProps {
   activities: AddressActivity[]
@@ -130,11 +131,6 @@ export function AddressActivityTable({
     }
   }
 
-  const truncateAddress = (address: string) => {
-    if (address.length <= 12) return address
-    return `${address.slice(0, 6)}...${address.slice(-4)}`
-  }
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -205,7 +201,7 @@ export function AddressActivityTable({
                               className="font-mono text-xs"
                               title={addr}
                             >
-                              {truncateAddress(addr)}
+                              {truncateText(addr)}
                             </Badge>
                           ))
                         ) : (

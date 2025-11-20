@@ -15,7 +15,8 @@ import { searchBlockchainTransaction } from "@/hooks/web3/explorer-service"
 import { toast } from "sonner"
 
 interface BlockchainSearchProps {
-  onSearchResults?: (data: SearchResultsData, params: SearchParams) => void
+  onSearchResults?: (data: SearchResultsData, params: SearchParams) => void,
+  setLoading?: (loading: boolean) => void,
 }
 
 interface SearchParams {
@@ -42,7 +43,7 @@ interface SearchResultsData {
   errors?: string[]
 }
 
-export function BlockchainSearch({ onSearchResults }: BlockchainSearchProps) {
+export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearchProps) {
   const [chainId, setChainId] = useState("1")
   const [txnHash, setTxnHash] = useState("")
   const [address, setAddress] = useState("")
@@ -52,13 +53,13 @@ export function BlockchainSearch({ onSearchResults }: BlockchainSearchProps) {
       toast.error("Please enter a transaction hash or address")
       return
     }
-
+    setLoading?.(true);
     await searchBlockchainTransaction({
       chainId: parseInt(chainId),
       txhash: txnHash,
       address: address,
       page: 1,
-      offset: 100,
+      offset: 15,
       successTask: (response) => {
         const apiResponse = response as any
         
@@ -73,13 +74,13 @@ export function BlockchainSearch({ onSearchResults }: BlockchainSearchProps) {
         }
 
         // Success case
-        toast.success("Search completed successfully")
         const mappedData: SearchResultsData = {
           txns: apiResponse.data?.txns || [],
         }
         onSearchResults?.(mappedData, { chainId: parseInt(chainId), txhash: txnHash, address: address })
       },
       failureTask: () => {
+        setLoading?.(false);
         toast.error("Search failed")
       },
       errorTask: () => {
@@ -118,7 +119,7 @@ export function BlockchainSearch({ onSearchResults }: BlockchainSearchProps) {
           className="w-full"
           value={txnHash}
           onChange={(e) => setTxnHash(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
         />
       </div>
 
@@ -129,7 +130,7 @@ export function BlockchainSearch({ onSearchResults }: BlockchainSearchProps) {
           className="w-full"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
         />
       </div>
 
