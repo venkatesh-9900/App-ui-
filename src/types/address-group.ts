@@ -28,10 +28,8 @@ export interface ListAddressGroupsResponse {
 
 export interface UpdateAddressGroupRequest {
     addresses?: string[];
-    topics?: string[];
-    subscriber_ids?: string[];
-    channel_ids?: string[];
-    is_active?: boolean;
+    name?: string;
+    description?: string;
 }
 
 export interface DeleteAddressGroupResponse {
