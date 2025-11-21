@@ -1,35 +1,48 @@
-timestamp: "20251015101010"
-replicaCount: 2
+timestamp: 1763432915.839
+replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: feat-test-15e51a97
+  tag: 0.0.89
   pullPolicy: IfNotPresent
-containerPort: 3000
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: app-ui
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ''
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
 service:
   type: ClusterIP
   port: 3000
 ingress:
-  enabled: false
+  enabled: true
   className: alb
-  host: ui.example.com
-  certificateArn: arn:aws:acm:ap-south-1:210519480143:certificate/xxxxxxxxxxxx
-  scheme: internet-facing
-  targetType: ip
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: frontend-ingress-group
+    alb.ingress.kubernetes.io/group.name: argus-prod-app
+    alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/xxxxxxxxxxxx
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 300m
-    memory: 256Mi
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/2bb5fece-2c08-42af-bf29-a4a047ca37fe
+  hosts:
+  - host: app.argusintelligence.net
+    paths:
+    - path: /
+      pathType: Prefix
+  tls: []
+resources: {}
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
 nodeSelector: {}
 tolerations: []
 affinity: {}
