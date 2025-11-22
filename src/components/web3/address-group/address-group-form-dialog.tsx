@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Plus, X, Upload } from 'lucide-react'
 import { CreateAddressGroupRequest } from '@/types/address-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface AddressGroupFormDialogProps {
   open: boolean
@@ -25,6 +26,8 @@ interface AddressGroupFormDialogProps {
     name: string;
     description?: string;
     addresses: string[];
+    network: string;
+    chain: string;
   } | null;
 }
 
@@ -39,10 +42,14 @@ export function AddressGroupFormDialog({
   const [addresses, setAddresses] = useState<string[]>([''])
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
+  const [chain, setChain] = useState("")
+  const [network, setNetwork] = useState("")
   const [errors, setErrors] = useState<{
     addresses?: string
     name?: string
     description?: string
+    chain?: string
+    network?: string
   }>({})
   const csvInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -52,6 +59,8 @@ export function AddressGroupFormDialog({
       setName(initialData.name);
       setDescription(initialData.description || "");
       setAddresses(initialData.addresses.length ? initialData.addresses : []);
+      setChain(initialData.chain || "");
+      setNetwork(initialData.network || "");
       setErrors({});
     }
 
@@ -59,6 +68,8 @@ export function AddressGroupFormDialog({
       setName("");
       setDescription("");
       setAddresses([]);
+      setChain("");
+      setNetwork("");
       setErrors({});
     }
   }, [open, mode, initialData]);
@@ -147,10 +158,20 @@ export function AddressGroupFormDialog({
         newErrors.name = 'Group name is required'
       }
 
+      // validate chain
+      if (chain.trim() === '') {
+        newErrors.chain = 'Chain is required'
+      }
+
+      // validate network
+      if (network.trim() === '') {
+        newErrors.network = 'Network is required'
+      }
+
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [addresses, name])
+  }, [addresses, name, chain, network])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
@@ -159,14 +180,15 @@ export function AddressGroupFormDialog({
       onSubmit({
         addresses: validAddresses,
         name: name.trim(),
-        description: description.trim() || undefined
+        description: description.trim() || undefined,
+        chain: chain,
+        network: network,
       })
     }
-  }, [validateForm, addresses, name, description, onSubmit])
-
+  }, [validateForm, addresses, name, description, onSubmit, chain, network])
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
@@ -211,6 +233,50 @@ export function AddressGroupFormDialog({
               />
             </div>
 
+            {/* Chain Section */}
+            <div className='grid gap-3'>
+              <Label className="text-left font-semibold">
+                Chain <span className="text-destructive">*</span>
+              </Label>
+              <div className='space=y-2'>
+                <Select value={chain} onValueChange={setChain}>
+                  <SelectTrigger id="chain-select" className="w-full cursor-pointer">
+                    <SelectValue placeholder="Select a chain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem className="cursor-pointer" value="Ethereum">Ethereum</SelectItem>
+                    <SelectItem className="cursor-pointer" value="Polygon">Polygon</SelectItem>
+                    <SelectItem className="cursor-pointer" value="Arbitrum">Arbitrum</SelectItem>
+                    <SelectItem className="cursor-pointer" value="Optimism">Optimism</SelectItem>
+                    <SelectItem className="cursor-pointer" value="Base">Base</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.chain && (
+                  <p className="text-sm text-destructive">{errors.chain}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Network Section */}
+            <div className='grid gap-3'>
+              <Label className="text-left font-semibold">
+                Network <span className="text-destructive">*</span>
+              </Label>
+              <div className='space=y-2'>
+                <Select value={network} onValueChange={setNetwork}>
+                  <SelectTrigger id="network-select" className="w-full cursor-pointer">
+                    <SelectValue placeholder="Select a network" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem className="cursor-pointer" value="Mainnet">Mainnet</SelectItem>
+                    <SelectItem className="cursor-pointer" value="Sepolia">Sepolia</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.network && (
+                  <p className="text-sm text-destructive">{errors.network}</p>
+                )}
+              </div>
+            </div>
             {/* Addresses Section */}
             <div className="grid gap-3">
               <Label className="text-left font-semibold">

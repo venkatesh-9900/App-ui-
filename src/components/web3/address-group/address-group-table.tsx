@@ -125,6 +125,8 @@ export function AddressGroupTable({
       name: formData.name || selectedGroup?.name || '',
       description: formData.description || selectedGroup?.description || '',
       addresses: formData.addresses || selectedGroup?.addresses || [],
+      network: formData.network || selectedGroup?.network || '',
+      chain: formData.chain || selectedGroup?.chain || '',
       organization_id: selectedGroup?.organization_id || '',
       user_id: selectedGroup?.user_id || '',
       created_at: selectedGroup?.created_at || '',
@@ -199,6 +201,16 @@ export function AddressGroupTable({
                     <span>Name</span>
                   </div>
                 </TableHead>
+                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                  <div className="flex items-center gap-1">
+                    <span>Chain</span>
+                  </div>
+                </TableHead>
+                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                  <div className="flex items-center gap-1">
+                    <span>Network</span>
+                  </div>
+                </TableHead>
                 <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                   <div className="flex items-center gap-1">
                     <Activity className="w-4 h-4" />
@@ -235,6 +247,28 @@ export function AddressGroupTable({
                           title={group.name}
                         >
                           {truncateText(group.name)}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 w-1/6 min-w-max">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="default"
+                          className="text-xs"
+                          title={group.chain}
+                        >
+                          {truncateText(group.chain)}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 w-1/6 min-w-max">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="default"
+                          className="text-xs"
+                          title={group.network}
+                        >
+                          {truncateText(group.network)}
                         </Badge>
                       </div>
                     </TableCell>
@@ -343,6 +377,8 @@ export function AddressGroupTable({
             name: selectedGroup.name,
             description: selectedGroup.description,
             addresses: selectedGroup.addresses,
+            chain: selectedGroup.chain,
+            network: selectedGroup.network,
           }}
           isSubmitting={isUpdating}
           onSubmit={(data) => handleUpdateGroup(selectedGroup.id, data)}
