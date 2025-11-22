@@ -25,43 +25,59 @@ export default function ChatPage() {
     const [hasLoadedInitialSession, setHasLoadedInitialSession] = useState(false)
     const [readOnly, setReadOnly] = useState(false)
 
+    const session = searchParams.get("sessionId");
+    const prompt = searchParams.get("prompt");
+    const isNew = searchParams.get("new");
+    const userid = searchParams.get("userid");
+    const [lastLoadedSession, setLastLoadedSession] = useState<string | null>(null);
+
+
     useEffect(() => {
-        // Get params here
-        const session = searchParams.get('sessionId')
-        const prompt = searchParams.get('prompt')
-        const isNew = searchParams.get('new')
-        const userid = searchParams.get('userid')
-        
-        console.log('ChatPage useEffect - sessionId:', session, 'prompt:', prompt, 'isNew:', isNew, 'userid:', userid)
-        
+        console.log("ChatPage useEffect - session:", session, "prompt:", prompt, "isNew:", isNew, "userid:", userid);
+
+        // CASE 1: Existing session selected
         if (session) {
-            // Loading an existing session
-            console.log('Loading existing session:', session, 'with userid:', userid)
-            setSessionId(session)
-            setMessages([])
-            setInitialMessage("")
-            loadExistingSession(session, userid)
-            setHasLoadedInitialSession(true)
-        } else if (isNew === 'true') {
-            console.log('Fresh new chat')
-            setSessionId(null)
-            setMessages([])
-            setInitialMessage("")
-            setHasLoadedInitialSession(true)
-        } else if (prompt) {
-            console.log('Loading with prompt:', prompt)
-            setInitialMessage(prompt)
-            setSessionId(null)
-            setMessages([])
-            setHasLoadedInitialSession(true)
-        } else if (!hasLoadedInitialSession) {
-            console.log('Initial load - fresh new chat')
-            setSessionId(null)
-            setMessages([])
-            setInitialMessage("")
-            setHasLoadedInitialSession(true)
+            if (lastLoadedSession !== session && lastLoadedSession !== "new") {
+                setLastLoadedSession(session);
+                console.log("Setting sessionId to:", session);
+                setSessionId(session);
+                setMessages([]);
+                setInitialMessage("");
+                loadExistingSession(session, userid);
+            }
+            if (lastLoadedSession === "new")
+                setLastLoadedSession(session);
+            return;
         }
-    }, [searchParams.get('sessionId'), searchParams.get('prompt'), searchParams.get('new'), searchParams.get('userid'), hasLoadedInitialSession])
+        // CASE 2: New chat
+        if (isNew === "true") {
+            console.log("Starting new chat");
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage("");
+            setLastLoadedSession("new");
+            return;
+        }
+
+        // CASE 3: Chat started with prompt
+        if (prompt) {
+            console.log("Starting prompt chat:", prompt);
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage(prompt);
+            setLastLoadedSession("prompt");
+            return;
+        }
+
+        // CASE 4: Empty state (first load)
+        if (lastLoadedSession !== "empty") {
+            console.log("Empty chat");
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage("");
+            setLastLoadedSession("empty");
+        }
+    }, [session, prompt, isNew, userid]);
 
     const loadExistingSession = async (id: string, userid?: string | null) => {
         setIsLoadingSession(true)
