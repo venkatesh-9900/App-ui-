@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Activity, TrendingUp } from "lucide-react"
+import { ChevronRight, Activity, Group } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -15,6 +15,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 
 const menuItems = [
   {
@@ -26,6 +27,11 @@ const menuItems = [
     name: "Address Activity",
     url: "/web3/address-activity",
     icon: Activity,
+  },
+  {
+    name: "Address Group",
+    url: "/web3/address-group",
+    icon: Group,
   },
 ]
 
@@ -43,12 +49,23 @@ export function Web3Monitoring() {
     if (url === "/web3/address-activity" && pathname === "/web3/address-activity") {
       return true
     }
+    if (url === "/web3/address-group" && pathname === "/web3/address-group") {
+      return true
+    }
     return false
   }
+  const isAnySubmenuActive = menuItems.some(item => isActive(item.url));
+  const [open, setOpen] = useState(isAnySubmenuActive);
 
+  // Auto-open when route changes
+  useEffect(() => {
+    if (isAnySubmenuActive) setOpen(true);
+  }, [isAnySubmenuActive]);
+  
   return (
     <Collapsible
-      defaultOpen={false}
+      open={open}
+      onOpenChange={setOpen}
       className="group/collapsible"
     >
       <SidebarMenuItem>
