@@ -5,7 +5,7 @@ export interface CreateAddressGroupRequest {
     chain: string;
     addresses: string[];
 }
-
+ 
 export interface AddressGroup {
     id: number;
     name: string;
