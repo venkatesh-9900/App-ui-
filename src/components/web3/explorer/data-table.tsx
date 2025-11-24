@@ -89,6 +89,7 @@ import { BlockchainSearch } from "@/components/web3/explorer/blockchain-search"
 import { searchBlockchainTransaction } from "@/hooks/web3/explorer-service"
 import { toast } from "sonner"
 import { truncateText } from "@/utils/formatting"
+import { TransactionDetailsDialog } from "./transaction-details-dialog"
 
 interface SearchParams {
   chainId: number
@@ -110,6 +111,8 @@ interface SearchResultsData {
     gas_used: number
     status: string
     nonce: number
+    max_fee_per_gas: number
+    max_priority_fee_per_gas: number
   }>
   errors?: string[]
 }
@@ -127,6 +130,8 @@ export const schema = z.object({
   gas_used: z.number(),
   status: z.string(),
   nonce: z.number(),
+  max_fee_per_gas: z.number(),
+  max_priority_fee_per_gas: z.number(),
 })
 
 // Create a separate component for the drag handle
@@ -184,15 +189,21 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: "Transaction Hash",
     cell: ({ row }) => {
       const hash = row.original.txn_hash
+      const [open, setOpen] = React.useState(false);
       if (!hash) return <div className="text-muted-foreground">-</div>
       return (
         <div className="flex items-center gap-2 min-w-0 group">
-          <div className="font-mono text-sm max-w-[170px] min-w-0 truncate">
+          <div className="font-mono text-sm max-w-[170px] min-w-0 truncate cursor-pointer" onClick={() => setOpen(true)}>
             {truncateText(hash)}
           </div>
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             <CopyButton text={hash} />
           </div>
+          <TransactionDetailsDialog
+            open={open}
+            setOpen={setOpen}
+            data={row.original}
+          />
         </div>
       )
     },
