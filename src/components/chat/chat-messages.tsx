@@ -38,7 +38,6 @@ export function ChatMessages({ messages, isLoading = false, isLoadingSession = f
       },
       { threshold: 0.1 }
     )
-
     observer.observe(scrollRef.current)
 
     return () => observer.disconnect()
