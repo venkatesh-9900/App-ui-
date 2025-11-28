@@ -1,7 +1,7 @@
 "use client"
 
 import { Heading } from "@/components/ui/heading";
-import { NeighboursTable } from "@/components/web3-monitoring/neighbours-table";
+import { NeighboursTable } from "@/components/web3/address/neighbours-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { NeighboursColumn } from "@/types/blockchain";
 

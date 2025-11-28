@@ -20,8 +20,8 @@ import { NeighboursView } from "./neighbours-view";
 import { IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from "@tabler/icons-react";
 import { NeighbourData, NeighbourResponse, NeighboursColumn, NeighboursColumnData } from "@/types/blockchain";
 import { toast } from "sonner";
-import { blockchainAddressLookup } from "@/hooks/web3-monitoring-service";
-import AddressStatic from "@/components/web3-monitoring/address-static";
+import { blockchainAddressLookup } from "@/hooks/web3/address-service";
+import AddressStatic from "@/components/web3/address/address-static";
 // import { ChaptersClient } from "../chapters/client";
 // Define DataTableProps interface
 interface DataTableProps<TData, TValue> {

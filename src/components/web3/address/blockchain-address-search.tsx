@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { blockchainAddressLookup } from "@/hooks/web3-monitoring-service"
+import { blockchainAddressLookup } from "@/hooks/web3/address-service"
 import { toast } from "sonner"
 import { NeighbourData } from "@/types/blockchain"
 

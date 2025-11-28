@@ -3,26 +3,16 @@
 import { ProtectedRoute } from "@/components/protected-route";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import AddressStatic from "@/components/web3-monitoring/address-static";
-import { BlockchainAddressSearch } from "@/components/web3-monitoring/blockchain-address-search";
-import { DashboardNavbar } from "@/components/web3-monitoring/dashboard-navbar";
-import { NeighboursView } from "@/components/web3-monitoring/neighbours-view";
+import AddressStatic from "@/components/web3/address/address-static";
+import { BlockchainAddressSearch } from "@/components/web3/address/blockchain-address-search";
+import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar";
+import { NeighboursView } from "@/components/web3/address/neighbours-view";
 import { NeighbourResponse, NeighboursColumn } from "@/types/blockchain";
 import { closestCenter, DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { set } from "date-fns";
 import React from "react";
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner";
-
-interface txDepthData {
-    address: string
-    depth: number
-}
-
-interface txCount extends txDepthData {
-    count: number
-}
 
 export default function AddressPage() {
     const [addressId, setAddressId] = useState("")
@@ -36,44 +26,6 @@ export default function AddressPage() {
         Math.trunc(new Date().getTime() / 1000) + 86399
     )
     const [txNumber, setTxNumber] = useState<number>(0);
-
-    // useEffect(() => {
-    //     if (apiData.nodes.length > 0){
-    //         setAddressId(apiData.nodes[0])
-    //     }
-    //     // setAddressId(apiData.nodes[0])
-    //     let base_address_data = getAddressAnalytics(apiData) || []
-    //     console.log(base_address_data)
-    //     setAddressData(base_address_data)
-    //     setIsLoading(false)
-    // }, [apiData]);
-
-    // const getAddressAnalytics = (graph_data: SearchAddressResponse, address?: string, depth?: number, excludeAddress?: string) : NeighboursColumn[] | null => {
-    //     let base_node = (!address || !depth) ? graph_data.nodes[0] : address
-    //     let base_depth = (!address || !depth) ? 0 : depth
-    //     let address_excl = excludeAddress || ""
-    //     if (depth == depthValue) return null;
-    //     const tx_data_list : GraphEdgeTxnData[] = []
-    //     for (let i = 0; i < graph_data.edges.length; i++) {
-    //         if (tx_data_list.findIndex((e) => e.txHash == graph_data.edges[i].txHash && e.from == graph_data.edges[i].from && e.to == graph_data.edges[i].to) == -1) {
-    //             tx_data_list.push(graph_data.edges[i])
-    //         }
-    //     }
-    //     let selected_txn_data_list = tx_data_list.filter((e) => e.from == base_node || e.to == base_node && e.depth == base_depth + 1)
-    //     let address_list = selected_txn_data_list.map((e) => e.from == base_node ? e.to : e.from)
-    //     address_list = address_list.filter((e) => e != address_excl)
-    //     let curr_depth = base_depth
-    //     const counts: txCount[] = Object.entries(
-    //         address_list.reduce<Record<string, number>>((acc, curr) => {
-    //             acc[curr] = (acc[curr] || 0) + 1;
-    //             return acc;
-    //         }, {})
-    //     ).map(([address, count]) => ({ address: address, depth: curr_depth != -1 ? curr_depth + 1 : curr_depth, count: count })).sort((a, b) => b.count - a.count);
-    //     const result_list : NeighboursColumn[] = counts.map((e) => {
-    //         return { address: e.address, depth: e.depth, txns_no: e.count, neighbours: getAddressAnalytics(graph_data, e.address, e.depth, base_node)};
-    //     });
-    //     return result_list;
-    // }
 
     const getNeighboursData = (data: NeighbourResponse[]) : NeighboursColumn[] => {
         return data.map((e: NeighbourResponse) => { 
