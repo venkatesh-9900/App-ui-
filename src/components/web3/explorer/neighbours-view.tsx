@@ -2,9 +2,7 @@
 
 import { Heading } from "@/components/ui/heading";
 import { NeighboursTable } from "@/components/web3-monitoring/neighbours-table";
-import { Separator } from "@/components/ui/separator";
 import { ColumnDef } from "@tanstack/react-table";
-import { z } from "zod"
 import { NeighboursColumn } from "@/types/blockchain";
 
 // export const schema = z.object({
@@ -39,22 +37,36 @@ const columns: ColumnDef<NeighboursColumn>[] = [
 ]
 
 interface NeighboursViewProps {
+    chain_id: number;
+    start_date: Date;
+    end_date: Date;
+    direction: number;
     current_address: string;
     depth: number;
     data: NeighboursColumn[];
+    tx_count: number;
 }
 
-export const NeighboursView: React.FC<NeighboursViewProps> = ({ current_address, depth, data }) => {
+export const NeighboursView: React.FC<NeighboursViewProps> = ({ chain_id, start_date, end_date, direction, current_address, depth, data, tx_count }) => {
     return (
         <>
             <div className="flex items-center justify-between">
-                <Heading title={depth == 0 ? `Neighbours`: `Neighbours of ${current_address}`} description={`Level: ${depth + 1}`} smallTitle={!(depth == 0)} />
+                <Heading title={depth == 1 ? `Neighbours`: `Neighbours of ${current_address}`} description={`Level: ${depth}`} smallTitle={!(depth == 1)} />
             </div>
+            {tx_count > 0 && <p className="text-xs text-muted-foreground mb-1">
+                {`(As per latest ${tx_count} transactions in the selected time frame)`}
+            </p>}
             {/* <Separator /> */}
             <NeighboursTable
+                chainId={chain_id}
+                currentAddress={current_address}
+                startDate={start_date}
+                endDate={end_date}
+                direction={direction}
+                depth={depth}
                 columns={columns}
                 data={data}
-                getRowCanExpand={() => true}
+                getRowCanExpand={() => depth < 5}
             />
             {/* <Separator /> */}
         </>

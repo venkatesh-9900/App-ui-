@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Search } from "lucide-react"
+import { Calendar as CalendarIcon, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Select,
   SelectContent,
@@ -11,14 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { blockchainAddressLookup, searchBlockchainTransaction } from "@/hooks/web3-monitoring-service"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { blockchainAddressLookup } from "@/hooks/web3-monitoring-service"
 import { toast } from "sonner"
-import { SearchAddressResponse } from "@/types/blockchain"
-import { redirect } from "next/navigation"
-import { error } from "console"
+import { NeighbourData } from "@/types/blockchain"
 
 interface AddressSearchProps {
-  onSearchResults: (data: SearchAddressResponse, address: string, depth: number) => void
+  onSearchResults: (data: NeighbourData, chainId: number, address: string, startTime: number, endTime: number, direction: number) => void
   onError: (error: string) => void
   setLoading: () => void
 }
@@ -26,43 +28,37 @@ interface AddressSearchProps {
 export function BlockchainAddressSearch({ onSearchResults, onError, setLoading }: AddressSearchProps) {
   const [selectedChainId, setSelectedChainId] = useState("1")
   const [addressId, setAddressId] = useState("")
-  const [selectedTime, setSelectedTime] = useState("d")
-  const [selectedDepth, setSelectedDepth] = useState("3")
+  const [selectedDirection, setSelectedDirection] = useState("2")
+  const [fromDate, setFromDate] = useState<Date>()
+  const [toDate, setToDate] = useState<Date>()
 
   const handleSearch = async () => {
-    setLoading();
     if (!addressId) {
       toast.error("Please enter a transaction address")
       return
     };
-    let startTime : number= 0;
-
-    if (selectedTime == "h") {
-      startTime = Math.trunc((Date.now() - 60 * 60 * 1000)/1000);
-    } else if (selectedTime == "d") {
-      startTime = Math.trunc((Date.now() - 24 * 60 * 60 * 1000)/1000);
-    } else if (selectedTime == "w") {
-      startTime = Math.trunc((Date.now() - 7 * 24 * 60 * 60 * 1000)/1000);
-    } else if (selectedTime == "m") {
-      startTime = Math.trunc((Date.now() - 30 * 24 * 60 * 60 * 1000)/1000);
-    } else if (selectedTime == "3m") {
-      startTime = Math.trunc((Date.now() - 3 * 30 * 24 * 60 * 60 * 1000)/1000);
-    } else if (selectedTime == "y") {
-      startTime = Math.trunc((Date.now() - 365 * 24 * 60 * 60 * 1000)/1000);
-    } else if (selectedTime == "5y") {
-      startTime = Math.trunc((Date.now() - 5 * 365 * 24 * 60 * 60 * 1000)/1000);
+    let startTime: number = 0;
+    let endTime: number = 0;
+    if (fromDate && toDate) {
+      startTime = Math.trunc(fromDate.getTime() / 1000);
+      endTime = Math.trunc(toDate.getTime() / 1000) + 86399;
+      console.log(startTime, endTime)
+      if (startTime > endTime) {
+        toast.error("Start date cannot be greater than end date")
+        return
+      }
     }
-
-    console.log("startTime: ",startTime);
     toast.info("Processing request...")
-
+    setLoading();
+    
     await blockchainAddressLookup({
       chainId: parseInt(selectedChainId),
       address: addressId,
       startTime: startTime,
-      depth: parseInt(selectedDepth),
+      endTime: endTime,
+      direction: parseInt(selectedDirection),
       successTask: (response) => {
-        onSearchResults(response, addressId, parseInt(selectedDepth));
+        onSearchResults(response, parseInt(selectedChainId), addressId, startTime, endTime, parseInt(selectedDirection));
       },
       failureTask: () => {
         toast.error("Search failed")
@@ -71,7 +67,7 @@ export function BlockchainAddressSearch({ onSearchResults, onError, setLoading }
       errorTask: () => {
         toast.error("An error occurred during search")
         onError("An error occurred during search");
-      },
+      }
     })
   }
 
@@ -83,7 +79,7 @@ export function BlockchainAddressSearch({ onSearchResults, onError, setLoading }
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-3">
-      <div className="flex cursor-pointer flex-col gap-2 md:w-48">
+      <div className="flex cursor-pointer flex-col gap-2 md:w-35">
         <Select value={selectedChainId} onValueChange={setSelectedChainId}>
           <SelectTrigger id="chain-select" className="w-full cursor-pointer">
             <SelectValue placeholder="Select a chain" />
@@ -110,37 +106,65 @@ export function BlockchainAddressSearch({ onSearchResults, onError, setLoading }
       </div>
       <div className="flex flex-row items-center gap-2">
         <span className="text-sm mr-1">
-          Show data for
+          From
         </span>
-        <div className="flex cursor-pointer flex-col gap-2 md:w-48 mr-2">
-          <Select value={selectedTime} onValueChange={setSelectedTime}>
-            <SelectTrigger id="time-range-select" className="w-full cursor-pointer">
-                <SelectValue placeholder="Select a time frame" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem className="cursor-pointer" value="h">Last hour</SelectItem>
-                <SelectItem className="cursor-pointer" value="d">Last day</SelectItem>
-                <SelectItem className="cursor-pointer" value="w">Last week</SelectItem>
-                <SelectItem className="cursor-pointer" value="m">Last month</SelectItem>
-                <SelectItem className="cursor-pointer" value="3m">Last 3 months</SelectItem>
-                <SelectItem className="cursor-pointer" value="y">Last year</SelectItem>
-                <SelectItem className="cursor-pointer" value="5y">Last 5 years</SelectItem>
-                <SelectItem className="cursor-pointer" value="all">All</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[200px] justify-start text-left font-normal",
+                  !fromDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {fromDate ? format(fromDate, "PPP") : <span>From date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar mode="single" selected={fromDate} onSelect={setFromDate} initialFocus />
+            </PopoverContent>
+          </Popover>
         </div>
+      </div>
+      <div className="flex flex-row items-center gap-2">
         <span className="text-sm mr-1">
-          Depth
+          To
         </span>
-        <div className="flex cursor-pointer flex-col gap-2 md:w-20">
-            <Select value={selectedDepth} onValueChange={setSelectedDepth}>
+        <div className="flex flex-col gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[200px] justify-start text-left font-normal",
+                  !toDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {toDate ? format(toDate, "PPP") : <span>To date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar mode="single" selected={toDate} onSelect={setToDate} initialFocus />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+      <div className="flex flex-row items-center gap-2">
+        <span className="text-sm mr-1">
+          Tx.Dir.
+        </span>
+        <div className="flex cursor-pointer flex-col flex-1 gap-2 md:w-35">
+            <Select value={selectedDirection} onValueChange={setSelectedDirection}>
             <SelectTrigger id="depth-select" className="w-full cursor-pointer">
                 <SelectValue placeholder="Select Depth" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem className="cursor-pointer" value="1">1</SelectItem>
-                <SelectItem className="cursor-pointer" value="2">2</SelectItem>
-                <SelectItem className="cursor-pointer" value="3">3</SelectItem>
+                <SelectItem className="cursor-pointer" value="0">INBOUND</SelectItem>
+                <SelectItem className="cursor-pointer" value="1">OUTBOUND</SelectItem>
+                <SelectItem className="cursor-pointer" value="2">ALL</SelectItem>
             </SelectContent>
             </Select>
         </div>

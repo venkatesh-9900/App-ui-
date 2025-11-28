@@ -3,7 +3,7 @@
 import { ENDPOINTS } from "@/config/config"
 import { app_name } from "@/constants/constants"
 import { reauthenticationStep, refreshAccessToken } from "../auth-service"
-import { SearchAddressResponse } from "@/types/blockchain"
+import { NeighbourData } from "@/types/blockchain"
 
 interface SearchTxnParams {
   chainId: number
@@ -20,9 +20,11 @@ interface SearchAddressParams {
   chainId: number
   address: string
   startTime: number
-  depth: number
+  endTime: number
+  direction: number
   retry?: boolean
-  successTask: (response: SearchAddressResponse) => void
+  excludeAddress?: string | null
+  successTask: (response: NeighbourData) => void
   failureTask: () => void
   errorTask: () => void
 }
@@ -152,11 +154,13 @@ export async function blockchainAddressLookup({
   chainId,
   address,
   startTime,
-  depth,
+  endTime,
+  direction,
   successTask,
   failureTask,
   errorTask,
   retry = false,
+  excludeAddress = null
 }: SearchAddressParams) {
   try {
     if (retry) {
@@ -167,8 +171,10 @@ export async function blockchainAddressLookup({
     const payload = {
       chain_id: chainId,
       address: address,
-      depth: depth,
-      start_timestamp: startTime
+      start_timestamp: startTime,
+      end_timestamp: endTime,
+      direction: direction,
+      ...(excludeAddress && { exclude_address: excludeAddress })
     }
     const response = await fetch(ENDPOINTS.WEB3_MONITORING.GET_NEIGHBOURS, {
       method: "POST",
@@ -190,7 +196,9 @@ export async function blockchainAddressLookup({
           chainId,
           address,
           startTime,
-          depth,
+          endTime,
+          direction,
+          excludeAddress,
           successTask,
           failureTask,
           errorTask,
@@ -199,7 +207,10 @@ export async function blockchainAddressLookup({
       }
     } else if (response.status === 200) {
       const responseData = await response.json()
-      successTask(responseData)
+      if (responseData.errors && responseData.errors.length > 0) {
+        throw new Error(`Failed to fetch neighbours due to these error(s): ${responseData.errors.join(', ')}`)
+      }
+      successTask(responseData.data)
     } else {
       console.error(
         "Failed to search blockchain data with status code:",
