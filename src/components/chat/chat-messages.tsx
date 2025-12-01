@@ -1,9 +1,9 @@
 
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2 } from "lucide-react"
+import { ArrowDown, Loader2 } from "lucide-react"
 import { ChatMessage } from "./chat-message"
 import { FileDetails } from "@/types/files"
 import ChatStarter from "./chat-starter"
@@ -26,10 +26,29 @@ interface ChatMessagesProps {
 
 export function ChatMessages({ messages, isLoading = false, isLoadingSession = false, sessionId, readOnly }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+
+  useEffect(() => {
+    if (!scrollRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        setShowScrollButton(!entry.isIntersecting) // hide if visible
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(scrollRef.current)
+
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     // Auto-scroll to bottom
-    if (scrollRef.current) {
+    let lastMessage = messages[messages.length - 1] ?? null;
+    if (!showScrollButton) {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" })
+    } else if (lastMessage?.role === 'user' && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages, isLoading])
@@ -67,7 +86,14 @@ export function ChatMessages({ messages, isLoading = false, isLoadingSession = f
               </div>
             </div>
           )}
-
+          { showScrollButton && (
+            <button
+              onClick={() => { scrollRef.current?.scrollIntoView({ behavior: "smooth" }) }}
+              className="absolute left-1/2 -translate-x-1/2 bottom-0 z-50 flex items-center gap-2 rounded-full bg-muted/90 px-2 py-2 border-2 border-zinc-300/60 dark:border-zinc-700/60 text-sm text-foreground shadow-lg backdrop-blur hover:bg-muted/100 focus:outline-none cursor-pointer"
+              aria-label="Scroll to bottom" >
+              <ArrowDown className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+          )}
           <div ref={scrollRef} className="h-1" />
         </div>
       </div>
