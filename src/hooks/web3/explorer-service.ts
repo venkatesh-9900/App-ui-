@@ -35,6 +35,13 @@ interface SearchTxnResponse {
   offset: number
 }
 
+interface SearchTxnResponse {
+  data: TransactionData[]
+  total: number
+  page: number
+  offset: number
+}
+
 interface SearchTxnApiParams extends SearchTxnParams {
   retry?: boolean
   successTask: (response: SearchTxnResponse) => void
