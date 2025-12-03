@@ -1,7 +1,8 @@
 export interface CreateAddressActivityRequest {
-    addresses: string[];
-    topics: string[];
-    subscriber_ids: string[];
+    action: string;
+    address_group_id: number;
+    notification_group_ids: string[];
+    notification_subscriber_ids: string[];
     channel_ids: string[];
 }
 
