@@ -71,7 +71,7 @@ export function AddressActivityTable({
 
   const handleToggleClick = async (activity: AddressActivity) => {
     // Get current status, default to true if null/undefined
-    const currentStatus = activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true
+    const currentStatus = activity.active !== undefined && activity.active !== null ? activity.active : true
     const newStatus = !currentStatus
     setTogglingId(activity.id)
     onToggle(activity.id, newStatus)
@@ -212,10 +212,10 @@ export function AddressActivityTable({
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
                       <div className="flex items-center gap-2">
                         <Badge 
-                          variant={(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? "default" : "secondary"} 
-                          className={`text-xs ${(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? "bg-green-500 hover:bg-green-600" : ""}`}
+                          variant={(activity.active !== undefined && activity.active !== null ? activity.active : true) ? "default" : "secondary"} 
+                          className={`text-xs ${(activity.active !== undefined && activity.active !== null ? activity.active : true) ? "bg-green-500 hover:bg-green-600" : ""}`}
                         >
-                          {(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? "Active" : "Paused"}
+                          {(activity.active !== undefined && activity.active !== null ? activity.active : true) ? "Active" : "Paused"}
                         </Badge>
                       </div>
                     </TableCell>
@@ -245,7 +245,7 @@ export function AddressActivityTable({
                             disabled={togglingId === activity.id}
                             className="cursor-pointer"
                           >
-                            {(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? (
+                            {(activity.active !== undefined && activity.active !== null ? activity.active : true) ? (
                               <>
                                 <Pause className="mr-2 h-4 w-4" />
                                 Pause Watcher

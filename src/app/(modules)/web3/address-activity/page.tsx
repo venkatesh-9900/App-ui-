@@ -183,13 +183,13 @@ export default function AddressActivityPage() {
         })
     }
 
-    const handleToggleActivity = async (id: number, isActive: boolean) => {
+    const handleToggleActivity = async (id: number, active: boolean) => {
         await toggleAddressActivity({
             id,
-            isActive,
+            active,
             successTask: () => {
-                toast.success(`Watcher ${isActive ? 'activated' : 'paused'} successfully!`, {
-                    description: `The watcher is now ${isActive ? 'active' : 'paused'}.`,
+                toast.success(`Watcher ${active ? 'activated' : 'paused'} successfully!`, {
+                    description: `The watcher is now ${active ? 'active' : 'paused'}.`,
                 })
                 fetchActivities() // Refresh the list
             },
