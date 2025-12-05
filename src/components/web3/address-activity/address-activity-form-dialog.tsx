@@ -253,8 +253,8 @@ export function AddressActivityFormDialog({
                       >
                         <Checkbox
                           id={`group-${group.id}`}
-                          checked={selectedGroups.includes(group.novu_topic_key)}
-                          onCheckedChange={() => handleGroupToggle(group.novu_topic_key)}
+                          checked={selectedGroups.includes(String(group.id))}
+                          onCheckedChange={() => handleGroupToggle(String(group.id))}
                           disabled={isSubmitting}
                         />
                         <Label
@@ -306,8 +306,8 @@ export function AddressActivityFormDialog({
                       >
                         <Checkbox
                           id={`sub-${subscriber.id}`}
-                          checked={selectedSubscribers.includes(subscriber.novu_subscriber_id)}
-                          onCheckedChange={() => handleSubscriberToggle(subscriber.novu_subscriber_id)}
+                          checked={selectedSubscribers.includes(String(subscriber.id))}
+                          onCheckedChange={() => handleSubscriberToggle(String(subscriber.id))}
                           disabled={isSubmitting}
                         />
                         <Label

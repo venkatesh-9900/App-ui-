@@ -38,6 +38,7 @@ export default function AddressActivityPage() {
     // Fetch activities on mount
     useEffect(() => {
         fetchActivities()
+        fetchAddressGroups();
     }, [])
 
     const fetchActivities = async () => {
@@ -129,7 +130,6 @@ export default function AddressActivityPage() {
         // Load groups and subscribers when dialog opens
         fetchGroups()
         fetchSubscribers()
-        fetchAddressGroups();
         setDialogOpen(true)
     }
 
@@ -238,7 +238,9 @@ export default function AddressActivityPage() {
                             <CardContent>
                                 <AddressActivityTable
                                     activities={activities}
+                                    addressGroups={addressGroups}
                                     isLoading={isLoadingActivities}
+                                    loadingAddressGroups={isLoadingGroups}
                                     onDelete={handleDeleteActivity}
                                     onToggle={handleToggleActivity}
                                 />
