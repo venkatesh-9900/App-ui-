@@ -20,20 +20,25 @@ import { AddressActivityFormDialog } from '@/components/web3/address-activity/ad
 import { AddressActivityTable } from '@/components/web3/address-activity/address-activity-table'
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
+import { AddressGroup } from '@/types/address-group'
+import { listAddressGroups } from '@/hooks/web3/address-group-service'
 
 export default function AddressActivityPage() {
     const [activities, setActivities] = useState<AddressActivity[]>([])
     const [groups, setGroups] = useState<NotificationGroup[]>([])
     const [subscribers, setSubscribers] = useState<NotificationSubscriber[]>([])
+    const [addressGroups, setAddressGroups] = useState<AddressGroup[]>([]); // Adjust type as needed
     const [isLoadingActivities, setIsLoadingActivities] = useState(true)
     const [isLoadingGroups, setIsLoadingGroups] = useState(false)
     const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false)
+    const [isLoadingAddressGroups, setIsLoadingAddressGroups] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
 
     // Fetch activities on mount
     useEffect(() => {
         fetchActivities()
+        fetchAddressGroups();
     }, [])
 
     const fetchActivities = async () => {
@@ -101,6 +106,26 @@ export default function AddressActivityPage() {
         })
     }
 
+    const fetchAddressGroups = async () => {
+        setIsLoadingAddressGroups(true)
+        await listAddressGroups({
+            successTask: (response) => {
+                if (response.data && Array.isArray(response.data)) {
+                    setAddressGroups(response.data)
+                }
+                setIsLoadingAddressGroups(false)
+            },
+            failureTask: () => {
+                toast.error('Failed to load address groups')
+                setIsLoadingAddressGroups(false)
+            },
+            errorTask: () => {
+                toast.error('Error loading address groups')
+                setIsLoadingAddressGroups(false)
+            },
+        })
+    }
+
     const handleCreateClick = () => {
         // Load groups and subscribers when dialog opens
         fetchGroups()
@@ -115,7 +140,7 @@ export default function AddressActivityPage() {
             request: formData,
             successTask: (data) => {
                 toast.success('Address activity watcher created!', {
-                    description: `Now monitoring ${formData.addresses.length} address(es).`,
+                    description: `Now monitoring this address group ${formData.address_group_id}`,
                 })
                 setDialogOpen(false)
                 setIsSubmitting(false)
@@ -213,7 +238,9 @@ export default function AddressActivityPage() {
                             <CardContent>
                                 <AddressActivityTable
                                     activities={activities}
+                                    addressGroups={addressGroups}
                                     isLoading={isLoadingActivities}
+                                    loadingAddressGroups={isLoadingGroups}
                                     onDelete={handleDeleteActivity}
                                     onToggle={handleToggleActivity}
                                 />
@@ -233,8 +260,10 @@ export default function AddressActivityPage() {
                             onSubmit={handleFormSubmit}
                             isSubmitting={isSubmitting}
                             groups={groups}
+                            addressGroups={addressGroups}
                             subscribers={subscribers}
                             loadingGroups={isLoadingGroups}
+                            loadingAddressGroups={isLoadingAddressGroups}
                             loadingSubscribers={isLoadingSubscribers}
                         />
         </div>

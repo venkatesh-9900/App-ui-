@@ -33,17 +33,22 @@ import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause } 
 import { AddressActivity } from '@/types/address-activity'
 import { format } from 'date-fns'
 import { truncateText } from '@/utils/formatting'
+import { AddressGroup } from '@/types/address-group'
 
 interface AddressActivityTableProps {
   activities: AddressActivity[]
+  addressGroups: AddressGroup[]
   isLoading: boolean
+  loadingAddressGroups: boolean
   onDelete: (id: number) => void
   onToggle: (id: number, isActive: boolean) => void
 }
 
 export function AddressActivityTable({
   activities,
+  addressGroups,
   isLoading,
+  loadingAddressGroups,
   onDelete,
   onToggle,
 }: AddressActivityTableProps) {
@@ -131,7 +136,15 @@ export function AddressActivityTable({
     }
   }
 
-  if (isLoading) {
+  const getGroupName = (groupId: String) => {
+    const addressGroup = addressGroups.find(addressGroup => String(addressGroup.id) == groupId)
+    if (addressGroup) {
+      return addressGroup.name;
+    } 
+    return "-";
+  }
+
+  if (isLoading || loadingAddressGroups) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -161,12 +174,12 @@ export function AddressActivityTable({
                 <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                   <div className="flex items-center gap-1">
                     <Activity className="w-4 h-4" />
-                    <span>Addresses</span>
+                    <span>Address Group</span>
                   </div>
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
                   <div className="flex items-center gap-1">
-                    <span>Type</span>
+                    <span>Status</span>
                   </div>
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
@@ -193,32 +206,11 @@ export function AddressActivityTable({
                   <TableRow key={activity.id} className="hover:bg-muted/50">
                     <TableCell className="px-4 py-3 w-2/5 min-w-max">
                       <div className="flex flex-wrap gap-1">
-                        {addresses.length > 0 ? (
-                          addresses.slice(0, 3).map((addr, idx) => (
-                            <Badge 
-                              key={idx}
-                              variant="secondary" 
-                              className="font-mono text-xs"
-                              title={addr}
-                            >
-                              {truncateText(addr)}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-sm text-muted-foreground">No addresses</span>
-                        )}
-                        {addresses.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{addresses.length - 3} more
-                          </Badge>
-                        )}
+                        { getGroupName(activity.web3_address_group_id) }
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
                       <div className="flex items-center gap-2">
-                        <Badge variant="default" className="text-xs">
-                          {activity.type}
-                        </Badge>
                         <Badge 
                           variant={(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? "default" : "secondary"} 
                           className={`text-xs ${(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? "bg-green-500 hover:bg-green-600" : ""}`}

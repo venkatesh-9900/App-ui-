@@ -18,7 +18,8 @@ import { NotificationGroup } from '@/types/topic'
 import { NotificationSubscriber } from '@/types/subscriber'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
+import { AddressGroup } from '@/types/address-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface AddressActivityFormDialogProps {
   open: boolean
@@ -29,6 +30,8 @@ interface AddressActivityFormDialogProps {
   subscribers: NotificationSubscriber[]
   loadingGroups: boolean
   loadingSubscribers: boolean
+  addressGroups: AddressGroup[]
+  loadingAddressGroups: boolean
 }
 
 const AVAILABLE_CHANNELS = [
@@ -44,16 +47,18 @@ export function AddressActivityFormDialog({
   onSubmit,
   isSubmitting,
   groups,
+  addressGroups,
   subscribers,
   loadingGroups,
   loadingSubscribers,
+  loadingAddressGroups,
 }: AddressActivityFormDialogProps) {
-  const [addresses, setAddresses] = useState<string[]>([''])
+  const [selectedAddressGroup, setSelectedAddressGroup] = useState<number>(0)
   const [selectedGroups, setSelectedGroups] = useState<string[]>([])
   const [selectedSubscribers, setSelectedSubscribers] = useState<string[]>([])
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [errors, setErrors] = useState<{
-    addresses?: string
+    addressGroups?: string
     groups?: string
     subscribers?: string
     channels?: string
@@ -62,7 +67,7 @@ export function AddressActivityFormDialog({
   useEffect(() => {
     if (!open) {
       // Reset form when dialog closes
-      setAddresses([''])
+      setSelectedAddressGroup(0)
       setSelectedGroups([])
       setSelectedSubscribers([])
       setSelectedChannels([])
@@ -70,24 +75,10 @@ export function AddressActivityFormDialog({
     }
   }, [open])
 
-  const handleAddAddress = useCallback(() => {
-    setAddresses(prev => [...prev, ''])
-  }, [])
 
-  const handleRemoveAddress = useCallback((index: number) => {
-    setAddresses(prev => prev.filter((_, i) => i !== index))
-  }, [])
-
-  const handleAddressChange = useCallback((index: number, value: string) => {
-    setAddresses(prev => {
-      const newAddresses = [...prev]
-      newAddresses[index] = value
-      return newAddresses
-    })
-    if (errors.addresses) {
-      setErrors(prev => ({ ...prev, addresses: undefined }))
-    }
-  }, [errors.addresses])
+  const handleAddressGroup = (value: string) => {
+    setSelectedAddressGroup(Number(value))
+  }
 
   const handleGroupToggle = useCallback((topicKey: string) => {
     setSelectedGroups(prev => {
@@ -131,18 +122,9 @@ export function AddressActivityFormDialog({
   const validateForm = useCallback((): boolean => {
     const newErrors: typeof errors = {}
 
-    // Validate addresses
-    const validAddresses = addresses.filter(addr => addr.trim() !== '')
-    if (validAddresses.length === 0) {
-      newErrors.addresses = 'At least one valid address is required'
-    } else {
-      // Basic Ethereum address validation
-      const invalidAddresses = validAddresses.filter(addr => {
-        return !addr.match(/^0x[a-fA-F0-9]{40}$/)
-      })
-      if (invalidAddresses.length > 0) {
-        newErrors.addresses = 'All addresses must be valid Ethereum addresses (0x...)'
-      }
+    // Validate address groups
+    if (selectedAddressGroup === 0) {
+      newErrors.addressGroups = 'An address group must be selected'
     }
 
     // Validate groups
@@ -162,20 +144,20 @@ export function AddressActivityFormDialog({
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [addresses, selectedGroups, selectedSubscribers, selectedChannels])
+  }, [addressGroups, selectedGroups, selectedSubscribers, selectedChannels])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
-      const validAddresses = addresses.filter(addr => addr.trim() !== '')
       onSubmit({
-        addresses: validAddresses,
-        topics: selectedGroups,
-        subscriber_ids: selectedSubscribers,
+        action: "create",
+        address_group_id: selectedAddressGroup, // Placeholder, adjust as needed
+        notification_group_ids: selectedGroups,
+        notification_subscriber_ids: selectedSubscribers,
         channel_ids: selectedChannels,
       })
     }
-  }, [validateForm, addresses, selectedGroups, selectedSubscribers, selectedChannels, onSubmit])
+  }, [validateForm, selectedAddressGroup, selectedGroups, selectedSubscribers, selectedChannels, onSubmit])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -189,52 +171,55 @@ export function AddressActivityFormDialog({
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
-            {/* Addresses Section */}
-            <div className="grid gap-3">
-              <Label className="text-left font-semibold">
-                Ethereum Addresses <span className="text-destructive">*</span>
-              </Label>
-              <p className="text-xs text-muted-foreground -mt-2">
-                Add one or more Ethereum addresses to monitor
-              </p>
-              <div className="space-y-2">
-                {addresses.map((address, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      placeholder="0x..."
-                      value={address}
-                      onChange={(e) => handleAddressChange(index, e.target.value)}
-                      className={errors.addresses ? 'border-destructive' : ''}
-                      disabled={isSubmitting}
-                    />
-                    {addresses.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveAddress(index)}
-                        disabled={isSubmitting}
-                        className="cursor-pointer shrink-0"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+
+            {/* Address Groups Section */}
+            <div className="grid gap-3 border-t pt-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" />
+                <Label className="text-left font-semibold">
+                  Address Groups <span className="text-destructive">*</span>
+                </Label>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddAddress}
-                disabled={isSubmitting}
-                className="w-full cursor-pointer"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Another Address
-              </Button>
-              {errors.addresses && (
-                <p className="text-sm text-destructive">{errors.addresses}</p>
+              <p className="text-xs text-muted-foreground -mt-2">
+                Select individual address groups to notify
+              </p>
+
+              {loadingAddressGroups ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              ) : addressGroups.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
+                  No active address groups available
+                </p>
+              ) : (
+                <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
+                  <div className="space-y-2">
+                        <Select
+                          onValueChange={(value) => handleAddressGroup(value)}
+                          disabled={isSubmitting}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Address Group" />
+                          </SelectTrigger>
+
+                          <SelectContent>
+                            {addressGroups.map((group) => (
+                              <SelectItem
+                                key={group.id}
+                                value={String(group.id)}
+                              >
+                                {group.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                  </div>
+                </div>
+              )}
+              {errors.addressGroups && (
+                <p className="text-sm text-destructive">{errors.addressGroups}</p>
               )}
             </div>
 
@@ -268,8 +253,8 @@ export function AddressActivityFormDialog({
                       >
                         <Checkbox
                           id={`group-${group.id}`}
-                          checked={selectedGroups.includes(group.novu_topic_key)}
-                          onCheckedChange={() => handleGroupToggle(group.novu_topic_key)}
+                          checked={selectedGroups.includes(String(group.id))}
+                          onCheckedChange={() => handleGroupToggle(String(group.id))}
                           disabled={isSubmitting}
                         />
                         <Label
@@ -321,8 +306,8 @@ export function AddressActivityFormDialog({
                       >
                         <Checkbox
                           id={`sub-${subscriber.id}`}
-                          checked={selectedSubscribers.includes(subscriber.novu_subscriber_id)}
-                          onCheckedChange={() => handleSubscriberToggle(subscriber.novu_subscriber_id)}
+                          checked={selectedSubscribers.includes(String(subscriber.id))}
+                          onCheckedChange={() => handleSubscriberToggle(String(subscriber.id))}
                           disabled={isSubmitting}
                         />
                         <Label
