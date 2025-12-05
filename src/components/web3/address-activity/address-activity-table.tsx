@@ -179,7 +179,7 @@ export function AddressActivityTable({
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
                   <div className="flex items-center gap-1">
-                    <span>Type</span>
+                    <span>Status</span>
                   </div>
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
@@ -211,9 +211,6 @@ export function AddressActivityTable({
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
                       <div className="flex items-center gap-2">
-                        <Badge variant="default" className="text-xs">
-                          {activity.type}
-                        </Badge>
                         <Badge 
                           variant={(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? "default" : "secondary"} 
                           className={`text-xs ${(activity.is_active !== undefined && activity.is_active !== null ? activity.is_active : true) ? "bg-green-500 hover:bg-green-600" : ""}`}
