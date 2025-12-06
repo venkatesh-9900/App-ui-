@@ -247,13 +247,7 @@ export function AddressGroupTable({
                   <TableRow key={group.id} className="hover:bg-muted/50">
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
                       <div className="flex items-center gap-2">
-                        <Badge
-                          variant="default"
-                          className="text-xs"
-                          title={group.name}
-                        >
-                          {truncateText(group.name)}
-                        </Badge>
+                        {group.name}
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
@@ -303,13 +297,7 @@ export function AddressGroupTable({
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
                       <div className="flex items-center gap-2">
-                        <Badge
-                          variant="default"
-                          className="text-xs"
-                          title={group.user_id}
-                        >
-                          {group.user_id}
-                        </Badge>
+                        {group.user_id}
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm">

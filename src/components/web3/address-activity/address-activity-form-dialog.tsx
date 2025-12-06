@@ -37,7 +37,7 @@ interface AddressActivityFormDialogProps {
 const AVAILABLE_CHANNELS = [
   { id: 'email', label: 'Email', icon: Mail },
   // { id: 'sms', label: 'SMS', icon: Bell },
-  { id: 'in_app', label: 'In-App', icon: Bell },
+  // { id: 'in_app', label: 'In-App', icon: Bell },
   // { id: 'push', label: 'Push', icon: Bell },
 ]
 
@@ -129,13 +129,13 @@ export function AddressActivityFormDialog({
 
     // Validate groups
     if (selectedGroups.length === 0 && selectedSubscribers.length === 0) {
-      newErrors.groups = 'At least one group/subscriber must be selected'
-      newErrors.subscribers = 'At least one group/subscriber must be selected'
+      newErrors.groups = 'Select at least one group or subscriber'
+      newErrors.subscribers = 'Select at least one group or subscriber'
     }
 
     // Validate channels
     if (selectedChannels.length === 0) {
-      newErrors.channels = 'At least one channel must be selected'
+      newErrors.channels = 'Select the notification channel'
     }
 
     setErrors(newErrors)
@@ -224,10 +224,7 @@ export function AddressActivityFormDialog({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 <Label className="text-left font-semibold">
-                  Notification Groups
-                  {(!selectedSubscribers.length) && (
-                      <span className="text-destructive">*</span>
-                  )}
+                  Notification Groups <span className="text-destructive">*</span>
                 </Label>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
@@ -280,10 +277,7 @@ export function AddressActivityFormDialog({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 <Label className="text-left font-semibold">
-                  Subscribers
-                  {(!selectedGroups.length) && (
-                      <span className="text-destructive">*</span>
-                  )}
+                  Subscribers <span className="text-destructive">*</span>
                 </Label>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
