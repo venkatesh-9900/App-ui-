@@ -36,9 +36,9 @@ interface AddressActivityFormDialogProps {
 
 const AVAILABLE_CHANNELS = [
   { id: 'email', label: 'Email', icon: Mail },
-  { id: 'sms', label: 'SMS', icon: Bell },
+  // { id: 'sms', label: 'SMS', icon: Bell },
   { id: 'in_app', label: 'In-App', icon: Bell },
-  { id: 'push', label: 'Push', icon: Bell },
+  // { id: 'push', label: 'Push', icon: Bell },
 ]
 
 export function AddressActivityFormDialog({
@@ -88,8 +88,8 @@ export function AddressActivityFormDialog({
         return [...prev, topicKey]
       }
     })
-    if (errors.groups) {
-      setErrors(prev => ({ ...prev, groups: undefined }))
+    if (errors.groups || errors.subscribers) {
+      setErrors(prev => ({ ...prev, groups: undefined, subscribers: undefined }))
     }
   }, [errors.groups])
 
@@ -101,8 +101,8 @@ export function AddressActivityFormDialog({
         return [...prev, subscriberId]
       }
     })
-    if (errors.subscribers) {
-      setErrors(prev => ({ ...prev, subscribers: undefined }))
+    if (errors.subscribers || errors.groups) {
+      setErrors(prev => ({ ...prev, subscribers: undefined, groups: undefined }))
     }
   }, [errors.subscribers])
 
@@ -128,13 +128,9 @@ export function AddressActivityFormDialog({
     }
 
     // Validate groups
-    if (selectedGroups.length === 0) {
-      newErrors.groups = 'At least one group must be selected'
-    }
-
-    // Validate subscribers
-    if (selectedSubscribers.length === 0) {
-      newErrors.subscribers = 'At least one subscriber must be selected'
+    if (selectedGroups.length === 0 && selectedSubscribers.length === 0) {
+      newErrors.groups = 'At least one group/subscriber must be selected'
+      newErrors.subscribers = 'At least one group/subscriber must be selected'
     }
 
     // Validate channels
@@ -228,7 +224,10 @@ export function AddressActivityFormDialog({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 <Label className="text-left font-semibold">
-                  Notification Groups <span className="text-destructive">*</span>
+                  Notification Groups
+                  {(!selectedSubscribers.length) && (
+                      <span className="text-destructive">*</span>
+                  )}
                 </Label>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
@@ -281,7 +280,10 @@ export function AddressActivityFormDialog({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 <Label className="text-left font-semibold">
-                  Subscribers <span className="text-destructive">*</span>
+                  Subscribers
+                  {(!selectedGroups.length) && (
+                      <span className="text-destructive">*</span>
+                  )}
                 </Label>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
