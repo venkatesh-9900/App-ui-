@@ -62,9 +62,7 @@ export default function AddressGroupPage() {
         await createAddressGroup({
             request: formData,
             successTask: (data) => {
-                toast.success('Address group created!', {
-                    description: `Now monitoring ${formData.addresses.length} address(es).`,
-                })
+                toast.success('Address group is created!')
                 setDialogOpen(false)
                 setIsSubmitting(false)
                 fetchGroups() // Refresh the list

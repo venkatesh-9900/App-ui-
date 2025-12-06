@@ -36,9 +36,9 @@ interface AddressActivityFormDialogProps {
 
 const AVAILABLE_CHANNELS = [
   { id: 'email', label: 'Email', icon: Mail },
-  { id: 'sms', label: 'SMS', icon: Bell },
-  { id: 'in_app', label: 'In-App', icon: Bell },
-  { id: 'push', label: 'Push', icon: Bell },
+  // { id: 'sms', label: 'SMS', icon: Bell },
+  // { id: 'in_app', label: 'In-App', icon: Bell },
+  // { id: 'push', label: 'Push', icon: Bell },
 ]
 
 export function AddressActivityFormDialog({
@@ -88,8 +88,8 @@ export function AddressActivityFormDialog({
         return [...prev, topicKey]
       }
     })
-    if (errors.groups) {
-      setErrors(prev => ({ ...prev, groups: undefined }))
+    if (errors.groups || errors.subscribers) {
+      setErrors(prev => ({ ...prev, groups: undefined, subscribers: undefined }))
     }
   }, [errors.groups])
 
@@ -101,8 +101,8 @@ export function AddressActivityFormDialog({
         return [...prev, subscriberId]
       }
     })
-    if (errors.subscribers) {
-      setErrors(prev => ({ ...prev, subscribers: undefined }))
+    if (errors.subscribers || errors.groups) {
+      setErrors(prev => ({ ...prev, subscribers: undefined, groups: undefined }))
     }
   }, [errors.subscribers])
 
@@ -128,18 +128,14 @@ export function AddressActivityFormDialog({
     }
 
     // Validate groups
-    if (selectedGroups.length === 0) {
-      newErrors.groups = 'At least one group must be selected'
-    }
-
-    // Validate subscribers
-    if (selectedSubscribers.length === 0) {
-      newErrors.subscribers = 'At least one subscriber must be selected'
+    if (selectedGroups.length === 0 && selectedSubscribers.length === 0) {
+      newErrors.groups = 'Select at least one group or subscriber'
+      newErrors.subscribers = 'Select at least one group or subscriber'
     }
 
     // Validate channels
     if (selectedChannels.length === 0) {
-      newErrors.channels = 'At least one channel must be selected'
+      newErrors.channels = 'Select the notification channel'
     }
 
     setErrors(newErrors)

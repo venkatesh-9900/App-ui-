@@ -30,7 +30,7 @@ interface DeleteAddressActivityParams extends BaseServiceParams {
 
 interface ToggleAddressActivityParams extends BaseServiceParams {
     id: number;
-    isActive: boolean;
+    active: boolean;
 }
 
 const ADDRESS_ACTIVITY_ENDPOINTS = {
@@ -236,7 +236,7 @@ export const deleteAddressActivity = async ({
  */
 export const toggleAddressActivity = async ({
     id,
-    isActive,
+    active,
     successTask,
     failureTask,
     errorTask,
@@ -251,7 +251,7 @@ export const toggleAddressActivity = async ({
         const response = await fetch(ADDRESS_ACTIVITY_ENDPOINTS.TOGGLE(id), {
             method: 'PUT',
             headers: buildHeaderJSON(false),
-            body: JSON.stringify({ is_active: isActive }),
+            body: JSON.stringify({ active: active }),
         });
 
         if (response.status === 401) {
@@ -262,7 +262,7 @@ export const toggleAddressActivity = async ({
                 await toggleAddressActivity({
                     retry: true,
                     id,
-                    isActive,
+                    active,
                     successTask,
                     failureTask,
                     errorTask
