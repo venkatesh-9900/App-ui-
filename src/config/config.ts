@@ -102,6 +102,7 @@ export const ENDPOINTS = {
     WEB3_MONITORING: {
         SEARCH_TXN: `/api/monitoring/search-txn`,
         CHAINLIST: `/api/monitoring/chainlist`,
+        GET_NEIGHBOURS: `/api/monitoring/get-neighbours`,
     },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`
 };

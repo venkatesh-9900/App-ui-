@@ -268,7 +268,7 @@ export function AddressGroupFormDialog({
                     <SelectValue placeholder="Select a network" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem className="cursor-pointer" value="Mainnet">Mainnet</SelectItem>
+                    <SelectItem className="cursor-pointer" value="ETH_MAINNET">Mainnet</SelectItem>
                     <SelectItem className="cursor-pointer" value="Sepolia">Sepolia</SelectItem>
                   </SelectContent>
                 </Select>
