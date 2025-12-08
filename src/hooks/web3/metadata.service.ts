@@ -6,13 +6,13 @@ import { reauthenticationStep, refreshAccessToken } from "../auth-service"
 
 
 interface Chain {
-    chain_id?: string,
+    id: number,
+    chain_id: string,
     chain_name: string,
-    network?: string,
+    alechemy_network_id: string,
     block_explorer?: string,
-    apiurl: string,
-    status: number,
-    comment?: string
+    api_url?: string,
+    currency?: string,
 }
 interface ChainListResponse {
     data?: { chains: Array<Chain> },
@@ -21,7 +21,6 @@ interface ChainListResponse {
 
 
 interface chainListApiParams {
-    provider: string
     retry?: boolean
     successTask: (data: ChainListResponse) => void
     failureTask: () => void
@@ -34,7 +33,6 @@ interface chainListApiParams {
 
 
 export async function getChainlist({
-    provider,
     successTask,
     failureTask,
     errorTask,
@@ -48,9 +46,7 @@ export async function getChainlist({
 
         const token = localStorage.getItem("access_token");
 
-        const url = `${ENDPOINTS.WEB3_MONITORING.CHAINLIST}?provider=${encodeURIComponent(
-            provider
-        )}`;
+        const url = ENDPOINTS.WEB3_MONITORING.CHAINLIST;
 
         console.log("GET CHAINLIST URL:", url);
 
@@ -69,7 +65,6 @@ export async function getChainlist({
                 reauthenticationStep(errorTask);
             } else {
                 await getChainlist({
-                    provider,
                     successTask,
                     failureTask,
                     errorTask,
