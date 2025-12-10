@@ -47,11 +47,13 @@ interface SearchResultsData {
 interface Chain {
     id: number,
     chain_id: string,
-    chain_name: string,
+    name: string,
     alechemy_network_id: string,
-    block_explorer?: string,
-    api_url?: string,
+    block_explorer_url?: string,
+    rpc_url?: string,
     currency?: string,
+    created_at?: string,
+    updated_at?: string,
 }
 interface ChainListResponse {
   data?: { chains: Array<Chain> },
@@ -172,7 +174,7 @@ export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearc
               chainList.map((c,index) => {
                 // prefer chainId; if missing, fallback to chain numeric id
                 const value = c.chain_id ? c.chain_id : String(c.id);
-                const label = c.chain_name ? c.chain_name : c.alechemy_network_id;
+                const label = c.name ? c.name : c.alechemy_network_id;
                 return (
                   <SelectItem key={value} className="cursor-pointer" value={value}>
                     {label}
