@@ -5,7 +5,7 @@ import { app_name } from "@/constants/constants"
 import { reauthenticationStep, refreshAccessToken } from "../auth-service"
 
 
-interface Chain {
+export interface Chain {
     id: number,
     chain_id: string,
     name: string,
@@ -16,7 +16,7 @@ interface Chain {
     created_at?: string,
     updated_at?: string,
 }
-interface ChainListResponse {
+export interface ChainListResponse {
     data?: { chains: Array<Chain> },
     errors?: string[]
 }

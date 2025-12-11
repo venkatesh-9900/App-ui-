@@ -15,16 +15,20 @@ import { AddressGroupFormDialog } from '@/components/web3/address-group/address-
 import { AddressGroupTable } from '@/components/web3/address-group/address-group-table'
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
+import { Chain, ChainListResponse, getChainlist } from '@/hooks/web3/metadata.service'
 
 export default function AddressGroupPage() {
     const [groups, setGroups] = useState<AddressGroup[]>([])
     const [isLoadingGroups, setIsLoadingGroups] = useState(false)
+    const [isLoadingWeb3Networks, setIsLoadingWewb3Network] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [web3Networks, setWeb3Networks] = useState<Chain[]>([])
 
     // Fetch activities on mount
     useEffect(() => {
         fetchGroups()
+        fetchChainList()
     }, [])
 
     const fetchGroups = async () => {
@@ -50,6 +54,37 @@ export default function AddressGroupPage() {
                 setIsLoadingGroups(false)
             },
         })
+    }
+
+    const fetchChainList = async () => {
+        setIsLoadingWewb3Network(true);
+              try {
+                await getChainlist({
+                  successTask: (response: ChainListResponse) => {
+                    // response is of type ChainListResponse
+                    const apiResponse = response;
+                    setIsLoadingWewb3Network(false);
+                    if (apiResponse?.errors && apiResponse.errors.length > 0) {
+                      setWeb3Networks([]);
+                      toast.error(apiResponse.errors[0]);
+                    }
+        
+                    const fetchedChains: Chain[] = apiResponse?.data?.chains || [];
+                    setWeb3Networks(fetchedChains);
+                  },
+                  failureTask: () => {
+                    setIsLoadingWewb3Network(false);
+                    toast.error("Failed to fetch chain list");
+                  },
+                  errorTask: () => {
+                    setIsLoadingWewb3Network(false);
+                    toast.error("An error occurred while fetching chain list");
+                  },
+                });
+              } catch (err) {
+                console.error("fetchChainList: unexpected error", err);
+                toast.error("Unexpected error while fetching chain list");
+              }
     }
 
     const handleCreateClick = () => {
@@ -144,7 +179,8 @@ export default function AddressGroupPage() {
                             <CardContent>
                                 <AddressGroupTable
                                     groups={groups}
-                                    isLoading={isLoadingGroups}
+                                    web3Networks={web3Networks}
+                                    isLoading={isLoadingGroups || isLoadingWeb3Networks}
                                     onDelete={handleDeleteGroup}
                                 />
                             </CardContent>
@@ -156,6 +192,12 @@ export default function AddressGroupPage() {
                             onOpenChange={handleDialogOpenChange}
                             onSubmit={handleFormSubmit}
                             isSubmitting={isSubmitting}
+                            initialData={{
+                                name: "",
+                                description: "",
+                                addresses: [],
+                                web3Networks: web3Networks,
+                            }}    
                         />
                     </div>
                 </div>
