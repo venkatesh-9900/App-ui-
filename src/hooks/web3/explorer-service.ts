@@ -76,7 +76,7 @@ export async function searchBlockchainTransaction({
     const token = localStorage.getItem("access_token")
 
     const payload = {
-      chainId,
+      chain_id: chainId,
       module: module || "account",
       action: action || "txlist",
       ...(txhash && { txhash }),
