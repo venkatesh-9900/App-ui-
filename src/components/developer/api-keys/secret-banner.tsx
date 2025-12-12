@@ -106,12 +106,12 @@ export default function SecretBanner({ createdKey, onDismiss }: Props) {
 
             {/* ---------------- SECRET BLOCK ---------------- */}
             {secret && (
-                <div className="mt-4 max-w-[365px]">
+                <div className="mt-4 max-w-[500px]">
                     <div className="text-xs text-muted-foreground">Secret</div>
 
                     <div className="mt-2 flex items-stretch overflow-hidden rounded-md border">
                         <pre
-                            className="flex-1 font-mono text-sm px-3 py-2 break-all overflow-auto"
+                            className="flex-1 font-mono text-sm px-3 py-2 break-all overflow-hidden"
                             style={{ maxHeight: "6rem" }}
                         >
                             {secret}

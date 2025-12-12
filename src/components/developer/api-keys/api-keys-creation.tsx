@@ -279,9 +279,9 @@ export default function CreateApiKeyPage() {
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>New personal access token</AlertDialogTitle>
+            <AlertDialogTitle>New personal access key</AlertDialogTitle>
             <AlertDialogDescription>
-              Your new personal access token <strong>{name || "token"}</strong> will be ready for use immediately.
+              Your new personal access key <strong>{name || "key"}</strong> will be ready for use immediately.
               {computeExpiryLocal() && (
                 <>
                   {" "}

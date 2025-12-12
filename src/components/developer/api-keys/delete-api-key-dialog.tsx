@@ -74,9 +74,9 @@ export default function DeleteApiKeyDialog({ tokenKey, tokenName, onDeleted }: P
 
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure you want to delete this token?</AlertDialogTitle>
+          <AlertDialogTitle>Are you sure you want to delete this key?</AlertDialogTitle>
           <AlertDialogDescription>
-            Any applications or scripts using this token will no longer be able to access the API.
+            Any applications or scripts using this key will no longer be able to access the API.
             You cannot undo this action.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -97,7 +97,7 @@ export default function DeleteApiKeyDialog({ tokenKey, tokenName, onDeleted }: P
               onClick={handleConfirmDelete}
               disabled={loading}
             >
-              {loading ? "Deleting..." : "I understand, delete token"}
+              {loading ? "Deleting..." : "I understand, delete key"}
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
