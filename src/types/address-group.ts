@@ -1,8 +1,7 @@
 export interface CreateAddressGroupRequest {
     name: string;
     description?: string;
-    network: string;
-    chain: string;
+    web3_network_id: number;
     addresses: string[];
 }
  
@@ -10,9 +9,8 @@ export interface AddressGroup {
     id: number;
     name: string;
     description?: string;
-    network: string;
-    chain: string;
     addresses: string[];
+    web3_network_id: number;
     user_id: string;
     organization_id: string;
     created_at: string;

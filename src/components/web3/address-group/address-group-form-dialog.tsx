@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Plus, X, Upload } from 'lucide-react'
 import { CreateAddressGroupRequest } from '@/types/address-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Chain } from '@/hooks/web3/metadata.service'
 
 interface AddressGroupFormDialogProps {
   open: boolean
@@ -25,9 +26,9 @@ interface AddressGroupFormDialogProps {
   initialData?: {
     name: string;
     description?: string;
+    web3NetworkId?: number;
     addresses: string[];
-    network: string;
-    chain: string;
+    web3Networks: Chain[] ;
   } | null;
 }
 
@@ -42,8 +43,7 @@ export function AddressGroupFormDialog({
   const [addresses, setAddresses] = useState<string[]>([''])
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string>('')
-  const [chain, setChain] = useState("")
-  const [network, setNetwork] = useState("")
+  const [web3Network, setWeb3Network] = useState<number>(0)
   const [errors, setErrors] = useState<{
     addresses?: string
     name?: string
@@ -55,12 +55,11 @@ export function AddressGroupFormDialog({
 
   // Load initial data for edit mode
   useEffect(() => {
-    if (open && mode === "edit" && initialData) {
+    if (open && initialData) {
       setName(initialData.name);
       setDescription(initialData.description || "");
       setAddresses(initialData.addresses.length ? initialData.addresses : []);
-      setChain(initialData.chain || "");
-      setNetwork(initialData.network || "");
+      setWeb3Network(initialData.web3NetworkId ? initialData.web3NetworkId : initialData.web3Networks.length > 0 ? initialData.web3Networks[0].id : 0);
       setErrors({});
     }
 
@@ -68,8 +67,7 @@ export function AddressGroupFormDialog({
       setName("");
       setDescription("");
       setAddresses([]);
-      setChain("");
-      setNetwork("");
+      setWeb3Network(0);
       setErrors({});
     }
   }, [open, mode, initialData]);
@@ -159,19 +157,15 @@ export function AddressGroupFormDialog({
       }
 
       // validate chain
-      if (chain.trim() === '') {
-        newErrors.chain = 'Chain is required'
+      if (web3Network === 0) {
+        newErrors.chain = 'Web3Network is required'
       }
 
-      // validate network
-      if (network.trim() === '') {
-        newErrors.network = 'Network is required'
-      }
 
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [addresses, name, chain, network])
+  }, [addresses, name, web3Network])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
@@ -181,11 +175,10 @@ export function AddressGroupFormDialog({
         addresses: validAddresses,
         name: name.trim(),
         description: description.trim() || undefined,
-        chain: chain,
-        network: network,
+        web3_network_id: web3Network,
       })
     }
-  }, [validateForm, addresses, name, description, onSubmit, chain, network])
+  }, [validateForm, addresses, name, description, onSubmit, web3Network])
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -236,44 +229,31 @@ export function AddressGroupFormDialog({
             {/* Chain Section */}
             <div className='grid gap-3'>
               <Label className="text-left font-semibold">
-                Chain <span className="text-destructive">*</span>
+                Web3Network <span className="text-destructive">*</span>
               </Label>
               <div className='space=y-2'>
-                <Select value={chain} onValueChange={setChain}>
+                <Select value={String(web3Network)} onValueChange={(value) => setWeb3Network(Number(value))}>
                   <SelectTrigger id="chain-select" className="w-full cursor-pointer">
                     <SelectValue placeholder="Select a chain" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem className="cursor-pointer" value="Ethereum">Ethereum</SelectItem>
-                    <SelectItem className="cursor-pointer" value="Polygon">Polygon</SelectItem>
-                    <SelectItem className="cursor-pointer" value="Arbitrum">Arbitrum</SelectItem>
-                    <SelectItem className="cursor-pointer" value="Optimism">Optimism</SelectItem>
-                    <SelectItem className="cursor-pointer" value="Base">Base</SelectItem>
+                    {initialData?.web3Networks.map((network) => {
+                      const value = network.id
+                      const label = network.name ?? network.alechemy_network_id;
+                      return (
+                        <SelectItem
+                          key={value}
+                          className="cursor-pointer"
+                          value={String(value)}
+                        >
+                          {label}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 {errors.chain && (
                   <p className="text-sm text-destructive">{errors.chain}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Network Section */}
-            <div className='grid gap-3'>
-              <Label className="text-left font-semibold">
-                Network <span className="text-destructive">*</span>
-              </Label>
-              <div className='space=y-2'>
-                <Select value={network} onValueChange={setNetwork}>
-                  <SelectTrigger id="network-select" className="w-full cursor-pointer">
-                    <SelectValue placeholder="Select a network" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem className="cursor-pointer" value="ETH_MAINNET">Mainnet</SelectItem>
-                    <SelectItem className="cursor-pointer" value="Sepolia">Sepolia</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.network && (
-                  <p className="text-sm text-destructive">{errors.network}</p>
                 )}
               </div>
             </div>
