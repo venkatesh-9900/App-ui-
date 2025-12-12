@@ -53,6 +53,11 @@ export const ENDPOINTS = {
         UPLOAD_FILE: `${API_BASE_URL}/api/user/upload-profile-image`,
     },
     FETCH_AGENTS_LIST: `/api/interaction/agents-list`,
+    API_Keys: {
+        CREATE_API_KEY: `${API_BASE_URL}/api/api-keys/create`,
+        FETCH_API_KEYS_LIST: `${API_BASE_URL}/api/api-keys/list`,
+        DELETE_API_KEY: `${API_BASE_URL}/api/api-keys/delete`
+    },
     TEAM_MGR: {
         TEAM: {
             CREATE: `${API_BASE_URL}/api/team-management/create-team`,
