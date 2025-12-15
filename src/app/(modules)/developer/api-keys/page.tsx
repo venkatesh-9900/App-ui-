@@ -18,7 +18,7 @@ export default function ApiKeysPage() {
                             API Keys
                         </h1>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Use this API keys to securely access and interact with our APIs.
+                            Use these API keys to securely access and interact with our APIs.
                         </p>
                     </div>
 
