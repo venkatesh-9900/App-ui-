@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, Pencil, Trash2, Copy, Calendar, Tag, Key, Clock, UserCircle2Icon } from 'lucide-react'
 import { NotificationGroup } from '@/types/topic'
 import { format } from 'date-fns'
+import { useAuth } from '@/contexts'
 
 interface GroupsTableProps {
   groups: NotificationGroup[]
@@ -50,6 +51,7 @@ export function GroupsTable({
 }: GroupsTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<NotificationGroup | null>(null)
+  const { userInfo } = useAuth()
 
   const handleDeleteClick = (group: NotificationGroup) => {
     setSelectedGroup(group)
@@ -210,13 +212,14 @@ export function GroupsTable({
                           Copy key
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onEdit(group)} className="cursor-pointer">
+                        <DropdownMenuItem onClick={() => onEdit(group)} className="cursor-pointer" disabled={group.user_id !== userInfo?.email}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(group)}
                           className="text-destructive focus:text-destructive cursor-pointer"
+                          disabled={group.user_id !== userInfo?.email}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
