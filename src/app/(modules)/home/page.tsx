@@ -42,7 +42,7 @@ export default function HomePage() {
             <div className="flex flex-col items-center justify-start py-16 px-6">
                 {/* Heading */}
                 <h1 className="text-3xl font-semibold mb-12">
-                    How can we help you?
+                    Analyze transactions, addresses, and more.
                 </h1>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl auto-rows-fr">

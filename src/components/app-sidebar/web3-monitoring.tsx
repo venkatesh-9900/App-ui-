@@ -78,9 +78,9 @@ export function Web3Monitoring() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Web3 Monitoring" className="cursor-pointer">
+          <SidebarMenuButton tooltip="Alerts and Monitoring" className="cursor-pointer">
             <Activity className="h-4 w-4" />
-            <span>Web3 Monitoring</span>
+            <span>Alerts and Monitoring</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
