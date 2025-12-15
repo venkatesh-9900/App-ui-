@@ -34,7 +34,7 @@ import { AddressActivity } from '@/types/address-activity'
 import { format } from 'date-fns'
 import { truncateText } from '@/utils/formatting'
 import { AddressGroup } from '@/types/address-group'
-
+import { useAuth } from '@/contexts'
 interface AddressActivityTableProps {
   activities: AddressActivity[]
   addressGroups: AddressGroup[]
@@ -55,6 +55,7 @@ export function AddressActivityTable({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<AddressActivity | null>(null)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+  const { userInfo } = useAuth()
 
   const handleDeleteClick = (activity: AddressActivity) => {
     setSelectedActivity(activity)
@@ -242,7 +243,7 @@ export function AddressActivityTable({
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleToggleClick(activity)}
-                            disabled={togglingId === activity.id}
+                            disabled={togglingId === activity.id || activity.user_id !== userInfo?.email}
                             className="cursor-pointer"
                           >
                             {(activity.active !== undefined && activity.active !== null ? activity.active : true) ? (
@@ -261,6 +262,7 @@ export function AddressActivityTable({
                           <DropdownMenuItem
                             onClick={() => handleDeleteClick(activity)}
                             className="text-destructive focus:text-destructive cursor-pointer"
+                            disabled={activity.user_id !== userInfo?.email}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
