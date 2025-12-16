@@ -37,6 +37,7 @@ import { AddressGroupFormDialog } from '@/components/web3/address-group/address-
 import { updateAddressGroup } from '@/hooks/web3/address-group-service'
 import { toast } from 'sonner'
 import { Chain } from '@/types/matadata'
+import { useAuth } from '@/contexts';
 
 interface AddressGroupTableProps {
   web3Networks: Chain[]
@@ -55,6 +56,7 @@ export function AddressGroupTable({
   const [selectedGroup, setSelectedGroup] = useState<AddressGroup | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false);
+  const { userInfo } = useAuth()
 
   useEffect(() => {
     if (!dialogOpen) {
@@ -328,6 +330,7 @@ export function AddressGroupTable({
                               setSelectedGroup(group);
                               setDialogOpen(true);
                             }}
+                            disabled={group.user_id !== userInfo?.email}
                             className="cursor-pointer"
                           >
                             <Edit2 className="mr-2 h-4 w-4" />
@@ -338,6 +341,7 @@ export function AddressGroupTable({
                           <DropdownMenuItem
                             onClick={() => handleDeleteClick(group)}
                             className="text-destructive focus:text-destructive cursor-pointer"
+                            disabled={group.user_id !== userInfo?.email}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
