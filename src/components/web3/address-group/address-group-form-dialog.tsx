@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Plus, X, Upload } from 'lucide-react'
 import { CreateAddressGroupRequest } from '@/types/address-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Chain } from '@/hooks/web3/metadata.service'
+import { Chain } from '@/types/matadata'
 
 interface AddressGroupFormDialogProps {
   open: boolean

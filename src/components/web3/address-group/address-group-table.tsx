@@ -36,7 +36,7 @@ import { truncateText } from '@/utils/formatting'
 import { AddressGroupFormDialog } from '@/components/web3/address-group/address-group-form-dialog'
 import { updateAddressGroup } from '@/hooks/web3/address-group-service'
 import { toast } from 'sonner'
-import { Chain } from '@/hooks/web3/metadata.service'
+import { Chain } from '@/types/matadata'
 import { useAuth } from '@/contexts';
 
 interface AddressGroupTableProps {
