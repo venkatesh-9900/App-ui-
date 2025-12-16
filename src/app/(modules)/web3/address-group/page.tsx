@@ -15,7 +15,8 @@ import { AddressGroupFormDialog } from '@/components/web3/address-group/address-
 import { AddressGroupTable } from '@/components/web3/address-group/address-group-table'
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
-import { Chain, ChainListResponse, getChainlist } from '@/hooks/web3/metadata.service'
+import { getChainlist } from '@/hooks/web3/metadata.service'
+import { Chain, ChainListResponse } from '@/types/matadata'
 
 export default function AddressGroupPage() {
     const [groups, setGroups] = useState<AddressGroup[]>([])
