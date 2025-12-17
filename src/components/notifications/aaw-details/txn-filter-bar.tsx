@@ -1,19 +1,18 @@
-// src/components/notifications/aaw-details/aaw-cluster-sidebar.tsx
-
+"use client"
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
 // Define the grouping type options (export this if not done elsewhere)
-type GroupingType = 'Asset' | 'Category';
+type GroupingType = 'asset' | 'category';
 
-interface EventSideBarProps {
+interface TxnFilterBarProps {
     groupingType: GroupingType;
     setGroupingType: (type: GroupingType) => void;
 }
 
-export default function EventSideBar({ groupingType, setGroupingType }: EventSideBarProps) {
+export default function TxnFilterBar({ groupingType, setGroupingType }: TxnFilterBarProps) {
     return (
 
         <Card className="w-80 shadow-lg p-4 flex flex-col h-full bg-card text-card-foreground">
@@ -25,7 +24,7 @@ export default function EventSideBar({ groupingType, setGroupingType }: EventSid
                 {/* --- Top Section: Grouping Type Selection --- */}
                 <div>
                     <div className="flex flex-col gap-2">
-                        {['Asset', 'Category'].map((type) => (
+                        {['asset', 'category'].map((type) => (
                             <div
                                 key={type}
                                 onClick={() => setGroupingType(type as GroupingType)}
