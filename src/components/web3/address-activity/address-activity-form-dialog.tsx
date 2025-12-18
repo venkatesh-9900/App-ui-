@@ -53,11 +53,13 @@ export function AddressActivityFormDialog({
   loadingSubscribers,
   loadingAddressGroups,
 }: AddressActivityFormDialogProps) {
+  const [name, setName] = useState<string>('')
   const [selectedAddressGroup, setSelectedAddressGroup] = useState<number>(0)
   const [selectedGroups, setSelectedGroups] = useState<string[]>([])
   const [selectedSubscribers, setSelectedSubscribers] = useState<string[]>([])
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [errors, setErrors] = useState<{
+    name?: string
     addressGroups?: string
     groups?: string
     subscribers?: string
@@ -67,6 +69,7 @@ export function AddressActivityFormDialog({
   useEffect(() => {
     if (!open) {
       // Reset form when dialog closes
+      setName('')
       setSelectedAddressGroup(0)
       setSelectedGroups([])
       setSelectedSubscribers([])
@@ -122,6 +125,10 @@ export function AddressActivityFormDialog({
   const validateForm = useCallback((): boolean => {
     const newErrors: typeof errors = {}
 
+    if (name.trim() === '') {
+      newErrors.name = 'Name is required'
+    }
+
     // Validate address groups
     if (selectedAddressGroup === 0) {
       newErrors.addressGroups = 'An address group must be selected'
@@ -147,6 +154,7 @@ export function AddressActivityFormDialog({
     if (validateForm()) {
       onSubmit({
         action: "create",
+        name: name.trim(),
         address_group_id: selectedAddressGroup, // Placeholder, adjust as needed
         notification_group_ids: selectedGroups,
         notification_subscriber_ids: selectedSubscribers,
@@ -167,6 +175,22 @@ export function AddressActivityFormDialog({
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
+
+            <div className="grid gap-3">
+              <Label className="text-left font-semibold">
+                Watcher Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Watcher Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={errors.name ? 'border-destructive' : ''}
+                disabled={isSubmitting}
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name}</p>
+              )}
+            </div>
 
             {/* Address Groups Section */}
             <div className="grid gap-3 border-t pt-4">

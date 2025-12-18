@@ -1,4 +1,5 @@
 export interface CreateAddressActivityRequest {
+    name: string;
     action: string;
     address_group_id: number;
     notification_group_ids: string[];
@@ -8,6 +9,7 @@ export interface CreateAddressActivityRequest {
 
 export interface AddressActivity {
     id: number;
+    name: string;
     type: string;
     payload: any;
     trigger_id: string;
