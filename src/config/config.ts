@@ -53,6 +53,11 @@ export const ENDPOINTS = {
         UPLOAD_FILE: `${API_BASE_URL}/api/user/upload-profile-image`,
     },
     FETCH_AGENTS_LIST: `/api/interaction/agents-list`,
+    API_Keys: {
+        CREATE_API_KEY: `${API_BASE_URL}/api/api-keys/create`,
+        FETCH_API_KEYS_LIST: `${API_BASE_URL}/api/api-keys/list`,
+        DELETE_API_KEY: `${API_BASE_URL}/api/api-keys/delete`
+    },
     TEAM_MGR: {
         TEAM: {
             CREATE: `${API_BASE_URL}/api/team-management/create-team`,
@@ -101,6 +106,7 @@ export const ENDPOINTS = {
     GET_FILE_DETAILS_FROM_URL: `/api/interaction/get-file-objects-from-public-links`,
     WEB3_MONITORING: {
         SEARCH_TXN: `/api/monitoring/search-txn`,
+        CHAINLIST: `/api/monitoring/chainlist`,
         GET_NEIGHBOURS: `/api/monitoring/get-neighbours`,
     },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`

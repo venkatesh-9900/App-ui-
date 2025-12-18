@@ -36,14 +36,18 @@ import { truncateText } from '@/utils/formatting'
 import { AddressGroupFormDialog } from '@/components/web3/address-group/address-group-form-dialog'
 import { updateAddressGroup } from '@/hooks/web3/address-group-service'
 import { toast } from 'sonner'
+import { Chain } from '@/types/matadata'
+import { useAuth } from '@/contexts';
 
 interface AddressGroupTableProps {
+  web3Networks: Chain[]
   groups: AddressGroup[]
   isLoading: boolean
   onDelete: (id: number) => void
 }
 
 export function AddressGroupTable({
+  web3Networks,
   groups,
   isLoading,
   onDelete,
@@ -52,6 +56,7 @@ export function AddressGroupTable({
   const [selectedGroup, setSelectedGroup] = useState<AddressGroup | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false);
+  const { userInfo } = useAuth()
 
   useEffect(() => {
     if (!dialogOpen) {
@@ -125,8 +130,7 @@ export function AddressGroupTable({
       name: formData.name || selectedGroup?.name || '',
       description: formData.description || selectedGroup?.description || '',
       addresses: formData.addresses || selectedGroup?.addresses || [],
-      network: formData.network || selectedGroup?.network || '',
-      chain: formData.chain || selectedGroup?.chain || '',
+      web3_network_id: formData.web3_network_id || selectedGroup?.web3_network_id || 0,
       organization_id: selectedGroup?.organization_id || '',
       user_id: selectedGroup?.user_id || '',
       created_at: selectedGroup?.created_at || '',
@@ -201,7 +205,7 @@ export function AddressGroupTable({
                     <span>Name</span>
                   </div>
                 </TableHead>
-                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                {/* <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
                   <div className="flex items-center gap-1">
                     <span>Chain</span>
                   </div>
@@ -210,7 +214,7 @@ export function AddressGroupTable({
                   <div className="flex items-center gap-1">
                     <span>Network</span>
                   </div>
-                </TableHead>
+                </TableHead> */}
                 <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                   <div className="flex items-center gap-1">
                     <Activity className="w-4 h-4" />
@@ -250,7 +254,7 @@ export function AddressGroupTable({
                         {group.name}
                       </div>
                     </TableCell>
-                    <TableCell className="px-4 py-3 w-1/6 min-w-max">
+                    {/* <TableCell className="px-4 py-3 w-1/6 min-w-max">
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="default"
@@ -271,7 +275,7 @@ export function AddressGroupTable({
                           {truncateText(group.network)}
                         </Badge>
                       </div>
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="px-4 py-3 w-2/5 min-w-max">
                       <div className="flex flex-wrap gap-1">
                         {addresses.length > 0 ? (
@@ -326,6 +330,7 @@ export function AddressGroupTable({
                               setSelectedGroup(group);
                               setDialogOpen(true);
                             }}
+                            disabled={group.user_id !== userInfo?.email}
                             className="cursor-pointer"
                           >
                             <Edit2 className="mr-2 h-4 w-4" />
@@ -336,6 +341,7 @@ export function AddressGroupTable({
                           <DropdownMenuItem
                             onClick={() => handleDeleteClick(group)}
                             className="text-destructive focus:text-destructive cursor-pointer"
+                            disabled={group.user_id !== userInfo?.email}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
@@ -382,8 +388,8 @@ export function AddressGroupTable({
             name: selectedGroup.name,
             description: selectedGroup.description,
             addresses: selectedGroup.addresses,
-            chain: selectedGroup.chain,
-            network: selectedGroup.network,
+            web3NetworkId: selectedGroup.web3_network_id,
+            web3Networks: web3Networks,
           }}
           isSubmitting={isUpdating}
           onSubmit={(data) => handleUpdateGroup(selectedGroup.id, data)}
