@@ -64,12 +64,6 @@ export default function TxnTable({
                                 </TableHead>
                                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
                                     <div className="flex items-center gap-1">
-                                        <IconCategory className="w-4 h-4" />
-                                        <span>Category</span>
-                                    </div>
-                                </TableHead>
-                                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
-                                    <div className="flex items-center gap-1">
                                         <IconBlocks className="w-4 h-4" />
                                         <span>Block Num</span>
                                     </div>
@@ -121,11 +115,6 @@ export default function TxnTable({
                                                 </span>
                                             </span>
                                             <CopyButton content={t.toAddress} variant="ghost" size="sm" delay={2000} onClick={e => e.stopPropagation()} />
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="px-4 py-2 w-1/6 min-w-max">
-                                        <div className="flex items-center gap-2">
-                                            {t.category}
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-4 py-2 w-1/6 min-w-max">

@@ -7,6 +7,12 @@ import { Separator } from '@/components/ui/separator';
 // Define the grouping type options (export this if not done elsewhere)
 type GroupingType = 'asset' | 'category';
 
+const GROUPING_OPTIONS: { label: string; value: GroupingType }[] = [
+  { label: 'Asset', value: 'asset' },
+  { label: 'Category', value: 'category' },
+];
+
+
 interface TxnFilterBarProps {
     groupingType: GroupingType;
     setGroupingType: (type: GroupingType) => void;
@@ -24,19 +30,19 @@ export default function TxnFilterBar({ groupingType, setGroupingType }: TxnFilte
                 {/* --- Top Section: Grouping Type Selection --- */}
                 <div>
                     <div className="flex flex-col gap-2">
-                        {['asset', 'category'].map((type) => (
+                        {GROUPING_OPTIONS.map((option) => (
                             <div
-                                key={type}
-                                onClick={() => setGroupingType(type as GroupingType)}
+                                key={option.value}
+                                onClick={() => setGroupingType(option.value)}
                                 className={`
                                     px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer
-                                    ${groupingType === type
+                                    ${groupingType === option.value
                                         ? 'bg-primary text-primary-foreground shadow-md' // Active state uses primary theme color
                                         : 'text-muted-foreground hover:bg-muted' // Inactive state uses muted colors
                                     }
                                 `}
                             >
-                                {type}
+                                {option.label}
                             </div>
                         ))}
                     </div>
