@@ -3,4 +3,4 @@ name: app-ui
 description: A Helm chart for deploying React UI with AWS ALB + ACM integration
 type: application
 version: 0.0.1
-appVersion: 0.0.106-pr-243-85437f10
+appVersion: 0.0.99-pr-244-6eefed86
