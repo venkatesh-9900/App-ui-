@@ -41,22 +41,11 @@ const DetailRow = ({ label, value }: { label: string, value: string | number }) 
 
 // 3. Main Panel Component
 interface TxnDetailsSideBarProps {
-    event: TransactionDetails;
+    txn: TransactionDetails;
     onClose: () => void;
 }
 
-export default function TxnDetailsSideBar({ event, onClose }: TxnDetailsSideBarProps) {
-    const formattedTimestamp = useMemo(() => {
-        try {
-            const timestampInSeconds = parseInt(event.blockTimestamp.slice(2), 16);
-            return new Date(timestampInSeconds * 1000).toLocaleString();
-        } catch {
-            return 'Invalid Timestamp';
-        }
-    }, [event.blockTimestamp]);
-    console.log('Rendering EventDetailsPanel for event:', event);
-
-
+export default function TxnDetailsSideBar({ txn, onClose }: TxnDetailsSideBarProps) {
     return (
         // Mimicking a shadcn Sheet component with fixed positioning
         <div className="fixed top-0 right-0 h-full w-[360px] bg-card text-card-foreground shadow-2xl z-50">
@@ -64,7 +53,7 @@ export default function TxnDetailsSideBar({ event, onClose }: TxnDetailsSideBarP
             <ScrollArea className="h-full">
 
                 {/* --- Main Card Container for the entire panel --- */}
-                <Card className="shadow-none border-none h-full rounded-none py-0 gap-2">
+                <Card className="shadow-none border-none h-full rounded-none py-0 gap-0 mt-[1px]">
 
                     {/* 1. Header: Event Details Title, Badge, and Close Button */}
                     <CardHeader className="flex flex-row items-start justify-between px-6 py-4 pb-0 border-border sticky top-0 bg-card z-10">
@@ -88,13 +77,13 @@ export default function TxnDetailsSideBar({ event, onClose }: TxnDetailsSideBarP
                     <Separator className="mt-1" />
                     {/* 2. Content Area for Details Cards */}
                     <CardContent className='p-6 pt-4'>
-                        <DetailRow label="Asset Type" value={event.asset} />
-                        <DetailRow label="Value" value={event.value} />
-                        <AddressDetailRow label="From Address" address={event.fromAddress} />
-                        <AddressDetailRow label="To Address" address={event.toAddress} />
-                        <AddressDetailRow label="Event Hash" address={event.hash} />
-                        <DetailRow label="Block Number" value={event.blockNum} />
-                        <DetailRow label="Timestamp" value={formatDate(event.blockTimestamp)} />
+                        <DetailRow label="Asset Type" value={txn.asset} />
+                        <DetailRow label="Value" value={txn.value} />
+                        <AddressDetailRow label="From Address" address={txn.fromAddress} />
+                        <AddressDetailRow label="To Address" address={txn.toAddress} />
+                        <AddressDetailRow label="Event Hash" address={txn.hash} />
+                        <DetailRow label="Block Number" value={txn.blockNum} />
+                        <DetailRow label="Timestamp" value={formatDate(txn.blockTimestamp)} />
 
                     </CardContent>
                 </Card>

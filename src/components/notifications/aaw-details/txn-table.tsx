@@ -15,17 +15,17 @@ import { Activity, Calendar } from 'lucide-react';
 import { IconBlocks, IconCategory } from '@tabler/icons-react';
 
 interface TxnTableProps {
-    events?: TransactionDetails[] | null;
+    txn?: TransactionDetails[] | null;
     page: number;
     limit: number;
     totalCount: number;
     onNext: () => void;
     onPrev: () => void;
-    onRowClick: (event: TransactionDetails) => void;
+    onRowClick: (txn: TransactionDetails) => void;
 }
 
 export default function TxnTable({
-    events,
+    txn,
     page,
     limit,
     totalCount,
@@ -78,7 +78,7 @@ export default function TxnTable({
                         </TableHeader>
 
                         <TableBody>
-                            {events?.length === 0 && (
+                            {txn?.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                                         No transactions found
@@ -86,51 +86,51 @@ export default function TxnTable({
                                 </TableRow>
                             )}
 
-                            {events?.map((event) => (
+                            {txn?.map((t) => (
                                 <TableRow
-                                    key={event.hash}
+                                    key={t.hash}
                                     className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => onRowClick(event)}
+                                    onClick={() => onRowClick(t)}
                                 >
                                     <TableCell className="px-4 py-2 w-1/6 min-w-max">
                                         <div className="flex items-center gap-2">
-                                            {formatDate(event.blockTimestamp)}
+                                            {formatDate(t.blockTimestamp)}
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-4 py-2 w-1/6 min-w-max">
                                         <div className="flex items-center gap-2">
-                                            <span className='relative group'>{truncateText(event.fromAddress)}
+                                            <span className='relative group'>{truncateText(t.fromAddress)}
                                                 <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1
                                                                 hidden group-hover:block whitespace-nowrap
                                                                 rounded bg-popover text-popover-foreground
                                                                 px-2 py-1 text-xs shadow-md z-50">
-                                                    {event.fromAddress}
+                                                    {t.fromAddress}
                                                 </span>
                                             </span>
-                                            <CopyButton content={event.fromAddress} variant="ghost" size="sm" delay={2000} onClick={e => e.stopPropagation()} />
+                                            <CopyButton content={t.fromAddress} variant="ghost" size="sm" delay={2000} onClick={e => e.stopPropagation()} />
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-4 py-2 w-1/6 min-w-max">
                                         <div className="flex items-center gap-2">
-                                            <span className='relative group'>{truncateText(event.toAddress)}
+                                            <span className='relative group'>{truncateText(t.toAddress)}
                                                 <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1
                                                                 hidden group-hover:block whitespace-nowrap
                                                                 rounded bg-popover text-popover-foreground
                                                                 px-2 py-1 text-xs shadow-md z-50">
-                                                    {event.toAddress}
+                                                    {t.toAddress}
                                                 </span>
                                             </span>
-                                            <CopyButton content={event.toAddress} variant="ghost" size="sm" delay={2000} onClick={e => e.stopPropagation()} />
+                                            <CopyButton content={t.toAddress} variant="ghost" size="sm" delay={2000} onClick={e => e.stopPropagation()} />
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-4 py-2 w-1/6 min-w-max">
                                         <div className="flex items-center gap-2">
-                                            {event.category}
+                                            {t.category}
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-4 py-2 w-1/6 min-w-max">
                                         <div className="flex items-center gap-2">
-                                            {event.blockNum}
+                                            {t.blockNum}
                                         </div>
                                     </TableCell>
 

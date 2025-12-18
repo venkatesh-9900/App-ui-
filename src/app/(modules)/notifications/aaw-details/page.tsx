@@ -31,7 +31,7 @@ export default function AAWDetailsPage() {
     const [isGroupLoading, setIsGroupLoading] = useState(false);
     const [isTransactionLoading, setIsTransactionLoading] = useState(false);
     const [groupingType, setGroupingType] = useState<GroupingType>('asset');
-    const [selectedEvent, setSelectedEvent] = useState<TransactionDetails | null>(null);
+    const [selectedTxn, setSelectedTxn] = useState<TransactionDetails | null>(null);
     const [startIndex, setStartIndex] = useState(0);
 
     const fetchGroupInfo = useCallback(() => {
@@ -130,10 +130,6 @@ export default function AAWDetailsPage() {
             Math.min(totalCards - CARD_LIMIT, prev + CARD_LIMIT)
         );
     };
-
-    const setSelectedEvents = (event: TransactionDetails) => {
-        setSelectedEvent(event);
-    }
 
     if (isLocading) {
         return (
@@ -270,7 +266,7 @@ export default function AAWDetailsPage() {
                                 </div>
 
 
-                                {/* Events Table (Below the selected card) */}
+                                {/* Txn Table (Below the selected card) */}
                                 <div className='min-h-124'>
                                     {isTransactionLoading ? (
                                         <div className="flex justify-center items-center py-12">
@@ -279,13 +275,13 @@ export default function AAWDetailsPage() {
                                     ) : (
                                         <div>
                                             <TxnTable
-                                                events={transactions}
+                                                txn={transactions}
                                                 page={page}
                                                 limit={LIMIT}
                                                 totalCount={groupInfo.data[selectedKey]?.count ?? 0}
                                                 onNext={() => setPage((p) => p + 1)}
                                                 onPrev={() => setPage((p) => Math.max(1, p - 1))}
-                                                onRowClick={setSelectedEvents}
+                                                onRowClick={(txn) => setSelectedTxn(txn)}
                                             />
                                         </div>
                                     )}
@@ -306,11 +302,11 @@ export default function AAWDetailsPage() {
                     </CardContent>
                 </Card>
 
-                {/* Event Details Side Panel */}
-                {selectedEvent && (
+                {/* Txn Details Side Panel */}
+                {selectedTxn && (
                     <TxnDetailsSideBar
-                        event={selectedEvent}
-                        onClose={() => setSelectedEvent(null)}
+                        txn={selectedTxn}
+                        onClose={() => setSelectedTxn(null)}
                     />
                 )}
             </div>
