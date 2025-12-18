@@ -23,11 +23,12 @@ export default function AAWDetailsPage() {
     const watcher_id = searchParams.get('watcher_id');
     const start_cursor = searchParams.get('start_cursor');
     const end_cursor = searchParams.get('end_cursor');
+    const default_loading_state = !!(watcher_id && start_cursor && end_cursor);
     const [groupInfo, setGroupInfo] = useState<getAawGroupedTransactionInfo | null>(null);
     const [transactions, setTransactions] = useState<TransactionDetails[] | null>([]);
     const [selectedKey, setSelectedKey] = useState<string>("ETH");
     const [page, setPage] = useState(1);
-    const [isLocading, setIsLoading] = useState(true);
+    const [isLocading, setIsLoading] = useState(default_loading_state);
     const [isGroupLoading, setIsGroupLoading] = useState(false);
     const [isTransactionLoading, setIsTransactionLoading] = useState(false);
     const [groupingType, setGroupingType] = useState<GroupingType>('asset');
