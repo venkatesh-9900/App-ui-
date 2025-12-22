@@ -108,6 +108,7 @@ export const ENDPOINTS = {
         SEARCH_TXN: `/api/monitoring/search-txn`,
         CHAINLIST: `/api/monitoring/chainlist`,
         GET_NEIGHBOURS: `/api/monitoring/get-neighbours`,
+        ACCOUNTS: `/api/monitoring/accounts`
     },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`,
     CREATE_GROUP: `/api/interaction/create-group`,
