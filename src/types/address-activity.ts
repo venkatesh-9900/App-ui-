@@ -1,7 +1,7 @@
 export interface CreateAddressActivityRequest {
     name: string;
     action: string;
-    address_group_id: number;
+    address_group_ids: number[];
     notification_group_ids: string[];
     notification_subscriber_ids: string[];
     channel_ids: string[];

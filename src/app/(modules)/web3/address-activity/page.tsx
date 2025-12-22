@@ -140,7 +140,7 @@ export default function AddressActivityPage() {
             request: formData,
             successTask: (data) => {
                 toast.success('Address activity watcher created!', {
-                    description: `Now monitoring this address group ${formData.address_group_id}`,
+                    description: `Now monitoring this address group ${formData.address_group_ids}`,
                 })
                 setDialogOpen(false)
                 setIsSubmitting(false)
