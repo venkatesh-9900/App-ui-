@@ -1,3 +1,4 @@
+// Response for getting grouped transaction information
 export interface getAawGroupedTransactionInfo {
     status: string;
     watcher_name: string;
@@ -7,11 +8,13 @@ export interface getAawGroupedTransactionInfo {
     data: any
 }
 
+// Response for getting detailed transaction information
 export interface getAawTransactionDetails {
     status: string;
     data: TransactionDetails[];
 }
 
+// Details of a single transaction
 export interface TransactionDetails { 
     transactionHash: string;
     blockNum: number;
