@@ -88,6 +88,7 @@ export function ChatSessionsList() {
         toast.error("Error deleting chat")
         setDeletingSessionId(null)
       },
+      group_id: null
     })
   }
 

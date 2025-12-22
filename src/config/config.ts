@@ -109,7 +109,12 @@ export const ENDPOINTS = {
         CHAINLIST: `/api/monitoring/chainlist`,
         GET_NEIGHBOURS: `/api/monitoring/get-neighbours`,
     },
-    GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`
+    GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`,
+    CREATE_GROUP: `/api/interaction/create-group`,
+    DELETE_GROUP: `/api/interaction/delete-group`,
+    FETCH_ALL_GROUPS: `/api/interaction/fetch-all-groups`,
+    FETCH_GROUP_SESSIONS: `/api/interaction/fetch-group-sessions`,
+    GET_CHAT_TITLE: `/api/interaction/get-chat-title`
 };
 export const SELECTED_ENDPOINT =
     ENDPOINTS.INTERACTIONS.STREAM_STANDARD;
