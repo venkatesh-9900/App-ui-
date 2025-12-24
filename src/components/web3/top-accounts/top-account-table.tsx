@@ -129,7 +129,7 @@ export const columns: ColumnDef<AccountRow>[] = [
     header: () => (
       <div className="flex items-center gap-2">
         <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
-        <span>Transactions</span>
+        <span>Successfully Sent Transactions Count</span>
       </div>
     ),
     cell: ({ row }) => (
