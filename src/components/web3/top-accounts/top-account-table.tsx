@@ -37,18 +37,16 @@ import {
 } from "@/components/ui/table"
 
 import { getAccounts } from "@/hooks/web3/top-accounts-service"
-import { ArrowLeftRight, Hash, Percent, Wallet } from "lucide-react"
+import { ArrowLeftRight, Hash, Network, Wallet } from "lucide-react"
 import { AccountsResponse } from "@/types/top-accounts"
-import { add } from "date-fns"
-import { truncateText } from "@/utils/formatting"
 
-export type AccountRow = {
+type AccountRow = {
   id: string
   address: string
   balance: number
-  percentage: number
   transactions: number
   networkName: string
+  currency: string
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -71,6 +69,10 @@ function CopyButton({ text }: { text: string }) {
     </button>
   )
 }
+const toEvmNative = (wei: string | number) => { 
+  if (!wei) return "0";
+  return (Number(wei) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 10 }); 
+};
 
 /* =======================
    Columns
@@ -87,8 +89,8 @@ export const columns: ColumnDef<AccountRow>[] = [
     ),
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
-        <span className="font-mono text-xs truncate max-w-[220px]">
-          {truncateText(row.original.address)}
+        <span className="font-mono text-xs w-[320px]">
+          {row.original.address}
         </span>
         <CopyButton text={row.original.address} />
       </div>
@@ -104,7 +106,7 @@ export const columns: ColumnDef<AccountRow>[] = [
     ),
     cell: ({ row }) => (
       <span className="text-sm tabular-nums">
-        {row.original.balance}
+        {toEvmNative(row.original.balance)} {row.original.currency}
       </span>
     ),
   },
@@ -112,13 +114,13 @@ export const columns: ColumnDef<AccountRow>[] = [
     accessorKey: "percentage",
     header: () => (
       <div className="flex items-center gap-2">
-        <Percent className="h-4 w-4 text-muted-foreground" />
-        <span>Percentage</span>
+        <Network className="h-4 w-4 text-muted-foreground"/>
+        <span>Network</span>
       </div>
     ),
     cell: ({ row }) => (
       <span className="text-sm tabular-nums">
-        {row.original.percentage}
+        {row.original.networkName}
       </span>
     ),
   },
@@ -173,9 +175,9 @@ export function TopAccountsTable() {
             id: `${pageIndex}-${idx}-${row.address}`,
             address: row.address,
             balance: Number(row.balance),
-            percentage: Number(row.percentage),
             transactions: Number(row.successfully_sent_transaction_count),
             networkName: row.network_name,
+            currency: row.currency
           })) ?? []
 
         setData(rows)
@@ -233,7 +235,6 @@ export function TopAccountsTable() {
           variant="outline"
           size="icon"
           onClick={handleSearch}
-          disabled={!addressSearch.trim()}
         >
           <IconSearch className="size-4" />
         </Button>
@@ -256,11 +257,11 @@ export function TopAccountsTable() {
           <TableBody>
             {loading ? (
               <>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {columns.map((_, j) => (
-                      <TableCell key={j}>
-                        <div className="h-4 w-full rounded-md bg-muted animate-pulse" />
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <TableRow key={`shimmer-${i}`} className="animate-pulse">
+                    {columns.map((_, idx) => (
+                      <TableCell key={idx} className="py-3">
+                        <div className="h-4 w-full rounded bg-neutral-300 dark:bg-neutral-700" />
                       </TableCell>
                     ))}
                   </TableRow>
@@ -321,7 +322,7 @@ export function TopAccountsTable() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent side="top">
-                {[10, 15, 20].map((size) => (
+                {[10, 15, 20, 25].map((size) => (
                   <SelectItem key={size} value={String(size)}>
                     {size}
                   </SelectItem>
