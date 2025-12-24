@@ -163,3 +163,9 @@ export interface ChatMessage {
     timestamp: string;
     attached_files: FileDetails[] | null;
 }
+
+export interface ChatGroup {
+    group_id: string;
+    group_name: string;
+    sessions: ChatSessions[];
+}
