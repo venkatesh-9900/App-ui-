@@ -11,15 +11,15 @@ interface BaseServiceParams {
 
 interface listFilterbyAAWDetails extends BaseServiceParams {
     watcher_id: number;
-    start_cursor: number;
-    end_cursor: number;
+    start_cursor: string;
+    end_cursor: string;
     filter_by: string
 }
 
 interface listTransactionDetailsAAW extends BaseServiceParams {
     watcher_id: number;
-    start_cursor: number;
-    end_cursor: number;
+    start_cursor: string;
+    end_cursor: string;
     filter_by: string;
     filter_value: string;
     page: number;
@@ -27,8 +27,8 @@ interface listTransactionDetailsAAW extends BaseServiceParams {
 }
 
 const AAWDETAILS_ENDPOINTS = {
-    GROUP_INFO: (watcherId: number, start_cursor: number, end_cursor: number, filter_by: string) => `/api/notifications/aaw-group-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}`,
-    TRSACTION_DETAILS: (watcherId: number, filter_by: string, filter_value: string, start_cursor: number, end_cursor: number, page: number, limit: number) => `/api/notifications/aaw-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}&filter_value=${filter_value}&page=${page}&limit=${limit}`,
+    GROUP_INFO: (watcherId: number, start_cursor: string, end_cursor: string, filter_by: string) => `/api/notifications/aaw-group-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}`,
+    TRSACTION_DETAILS: (watcherId: number, filter_by: string, filter_value: string, start_cursor: string, end_cursor: string, page: number, limit: number) => `/api/notifications/aaw-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}&filter_value=${filter_value}&page=${page}&limit=${limit}`,
 };
 
 

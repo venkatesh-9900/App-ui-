@@ -40,8 +40,8 @@ export default function AAWDetailsPage() {
         setIsGroupLoading(true);
         listAAWDetails({
             watcher_id: Number(watcher_id),
-            start_cursor: Number(start_cursor ?? 0),
-            end_cursor: Number(end_cursor ?? 10),
+            start_cursor: String(start_cursor),
+            end_cursor: String(end_cursor),
             filter_by: groupingType.toLowerCase(), // asset | category
             successTask: (res) => {
                 setGroupInfo(res);
@@ -72,8 +72,8 @@ export default function AAWDetailsPage() {
         setIsTransactionLoading(true);
         listTransactionDetailsAAW({
             watcher_id: Number(watcher_id),
-            start_cursor: Number(start_cursor ?? 0),
-            end_cursor: Number(end_cursor ?? 10),
+            start_cursor: String(start_cursor),
+            end_cursor: String(end_cursor),
             filter_by: groupingType.toLowerCase(),
             filter_value: selectedKey,
             page,
