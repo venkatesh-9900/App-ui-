@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause } from 'lucide-react'
+import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause, Group } from 'lucide-react'
 import { AddressActivity } from '@/types/address-activity'
 import { format } from 'date-fns'
 import { truncateText } from '@/utils/formatting'
@@ -137,13 +137,11 @@ export function AddressActivityTable({
     }
   }
 
-  const getGroupName = (groupId: String) => {
-    const addressGroup = addressGroups.find(addressGroup => String(addressGroup.id) == groupId)
-    if (addressGroup) {
-      return addressGroup.name;
-    } 
-    return "-";
-  }
+  const getGroupsByIds = (groupIds: number[]) => {
+    if (!groupIds || groupIds.length === 0) return [];
+    return addressGroups.filter(g => groupIds.includes(g.id));
+  };
+
 
   if (isLoading || loadingAddressGroups) {
     return (
@@ -180,8 +178,8 @@ export function AddressActivityTable({
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                   <div className="flex items-center gap-1">
-                    <Activity className="w-4 h-4" />
-                    <span>Address Group</span>
+                    <Group className="w-4 h-4" />
+                    <span>Address Groups</span>
                   </div>
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
@@ -218,7 +216,34 @@ export function AddressActivityTable({
                     </TableCell>
                     <TableCell className="px-4 py-3 w-2/5 min-w-max">
                       <div className="flex flex-wrap gap-1">
-                        { getGroupName(activity.web3_address_group_id) }
+                        {(() => {
+                          const groups = getGroupsByIds(activity.web3_address_group_ids);
+
+                          return groups.length > 0 ? (
+                            <>
+                              {groups.slice(0, 3).map((group, idx) => (
+                                <Badge
+                                  key={idx}
+                                  variant="secondary"
+                                  className="text-xs"
+                                  title={group.name}
+                                >
+                                  {group.name}
+                                </Badge>
+                              ))}
+
+                              {groups.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{groups.length - 3} more
+                                </Badge>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              No groups
+                            </span>
+                          );
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">

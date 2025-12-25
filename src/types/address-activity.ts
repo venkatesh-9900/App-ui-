@@ -13,7 +13,7 @@ export interface AddressActivity {
     type: string;
     payload: any;
     trigger_id: string;
-    web3_address_group_id: string
+    web3_address_group_ids: number[];
     notification_workflow_id: string;
     user_id: string;
     organization_id: string;
