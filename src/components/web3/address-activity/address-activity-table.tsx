@@ -172,6 +172,12 @@ export function AddressActivityTable({
           <Table className="w-full border-collapse">
             <TableHeader className="bg-muted sticky top-0 z-10">
               <TableRow>
+              <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
+                  <div className="flex items-center gap-1">
+                    <Activity className="w-4 h-4" />
+                    <span>Name</span>
+                  </div>
+                </TableHead>
                 <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                   <div className="flex items-center gap-1">
                     <Activity className="w-4 h-4" />
@@ -205,6 +211,11 @@ export function AddressActivityTable({
                 const addresses = getAddresses(activity)
                 return (
                   <TableRow key={activity.id} className="hover:bg-muted/50">
+                    <TableCell className="px-4 py-3 w-2/5 min-w-max">
+                      <div className="flex flex-wrap gap-1">
+                        { activity.name }
+                      </div>
+                    </TableCell>
                     <TableCell className="px-4 py-3 w-2/5 min-w-max">
                       <div className="flex flex-wrap gap-1">
                         { getGroupName(activity.web3_address_group_id) }

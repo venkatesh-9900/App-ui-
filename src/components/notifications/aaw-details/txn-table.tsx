@@ -142,6 +142,7 @@ export default function TxnTable({
                         size="sm"
                         onClick={onPrev}
                         disabled={page === 1}
+                        className='cursor-pointer'
                     >
                         Previous
                     </Button>
@@ -155,6 +156,7 @@ export default function TxnTable({
                         size="sm"
                         onClick={onNext}
                         disabled={page >= totalPages}
+                        className='cursor-pointer'
                     >
                         Next
                     </Button>

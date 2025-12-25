@@ -233,6 +233,7 @@ export function AddressActivityFormDialog({
                           checked={selectedAddressGroups.includes(AddressGroup.id)}
                           onCheckedChange={() => handleAddressGroupToggle(AddressGroup.id)}
                           disabled={isSubmitting}
+                          className='cursor-pointer'
                         />
                         <Label
                           htmlFor={`group-${AddressGroup.id}`}
@@ -286,6 +287,7 @@ export function AddressActivityFormDialog({
                           checked={selectedGroups.includes(String(group.id))}
                           onCheckedChange={() => handleGroupToggle(String(group.id))}
                           disabled={isSubmitting}
+                          className='cursor-pointer'
                         />
                         <Label
                           htmlFor={`group-${group.id}`}
@@ -339,6 +341,7 @@ export function AddressActivityFormDialog({
                           checked={selectedSubscribers.includes(String(subscriber.id))}
                           onCheckedChange={() => handleSubscriberToggle(String(subscriber.id))}
                           disabled={isSubmitting}
+                          className='cursor-pointer'
                         />
                         <Label
                           htmlFor={`sub-${subscriber.id}`}
