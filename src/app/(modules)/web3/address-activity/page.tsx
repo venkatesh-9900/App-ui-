@@ -39,6 +39,8 @@ export default function AddressActivityPage() {
     useEffect(() => {
         fetchActivities()
         fetchAddressGroups();
+        fetchGroups()
+        fetchSubscribers()
     }, [])
 
     const fetchActivities = async () => {
@@ -128,8 +130,8 @@ export default function AddressActivityPage() {
 
     const handleCreateClick = () => {
         // Load groups and subscribers when dialog opens
-        fetchGroups()
-        fetchSubscribers()
+        // fetchGroups()
+        // fetchSubscribers()
         setDialogOpen(true)
     }
 
@@ -239,6 +241,8 @@ export default function AddressActivityPage() {
                                 <AddressActivityTable
                                     activities={activities}
                                     addressGroups={addressGroups}
+                                    groups={groups}
+                                    subscribers={subscribers}
                                     isLoading={isLoadingActivities}
                                     loadingAddressGroups={isLoadingGroups}
                                     onDelete={handleDeleteActivity}
