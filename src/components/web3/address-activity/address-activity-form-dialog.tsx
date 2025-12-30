@@ -180,7 +180,7 @@ export function AddressActivityFormDialog({
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [addressGroups, selectedGroups, selectedSubscribers, selectedChannels])
+  }, [addressGroups, selectedGroups, selectedSubscribers, selectedChannels, name])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
