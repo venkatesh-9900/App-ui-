@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -214,6 +214,12 @@ export default function AddressActivityPage() {
         }
     }, [dialogOpen])
 
+    const activeWatcherCount = useMemo(
+        () => activities.filter(a => a.active).length,
+        [activities]
+    )
+
+
   return (
         <ProtectedRoute>
             <DashboardNavbar />
@@ -249,9 +255,9 @@ export default function AddressActivityPage() {
                                     onToggle={handleToggleActivity}
                                 />
 
-                                {!isLoadingActivities && activities.length > 0 && (
+                                {!isLoadingActivities && activeWatcherCount > 0 && (
                                     <div className="mt-4 text-sm text-muted-foreground text-center">
-                                        {activities.length} {activities.length === 1 ? 'watcher' : 'watchers'} active
+                                        {activeWatcherCount} {activeWatcherCount === 1 ? 'watcher' : 'watchers'} active
           </div>
                                 )}
                             </CardContent>
