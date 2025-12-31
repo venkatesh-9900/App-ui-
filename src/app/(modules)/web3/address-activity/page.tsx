@@ -250,7 +250,7 @@ export default function AddressActivityPage() {
                                     groups={groups}
                                     subscribers={subscribers}
                                     isLoading={isLoadingActivities}
-                                    loadingAddressGroups={isLoadingGroups}
+                                    loadingAddressGroups={isLoadingAddressGroups}
                                     onDelete={handleDeleteActivity}
                                     onToggle={handleToggleActivity}
                                 />
