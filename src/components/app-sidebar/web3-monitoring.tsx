@@ -37,6 +37,11 @@ const menuItems = [
     name: "Address Analytics",
     url: "/web3/address",
     icon: Network
+  },
+  {
+    name: "Top Accounts",
+    url: "/web3/top-accounts",
+    icon: Activity
   }
 ]
 
@@ -78,9 +83,9 @@ export function Web3Monitoring() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Alerts and Monitoring" className="cursor-pointer">
+          <SidebarMenuButton tooltip="Web3 Monitoring" className="cursor-pointer">
             <Activity className="h-4 w-4" />
-            <span>Alerts and Monitoring</span>
+            <span>Web3 Monitoring</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
