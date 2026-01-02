@@ -26,13 +26,26 @@ interface AddressActivityFormDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (data: CreateAddressActivityRequest) => void
   isSubmitting: boolean
+
+  mode?: "create" | "edit"
+  initialData?: {
+    id?: number
+    name?: string
+    address_group_ids?: number[]
+    notification_group_ids?: number[]
+    notification_subscriber_ids?: number[]
+    channel_ids?: string[]
+  }
+
   groups: NotificationGroup[]
   subscribers: NotificationSubscriber[]
+  addressGroups: AddressGroup[]
+
   loadingGroups: boolean
   loadingSubscribers: boolean
-  addressGroups: AddressGroup[]
   loadingAddressGroups: boolean
 }
+
 
 const AVAILABLE_CHANNELS = [
   { id: 'email', label: 'Email', icon: Mail },
@@ -49,14 +62,16 @@ export function AddressActivityFormDialog({
   groups,
   addressGroups,
   subscribers,
+  mode = "create",
+  initialData,
   loadingGroups,
   loadingSubscribers,
   loadingAddressGroups,
 }: AddressActivityFormDialogProps) {
   const [name, setName] = useState<string>('')
-  const [selectedAddressGroup, setSelectedAddressGroup] = useState<number>(0)
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([])
-  const [selectedSubscribers, setSelectedSubscribers] = useState<string[]>([])
+  const [selectedAddressGroups, setSelectedAddressGroups] = useState<number[]>([])
+  const [selectedGroups, setSelectedGroups] = useState<number[]>([])
+  const [selectedSubscribers, setSelectedSubscribers] = useState<number[]>([])
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
   const [errors, setErrors] = useState<{
     name?: string
@@ -67,23 +82,41 @@ export function AddressActivityFormDialog({
   }>({})
 
   useEffect(() => {
+    if (open && initialData) {
+      console.log(initialData)
+      setName(initialData.name || "");
+      setSelectedAddressGroups(initialData.address_group_ids || [])
+      setSelectedGroups(initialData.notification_group_ids || [])
+      setSelectedSubscribers(initialData.notification_subscriber_ids || [])
+      setSelectedChannels(initialData.channel_ids || [])
+      setErrors({}) 
+    }
+
     if (!open) {
       // Reset form when dialog closes
       setName('')
-      setSelectedAddressGroup(0)
+      setSelectedAddressGroups([])
       setSelectedGroups([])
       setSelectedSubscribers([])
       setSelectedChannels([])
       setErrors({})
     }
-  }, [open])
+  }, [open, mode, initialData])
 
+  const handleAddressGroupToggle = useCallback((topicKey: number) => {
+    setSelectedAddressGroups(prev => {
+      if (prev.includes(topicKey)) {
+        return prev.filter(key => key !== topicKey)
+      } else {
+        return [...prev, topicKey]
+      }
+    })
+    if (errors.addressGroups || errors.groups || errors.subscribers) {
+      setErrors(prev => ({ ...prev, addressGroups: undefined, groups: undefined, subscribers: undefined }))
+    }
+  }, [errors.addressGroups])
 
-  const handleAddressGroup = (value: string) => {
-    setSelectedAddressGroup(Number(value))
-  }
-
-  const handleGroupToggle = useCallback((topicKey: string) => {
+  const handleGroupToggle = useCallback((topicKey: number) => {
     setSelectedGroups(prev => {
       if (prev.includes(topicKey)) {
         return prev.filter(key => key !== topicKey)
@@ -91,12 +124,12 @@ export function AddressActivityFormDialog({
         return [...prev, topicKey]
       }
     })
-    if (errors.groups || errors.subscribers) {
-      setErrors(prev => ({ ...prev, groups: undefined, subscribers: undefined }))
+    if ( errors.groups || errors.subscribers, errors.addressGroups) {
+      setErrors(prev => ({ ...prev, groups: undefined, subscribers: undefined, addressGroups: undefined }))
     }
   }, [errors.groups])
 
-  const handleSubscriberToggle = useCallback((subscriberId: string) => {
+  const handleSubscriberToggle = useCallback((subscriberId: number) => {
     setSelectedSubscribers(prev => {
       if (prev.includes(subscriberId)) {
         return prev.filter(id => id !== subscriberId)
@@ -104,8 +137,8 @@ export function AddressActivityFormDialog({
         return [...prev, subscriberId]
       }
     })
-    if (errors.subscribers || errors.groups) {
-      setErrors(prev => ({ ...prev, subscribers: undefined, groups: undefined }))
+    if (errors.subscribers || errors.groups || errors.addressGroups) {
+      setErrors(prev => ({ ...prev, subscribers: undefined, groups: undefined, addressGroups: undefined }))
     }
   }, [errors.subscribers])
 
@@ -130,12 +163,12 @@ export function AddressActivityFormDialog({
     }
 
     // Validate address groups
-    if (selectedAddressGroup === 0) {
+    if (selectedAddressGroups.length === 0) {
       newErrors.addressGroups = 'An address group must be selected'
     }
 
     // Validate groups
-    if (selectedGroups.length === 0 && selectedSubscribers.length === 0) {
+    if (selectedGroups.length === 0 && selectedSubscribers.length === 0 ) {
       newErrors.groups = 'Select at least one group or subscriber'
       newErrors.subscribers = 'Select at least one group or subscriber'
     }
@@ -147,28 +180,30 @@ export function AddressActivityFormDialog({
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [addressGroups, selectedGroups, selectedSubscribers, selectedChannels])
+  }, [addressGroups, selectedGroups, selectedSubscribers, selectedChannels, name])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
       onSubmit({
-        action: "create",
+        action: mode === "edit" ? "update" : "create",
         name: name.trim(),
-        address_group_id: selectedAddressGroup, // Placeholder, adjust as needed
+        address_group_ids: selectedAddressGroups, // Placeholder, adjust as needed
         notification_group_ids: selectedGroups,
         notification_subscriber_ids: selectedSubscribers,
         channel_ids: selectedChannels,
       })
     }
-  }, [validateForm, selectedAddressGroup, selectedGroups, selectedSubscribers, selectedChannels, onSubmit])
+  }, [validateForm, selectedAddressGroups, selectedGroups, selectedSubscribers, selectedChannels, onSubmit])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create Address Activity Watcher</DialogTitle>
+            <DialogTitle>
+              {mode === "edit" ? "Update Address Activity Watcher" : "Create Address Activity Watcher"}
+            </DialogTitle>
             <DialogDescription>
               Monitor blockchain addresses for activity and send notifications to selected groups and subscribers.
             </DialogDescription>
@@ -215,26 +250,29 @@ export function AddressActivityFormDialog({
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
-                        <Select
-                          onValueChange={(value) => handleAddressGroup(value)}
+                    {addressGroups.map((AddressGroup) => (
+                      <div
+                        key={AddressGroup.id}
+                        className="flex items-center gap-2 p-2 hover:bg-muted rounded"
+                      >
+                        <Checkbox
+                          id={`group-${AddressGroup.id}`}
+                          checked={selectedAddressGroups.includes(AddressGroup.id)}
+                          onCheckedChange={() => handleAddressGroupToggle(AddressGroup.id)}
                           disabled={isSubmitting}
+                          className='cursor-pointer'
+                        />
+                        <Label
+                          htmlFor={`group-${AddressGroup.id}`}
+                          className="flex-1 cursor-pointer text-sm"
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select Address Group" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            {addressGroups.map((group) => (
-                              <SelectItem
-                                key={group.id}
-                                value={String(group.id)}
-                              >
-                                {group.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
+                          <div className="font-medium">{AddressGroup.name}</div>
+                          {AddressGroup.description && (
+                            <div className="text-xs text-muted-foreground">{AddressGroup.description}</div>
+                          )}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -273,9 +311,10 @@ export function AddressActivityFormDialog({
                       >
                         <Checkbox
                           id={`group-${group.id}`}
-                          checked={selectedGroups.includes(String(group.id))}
-                          onCheckedChange={() => handleGroupToggle(String(group.id))}
+                          checked={selectedGroups.includes((group.id))}
+                          onCheckedChange={() => handleGroupToggle((group.id))}
                           disabled={isSubmitting}
+                          className='cursor-pointer'
                         />
                         <Label
                           htmlFor={`group-${group.id}`}
@@ -326,9 +365,10 @@ export function AddressActivityFormDialog({
                       >
                         <Checkbox
                           id={`sub-${subscriber.id}`}
-                          checked={selectedSubscribers.includes(String(subscriber.id))}
-                          onCheckedChange={() => handleSubscriberToggle(String(subscriber.id))}
+                          checked={selectedSubscribers.includes((subscriber.id))}
+                          onCheckedChange={() => handleSubscriberToggle((subscriber.id))}
                           disabled={isSubmitting}
+                          className='cursor-pointer'
                         />
                         <Label
                           htmlFor={`sub-${subscriber.id}`}
@@ -406,10 +446,10 @@ export function AddressActivityFormDialog({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
+                  {mode === "edit" ? "Updating..." : "Creating..."}
                 </>
               ) : (
-                <>Create Watcher</>
+                mode === "edit" ? "Update Watcher" : "Create Watcher"
               )}
             </Button>
           </DialogFooter>

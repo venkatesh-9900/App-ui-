@@ -29,15 +29,22 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause } from 'lucide-react'
-import { AddressActivity } from '@/types/address-activity'
+import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause, Group, Edit2 } from 'lucide-react'
+import { AddressActivity, CreateAddressActivityRequest, UpdateAddressActivityRequest } from '@/types/address-activity'
 import { format } from 'date-fns'
 import { truncateText } from '@/utils/formatting'
 import { AddressGroup } from '@/types/address-group'
 import { useAuth } from '@/contexts'
+import { NotificationSubscriber } from '@/types/subscriber'
+import { NotificationGroup } from '@/types/topic'
+import { AddressActivityFormDialog } from './address-activity-form-dialog'
+import { updateAddressActivity } from '@/hooks/web3/address-activity-service'
+import { toast } from 'sonner'
 interface AddressActivityTableProps {
   activities: AddressActivity[]
   addressGroups: AddressGroup[]
+  groups: NotificationGroup[]
+  subscribers: NotificationSubscriber[]
   isLoading: boolean
   loadingAddressGroups: boolean
   onDelete: (id: number) => void
@@ -49,12 +56,16 @@ export function AddressActivityTable({
   addressGroups,
   isLoading,
   loadingAddressGroups,
+  groups,
+  subscribers,
   onDelete,
   onToggle,
 }: AddressActivityTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<AddressActivity | null>(null)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false);
   const { userInfo } = useAuth()
 
   const handleDeleteClick = (activity: AddressActivity) => {
@@ -137,13 +148,60 @@ export function AddressActivityTable({
     }
   }
 
-  const getGroupName = (groupId: String) => {
-    const addressGroup = addressGroups.find(addressGroup => String(addressGroup.id) == groupId)
-    if (addressGroup) {
-      return addressGroup.name;
-    } 
-    return "-";
+  async function handleUpdateActivity(id: number, formData: UpdateAddressActivityRequest) {
+    setIsUpdating(true)
+    const updatedActivity: AddressActivity = {
+      id: id,
+      name: formData.name || selectedActivity?.name || '',
+      web3_address_group_ids: formData.address_group_ids,
+      notification_group_ids: formData.notification_group_ids,
+      notification_subscriber_ids: formData.notification_subscriber_ids,
+      channel_ids: formData.channel_ids,
+      organization_id: selectedActivity?.organization_id || '',
+      payload: selectedActivity?.payload,
+      notification_workflow_id: selectedActivity?.notification_workflow_id || '',
+      active: selectedActivity?.active,
+      trigger_id: selectedActivity?.trigger_id || '',
+      type: selectedActivity?.type || '',
+      user_id: selectedActivity?.user_id || '',
+      created_at: selectedActivity?.created_at || '',
+      updated_at: new Date().toISOString(),
+    }
+    setSelectedActivity(updatedActivity);
+    await updateAddressActivity({
+      id: id,
+      request: formData,
+      successTask: (data) => {
+        toast.success('Updating group successful!', {
+          description: `Updates to the address group have been saved.`,
+        })
+        const index = activities.findIndex(g => g.id === id);
+        if (index !== -1) {
+          activities[index] = updatedActivity;
+        }
+        setDialogOpen(false)
+        setIsUpdating(false)
+      },
+      failureTask: () => {
+          toast.error('Failed to update group', {
+            description: 'Please try again.',
+          })
+        setIsUpdating(false)
+      },
+      errorTask: () => {
+        toast.error('An error occurred', {
+          description: 'Please check your connection and try again.',
+        })
+        setIsUpdating(false)
+      },
+    })
   }
+
+  const getGroupsByIds = (groupIds: number[]) => {
+    if (!groupIds || groupIds.length === 0) return [];
+    return addressGroups.filter(g => groupIds.includes(g.id));
+  };
+
 
   if (isLoading || loadingAddressGroups) {
     return (
@@ -172,10 +230,16 @@ export function AddressActivityTable({
           <Table className="w-full border-collapse">
             <TableHeader className="bg-muted sticky top-0 z-10">
               <TableRow>
-                <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
+              <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                   <div className="flex items-center gap-1">
                     <Activity className="w-4 h-4" />
-                    <span>Address Group</span>
+                    <span>Name</span>
+                  </div>
+                </TableHead>
+                <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
+                  <div className="flex items-center gap-1">
+                    <Group className="w-4 h-4" />
+                    <span>Address Groups</span>
                   </div>
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
@@ -207,7 +271,39 @@ export function AddressActivityTable({
                   <TableRow key={activity.id} className="hover:bg-muted/50">
                     <TableCell className="px-4 py-3 w-2/5 min-w-max">
                       <div className="flex flex-wrap gap-1">
-                        { getGroupName(activity.web3_address_group_id) }
+                        { activity.name }
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 w-2/5 min-w-max">
+                      <div className="flex flex-wrap gap-1">
+                        {(() => {
+                          const groups = getGroupsByIds(activity.web3_address_group_ids);
+
+                          return groups.length > 0 ? (
+                            <>
+                              {groups.slice(0, 3).map((group, idx) => (
+                                <Badge
+                                  key={idx}
+                                  variant="secondary"
+                                  className="text-xs"
+                                  title={group.name}
+                                >
+                                  {group.name}
+                                </Badge>
+                              ))}
+
+                              {groups.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{groups.length - 3} more
+                                </Badge>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              No groups
+                            </span>
+                          );
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
@@ -260,6 +356,18 @@ export function AddressActivityTable({
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedActivity(activity);
+                              setDialogOpen(true);
+                            }}
+                            disabled={activity?.user_id !== userInfo?.email}
+                            className="cursor-pointer"
+                          >
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
                             onClick={() => handleDeleteClick(activity)}
                             className="text-destructive focus:text-destructive cursor-pointer"
                             disabled={activity.user_id !== userInfo?.email}
@@ -299,6 +407,29 @@ export function AddressActivityTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedActivity &&( <AddressActivityFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={(data) => handleUpdateActivity(selectedActivity.id, data)}
+        isSubmitting={isUpdating}
+        mode="edit"
+        initialData={{
+          id: selectedActivity.id,
+          name: selectedActivity.name,
+          address_group_ids: selectedActivity.web3_address_group_ids,
+          notification_group_ids: selectedActivity.notification_group_ids,
+          notification_subscriber_ids: selectedActivity.notification_subscriber_ids,
+          channel_ids: selectedActivity.channel_ids
+        }}
+        groups={groups}
+        addressGroups={addressGroups}
+        subscribers={subscribers}
+        loadingGroups={false}
+        loadingAddressGroups={false}
+        loadingSubscribers={false}
+      />
+      )}
     </div>
   )
 }

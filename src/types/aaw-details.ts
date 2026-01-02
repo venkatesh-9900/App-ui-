@@ -34,7 +34,7 @@ export interface TransactionDetails {
     };
     value: number;
     typeTraceAddress: string;
-    eventChunkId: string;
+    txnId: string;
     chainId: number;
     createdAt: string;
 }

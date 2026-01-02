@@ -1,9 +1,9 @@
 export interface CreateAddressActivityRequest {
     name: string;
     action: string;
-    address_group_id: number;
-    notification_group_ids: string[];
-    notification_subscriber_ids: string[];
+    address_group_ids: number[];
+    notification_group_ids: number[];
+    notification_subscriber_ids: number[];
     channel_ids: string[];
 }
 
@@ -13,7 +13,10 @@ export interface AddressActivity {
     type: string;
     payload: any;
     trigger_id: string;
-    web3_address_group_id: string
+    web3_address_group_ids: number[];
+    notification_group_ids: number[];
+    notification_subscriber_ids: number[];
+    channel_ids: string[]
     notification_workflow_id: string;
     user_id: string;
     organization_id: string;
@@ -34,10 +37,11 @@ export interface ListAddressActivitiesResponse {
 }
 
 export interface UpdateAddressActivityRequest {
-    addresses?: string[];
-    topics?: string[];
-    subscriber_ids?: string[];
-    channel_ids?: string[];
+    address_group_ids: number[];
+    notification_group_ids: number[];
+    notification_subscriber_ids: number[];
+    channel_ids: string[];
+    name: string,
     active?: boolean;
 }
 
