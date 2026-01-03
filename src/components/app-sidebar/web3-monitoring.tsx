@@ -29,6 +29,11 @@ const menuItems = [
     icon: Activity,
   },
   {
+    name: "Airdrop Activity",
+    url: "/web3/address-activity-airdrop",
+    icon: Activity,
+  },
+  {
     name: "Address Group",
     url: "/web3/address-group",
     icon: Group,
@@ -57,6 +62,9 @@ export function Web3Monitoring() {
       return true
     }
     if (url === "/web3/address-activity" && pathname === "/web3/address-activity") {
+      return true
+    }
+    if (url === "/web3/address-activity-airdrop" && pathname === "/web3/address-activity-airdrop") {
       return true
     }
     if (url === "/web3/address-group" && pathname === "/web3/address-group") {
