@@ -172,8 +172,8 @@ export function AddressActivityTable({
       id: id,
       request: formData,
       successTask: (data) => {
-        toast.success('Updating group successful!', {
-          description: `Updates to the address group have been saved.`,
+        toast.success('Updating address acitivity successful!', {
+          description: `Updates to the address acitivity have been saved.`,
         })
         const index = activities.findIndex(g => g.id === id);
         if (index !== -1) {
@@ -183,7 +183,7 @@ export function AddressActivityTable({
         setIsUpdating(false)
       },
       failureTask: () => {
-          toast.error('Failed to update group', {
+          toast.error('Failed to update address acitivity', {
             description: 'Please try again.',
           })
         setIsUpdating(false)
