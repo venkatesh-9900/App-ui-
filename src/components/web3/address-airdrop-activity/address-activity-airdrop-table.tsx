@@ -30,18 +30,18 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause, Group, Edit2 } from 'lucide-react'
-import { AddressActivity, CreateAddressActivityRequest, UpdateAddressActivityRequest } from '@/types/address-activity'
+import { AddressActivityAirdrop, CreateAddressActivityAirdropRequest, UpdateAddressActivityAirdropRequest } from '@/types/address-activity-airdrop'
 import { format } from 'date-fns'
 import { truncateText } from '@/utils/formatting'
 import { AddressGroup } from '@/types/address-group'
 import { useAuth } from '@/contexts'
 import { NotificationSubscriber } from '@/types/subscriber'
 import { NotificationGroup } from '@/types/topic'
-import { AddressActivityFormDialog } from './address-activity-form-dialog'
-import { updateAddressActivity } from '@/hooks/web3/address-activity-service'
+import { AddressActivityAirdropFormDialog } from './address-activity-airdrop-form-dialog'
+import { updateAddressActivityAirdrop } from '@/hooks/web3/address-activity-airdrop-service'
 import { toast } from 'sonner'
-interface AddressActivityTableProps {
-  activities: AddressActivity[]
+interface AddressActivityAirdropTableProps {
+  activities: AddressActivityAirdrop[]
   addressGroups: AddressGroup[]
   groups: NotificationGroup[]
   subscribers: NotificationSubscriber[]
@@ -51,7 +51,7 @@ interface AddressActivityTableProps {
   onToggle: (id: number, isActive: boolean) => void
 }
 
-export function AddressActivityTable({
+export function AddressActivityAirdropTable({
   activities,
   addressGroups,
   isLoading,
@@ -60,15 +60,15 @@ export function AddressActivityTable({
   subscribers,
   onDelete,
   onToggle,
-}: AddressActivityTableProps) {
+}: AddressActivityAirdropTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedActivity, setSelectedActivity] = useState<AddressActivity | null>(null)
+  const [selectedActivity, setSelectedActivity] = useState<AddressActivityAirdrop | null>(null)
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false);
   const { userInfo } = useAuth()
 
-  const handleDeleteClick = (activity: AddressActivity) => {
+  const handleDeleteClick = (activity: AddressActivityAirdrop) => {
     setSelectedActivity(activity)
     setDeleteDialogOpen(true)
   }
@@ -81,7 +81,7 @@ export function AddressActivityTable({
     setSelectedActivity(null)
   }
 
-  const handleToggleClick = async (activity: AddressActivity) => {
+  const handleToggleClick = async (activity: AddressActivityAirdrop) => {
     // Get current status, default to true if null/undefined
     const currentStatus = activity.active !== undefined && activity.active !== null ? activity.active : true
     const newStatus = !currentStatus
@@ -130,7 +130,7 @@ export function AddressActivityTable({
     }
   }
 
-  const getAddresses = (activity: AddressActivity): string[] => {
+  const getAddresses = (activity: AddressActivityAirdrop): string[] => {
     try {
       if (activity.payload && typeof activity.payload === 'object') {
         if (Array.isArray(activity.payload.addresses)) {
@@ -148,9 +148,9 @@ export function AddressActivityTable({
     }
   }
 
-  async function handleUpdateActivity(id: number, formData: UpdateAddressActivityRequest) {
+  async function handleUpdateActivity(id: number, formData: UpdateAddressActivityAirdropRequest) {
     setIsUpdating(true)
-    const updatedActivity: AddressActivity = {
+    const updatedActivity: AddressActivityAirdrop = {
       id: id,
       name: formData.name || selectedActivity?.name || '',
       web3_address_group_ids: formData.address_group_ids,
@@ -168,12 +168,12 @@ export function AddressActivityTable({
       updated_at: new Date().toISOString(),
     }
     setSelectedActivity(updatedActivity);
-    await updateAddressActivity({
+    await updateAddressActivityAirdrop({
       id: id,
       request: formData,
       successTask: (data) => {
-        toast.success('Updating address acitivity successful!', {
-          description: `Updates to the address acitivity have been saved.`,
+        toast.success('Updating airdrop acitivity successful!', {
+          description: `Updates to the airdrop activity have been saved.`,
         })
         const index = activities.findIndex(g => g.id === id);
         if (index !== -1) {
@@ -183,7 +183,7 @@ export function AddressActivityTable({
         setIsUpdating(false)
       },
       failureTask: () => {
-          toast.error('Failed to update address acitivity', {
+          toast.error('Failed to update airdrop activity', {
             description: 'Please try again.',
           })
         setIsUpdating(false)
@@ -215,7 +215,7 @@ export function AddressActivityTable({
     return (
       <div className="text-center py-12">
         <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">No address activity watchers found.</p>
+        <p className="text-muted-foreground">No address activity airdrop watchers found.</p>
         <p className="text-sm text-muted-foreground mt-1">
           Create your first watcher to monitor blockchain addresses.
         </p>
@@ -408,7 +408,7 @@ export function AddressActivityTable({
         </AlertDialogContent>
       </AlertDialog>
 
-      {selectedActivity &&( <AddressActivityFormDialog
+      {selectedActivity &&( <AddressActivityAirdropFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSubmit={(data) => handleUpdateActivity(selectedActivity.id, data)}
