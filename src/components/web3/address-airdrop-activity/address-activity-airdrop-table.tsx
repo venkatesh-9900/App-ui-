@@ -215,7 +215,7 @@ export function AddressActivityAirdropTable({
     return (
       <div className="text-center py-12">
         <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">No address activity watchers found.</p>
+        <p className="text-muted-foreground">No address activity airdrop watchers found.</p>
         <p className="text-sm text-muted-foreground mt-1">
           Create your first watcher to monitor blockchain addresses.
         </p>

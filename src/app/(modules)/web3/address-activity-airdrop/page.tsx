@@ -47,7 +47,6 @@ export default function AddressActivityAirdropPage() {
         setIsLoadingActivities(true)
         await listAddressAirdropActivities({
             successTask: (response) => {
-                console.log('Activities Response:', response)
                 if (response.data && Array.isArray(response.data)) {
                     setActivities(response.data)
                 }
@@ -55,7 +54,7 @@ export default function AddressActivityAirdropPage() {
             },
             failureTask: () => {
                 toast.error('Failed to load address activities', {
-                    description: 'Could not fetch address activity watchers. Please try again.',
+                    description: 'Could not fetch address activity airdrop watchers. Please try again.',
                 })
                 setIsLoadingActivities(false)
             },
@@ -141,7 +140,7 @@ export default function AddressActivityAirdropPage() {
         await createAddressActivityAirdrop({
             request: formData,
             successTask: (data) => {
-                toast.success('Address activity watcher created!', {
+                toast.success('Address activity airdrop watcher created!', {
                     description: `Now monitoring this address group ${formData.address_group_ids}`,
                 })
                 setDialogOpen(false)
@@ -168,7 +167,7 @@ export default function AddressActivityAirdropPage() {
             id,
             successTask: () => {
                 toast.success('Watcher deleted successfully!', {
-                    description: 'The address activity watcher has been removed.',
+                    description: 'The address activity airdrop watcher has been removed.',
                 })
                 fetchActivities() // Refresh the list
             },
