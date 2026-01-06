@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { getAawGroupedTransactionInfo, TransactionDetails } from '@/types/aaw-details';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'; // Use Separator for horizontal lines
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { listAAWDetails, listTransactionDetailsAAW } from '@/hooks/aaaw-details-service'
 import { ProtectedRoute } from "@/components/protected-route"
@@ -12,12 +12,13 @@ import TxnTable from '@/components/notifications/aaw-details/txn-table';
 import TxnDetailsSideBar from '@/components/notifications/aaw-details/txn-details-side-bar';
 import TxnFilterBar from '@/components/notifications/aaw-details/txn-filter-bar'; // NEW IMPORT
 import { Button } from '@/components/ui/button';
-
+import { set } from 'zod';
 // Define the grouping type options
 type GroupingType = 'asset' | 'category';
 
 export default function AAAWDetailsPage() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const LIMIT = 10;
     const CARD_LIMIT = 3;
     const watcher_id = searchParams.get('watcher_id');
@@ -34,6 +35,9 @@ export default function AAAWDetailsPage() {
     const [groupingType, setGroupingType] = useState<GroupingType>('asset');
     const [selectedTxn, setSelectedTxn] = useState<TransactionDetails | null>(null);
     const [startIndex, setStartIndex] = useState(0);
+    const [selectedTxns, setSelectedTxns] = useState<Map<string, TransactionDetails>>(
+        () => new Map()
+    );
 
     const fetchGroupInfo = useCallback(() => {
         if (!watcher_id) return;
@@ -69,6 +73,7 @@ export default function AAAWDetailsPage() {
 
     const fetchTransactionDetails = useCallback(() => {
         if (!selectedKey || !watcher_id) return;
+        setSelectedTxns(new Map()); // Clear selected transactions on key/page change
         setIsTransactionLoading(true);
         listTransactionDetailsAAW({
             watcher_id: Number(watcher_id),
@@ -131,6 +136,43 @@ export default function AAAWDetailsPage() {
             Math.min(totalCards - CARD_LIMIT, prev + CARD_LIMIT)
         );
     };
+
+    const toggleTxnSelection = useCallback(
+        (txn: TransactionDetails) => {
+            setSelectedTxns(prev => {
+                const next = new Map(prev);
+                if (next.has(txn.hash)) {
+                    next.delete(txn.hash);
+                } else {
+                    next.set(txn.hash, txn);
+                }
+                return next;
+            });
+        },
+        []
+    );
+
+    const buildAIPrompt = () => {
+        if (selectedTxns.size === 0) return "";
+        const txns = Array.from(selectedTxns.values())
+            .map(t => t.hash)
+            .join(", \n");
+        return `Analyze the following transactions: ${txns}`;
+    };
+
+    const handleAskAI = () => {
+        const prompt = buildAIPrompt();
+        if (!prompt) {
+            toast.error("Select at least one transaction");
+            return;
+        }
+
+        router.push(
+            `/chat?new=true&prompt=${encodeURIComponent(prompt)}`
+        );
+    };
+
+    
 
     if (isLocading) {
         return (
@@ -285,6 +327,8 @@ export default function AAAWDetailsPage() {
                                                 onNext={() => setPage((p) => p + 1)}
                                                 onPrev={() => setPage((p) => Math.max(1, p - 1))}
                                                 onRowClick={(txn) => setSelectedTxn(txn)}
+                                                selectedTxnIds={new Set(selectedTxns.keys())}
+                                                onToggleTxn={toggleTxnSelection}
                                             />
                                         </div>
                                     )}
@@ -298,6 +342,8 @@ export default function AAAWDetailsPage() {
                                 <TxnFilterBar
                                     groupingType={groupingType}
                                     setGroupingType={setGroupingType}
+                                    onAskAI={handleAskAI}
+                                    selectedTxns={selectedTxns}
                                 />
                             </div>
 

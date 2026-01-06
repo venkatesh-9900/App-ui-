@@ -53,6 +53,16 @@ export default function ChatPage() {
             setGroupId(null);
             return;
         }
+
+        if (isNew === "true" && prompt) {
+            console.log("Starting new chat with prompt:", prompt);
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage(prompt);
+            setLastLoadedSession("new");
+            return;
+        }
+
         // CASE 2: New chat
         if (isNew === "true") {
             console.log("Starting new chat");
