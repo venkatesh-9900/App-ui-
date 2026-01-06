@@ -13,6 +13,7 @@ import { truncateText, formatDate } from '@/utils/formatting';
 import { CopyButton } from '@/components/ui/copy-button';
 import { Activity, Calendar } from 'lucide-react';
 import { IconBlocks, IconCategory } from '@tabler/icons-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TxnTableProps {
     txn?: TransactionDetails[] | null;
@@ -22,6 +23,8 @@ interface TxnTableProps {
     onNext: () => void;
     onPrev: () => void;
     onRowClick: (txn: TransactionDetails) => void;
+    selectedTxnIds: Set<string>;
+    onToggleTxn: (txn: TransactionDetails) => void;
 }
 
 export default function TxnTable({
@@ -32,6 +35,8 @@ export default function TxnTable({
     onNext,
     onPrev,
     onRowClick,
+    selectedTxnIds,
+    onToggleTxn,
 }: TxnTableProps) {
     const start = (page - 1) * limit + 1;
     const end = Math.min(page * limit, totalCount);
@@ -44,6 +49,8 @@ export default function TxnTable({
                     <Table>
                         <TableHeader className="bg-muted">
                             <TableRow>
+                                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                                </TableHead>
                                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
                                     <div className="flex items-center gap-1">
                                         <Calendar className="w-4 h-4" />
@@ -86,6 +93,20 @@ export default function TxnTable({
                                     className="cursor-pointer hover:bg-muted/50"
                                     onClick={() => onRowClick(t)}
                                 >
+                                    <TableCell
+                                        className="px-4 py-2 w-1/6 min-w-max"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+
+                                        <Checkbox
+                                            id={`txn-${t.txnId}`}
+                                            checked={selectedTxnIds?.has(t.hash) ?? false}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onCheckedChange={() => onToggleTxn(t)}
+                                            className="cursor-pointer"
+                                        />
+                                    </TableCell>
+
                                     <TableCell className="px-4 py-2 w-1/6 min-w-max">
                                         <div className="flex items-center gap-2">
                                             {formatDate(t.blockTimestamp)}
