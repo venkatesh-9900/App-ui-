@@ -28,6 +28,7 @@ export interface TokenHolding {
   token_symbol: string
   token_contract: string
   balance: string
+  price_usd?: number | null
   value_usd?: string | null
 }
 
