@@ -63,7 +63,7 @@ export interface TokenTransferEvent {
   age: string
   from_address: string
   to_address: string
-  direction: "in" | "out"
+  direction: "in" | "out" | "self"
   amount: string
   token_name: string
   token_symbol: string
