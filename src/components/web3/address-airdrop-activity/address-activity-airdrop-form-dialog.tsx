@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Plus, X, Users, Bell, Mail } from 'lucide-react'
-import { CreateAddressActivityRequest } from '@/types/address-activity'
+import { CreateAddressActivityAirdropRequest } from '@/types/address-activity-airdrop'
 import { NotificationGroup } from '@/types/topic'
 import { NotificationSubscriber } from '@/types/subscriber'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -21,10 +21,10 @@ import { Badge } from '@/components/ui/badge'
 import { AddressGroup } from '@/types/address-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-interface AddressActivityFormDialogProps {
+interface AddressActivityAirdropFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: CreateAddressActivityRequest) => void
+  onSubmit: (data: CreateAddressActivityAirdropRequest) => void
   isSubmitting: boolean
 
   mode?: "create" | "edit"
@@ -54,7 +54,7 @@ const AVAILABLE_CHANNELS = [
   // { id: 'push', label: 'Push', icon: Bell },
 ]
 
-export function AddressActivityFormDialog({
+export function AddressActivityAirdropFormDialog({
   open,
   onOpenChange,
   onSubmit,
@@ -67,7 +67,7 @@ export function AddressActivityFormDialog({
   loadingGroups,
   loadingSubscribers,
   loadingAddressGroups,
-}: AddressActivityFormDialogProps) {
+}: AddressActivityAirdropFormDialogProps) {
   const [name, setName] = useState<string>('')
   const [selectedAddressGroups, setSelectedAddressGroups] = useState<number[]>([])
   const [selectedGroups, setSelectedGroups] = useState<number[]>([])
@@ -202,7 +202,7 @@ export function AddressActivityFormDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {mode === "edit" ? "Update Address Activity Watcher" : "Create Address Activity Watcher"}
+              {mode === "edit" ? "Update Address Activity Airdrop Watcher" : "Create Address Activity Airdrop Watcher"}
             </DialogTitle>
             <DialogDescription>
               Monitor blockchain addresses for activity and send notifications to selected groups and subscribers.

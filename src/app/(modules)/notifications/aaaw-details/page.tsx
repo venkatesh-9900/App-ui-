@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'; // Use Separator for horizontal lines
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { listAAWDetails, listTransactionDetailsAAW } from '@/hooks/aaw-details-service'
+import { listAAWDetails, listTransactionDetailsAAW } from '@/hooks/aaaw-details-service'
 import { ProtectedRoute } from "@/components/protected-route"
 import TxnSummaryCard from '@/components/notifications/aaw-details/txn-summary-card';
 import TxnTable from '@/components/notifications/aaw-details/txn-table';
@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 // Define the grouping type options
 type GroupingType = 'asset' | 'category';
 
-export default function AAWDetailsPage() {
+export default function AAAWDetailsPage() {
     const searchParams = useSearchParams();
     const LIMIT = 10;
     const CARD_LIMIT = 3;

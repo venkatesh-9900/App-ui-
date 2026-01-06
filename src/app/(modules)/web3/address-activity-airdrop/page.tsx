@@ -6,25 +6,25 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Plus, Activity } from 'lucide-react'
 import { 
-  createAddressActivity, 
-  listAddressActivities, 
-  deleteAddressActivity,
-  toggleAddressActivity 
-} from '@/hooks/web3/address-activity-service'
+  createAddressActivityAirdrop, 
+  listAddressAirdropActivities, 
+  deleteAddressActivityAirdrop,
+  toggleAddressActivityAirdrop 
+} from '@/hooks/web3/address-activity-airdrop-service'
 import { listTopics } from '@/hooks/topic-service'
 import { getActiveHumanSubscribers } from '@/hooks/subscriber-service'
-import { AddressActivity, CreateAddressActivityRequest } from '@/types/address-activity'
+import { AddressActivityAirdrop, CreateAddressActivityAirdropRequest } from '@/types/address-activity-airdrop'
 import { NotificationGroup } from '@/types/topic'
 import { NotificationSubscriber } from '@/types/subscriber'
-import { AddressActivityFormDialog } from '@/components/web3/address-activity/address-activity-form-dialog'
-import { AddressActivityTable } from '@/components/web3/address-activity/address-activity-table'
+import { AddressActivityAirdropFormDialog } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-form-dialog'
+import { AddressActivityAirdropTable } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-table'
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
 
-export default function AddressActivityPage() {
-    const [activities, setActivities] = useState<AddressActivity[]>([])
+export default function AddressActivityAirdropPage() {
+    const [activities, setActivities] = useState<AddressActivityAirdrop[]>([])
     const [groups, setGroups] = useState<NotificationGroup[]>([])
     const [subscribers, setSubscribers] = useState<NotificationSubscriber[]>([])
     const [addressGroups, setAddressGroups] = useState<AddressGroup[]>([]); // Adjust type as needed
@@ -45,9 +45,8 @@ export default function AddressActivityPage() {
 
     const fetchActivities = async () => {
         setIsLoadingActivities(true)
-        await listAddressActivities({
+        await listAddressAirdropActivities({
             successTask: (response) => {
-                console.log('Activities Response:', response)
                 if (response.data && Array.isArray(response.data)) {
                     setActivities(response.data)
                 }
@@ -55,7 +54,7 @@ export default function AddressActivityPage() {
             },
             failureTask: () => {
                 toast.error('Failed to load address activities', {
-                    description: 'Could not fetch address activity watchers. Please try again.',
+                    description: 'Could not fetch address activity airdrop watchers. Please try again.',
                 })
                 setIsLoadingActivities(false)
             },
@@ -135,13 +134,13 @@ export default function AddressActivityPage() {
         setDialogOpen(true)
     }
 
-    const handleFormSubmit = async (formData: CreateAddressActivityRequest) => {
+    const handleFormSubmit = async (formData: CreateAddressActivityAirdropRequest) => {
         setIsSubmitting(true)
 
-        await createAddressActivity({
+        await createAddressActivityAirdrop({
             request: formData,
             successTask: (data) => {
-                toast.success('Address activity watcher created!', {
+                toast.success('Address activity airdrop watcher created!', {
                     description: `Now monitoring this address group ${formData.address_group_ids}`,
                 })
                 setDialogOpen(false)
@@ -164,11 +163,11 @@ export default function AddressActivityPage() {
     }
 
     const handleDeleteActivity = async (id: number) => {
-        await deleteAddressActivity({
+        await deleteAddressActivityAirdrop({
             id,
             successTask: () => {
                 toast.success('Watcher deleted successfully!', {
-                    description: 'The address activity watcher has been removed.',
+                    description: 'The address activity airdrop watcher has been removed.',
                 })
                 fetchActivities() // Refresh the list
             },
@@ -186,7 +185,7 @@ export default function AddressActivityPage() {
     }
 
     const handleToggleActivity = async (id: number, active: boolean) => {
-        await toggleAddressActivity({
+        await toggleAddressActivityAirdrop({
             id,
             active,
             successTask: () => {
@@ -234,7 +233,7 @@ export default function AddressActivityPage() {
                                             <Activity className="w-6 h-6 text-primary" />
                                         </div>
                                         <div>
-                                            <CardTitle className="text-sm sm:text-2xl">Address Activity Watchers</CardTitle>
+                                            <CardTitle className="text-sm sm:text-2xl">Address Airdrop Activity Watchers</CardTitle>
           </div>
         </div>
                                     <Button onClick={handleCreateClick} size="lg" className="cursor-pointer">
@@ -244,7 +243,7 @@ export default function AddressActivityPage() {
         </div>
                             </CardHeader>
                             <CardContent>
-                                <AddressActivityTable
+                                <AddressActivityAirdropTable
                                     activities={activities}
                                     addressGroups={addressGroups}
                                     groups={groups}
@@ -264,7 +263,7 @@ export default function AddressActivityPage() {
                         </Card>
 
                         {/* Create Dialog */}
-                        <AddressActivityFormDialog
+                        <AddressActivityAirdropFormDialog
                             open={dialogOpen}
                             onOpenChange={handleDialogOpenChange}
                             onSubmit={handleFormSubmit}

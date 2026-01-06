@@ -1,4 +1,4 @@
-export interface CreateAddressActivityRequest {
+export interface CreateAddressActivityAirdropRequest {
     name: string;
     action: string;
     address_group_ids: number[];
@@ -7,7 +7,7 @@ export interface CreateAddressActivityRequest {
     channel_ids: string[];
 }
 
-export interface AddressActivity {
+export interface AddressActivityAirdrop {
     id: number;
     name: string;
     type: string;
@@ -25,18 +25,18 @@ export interface AddressActivity {
     updated_at: string;
 }
 
-export interface AddressActivityResponse {
+export interface AddressActivityAirdropResponse {
     message?: string;
-    data?: AddressActivity;
+    data?: AddressActivityAirdrop;
     status?: string;
 }
 
-export interface ListAddressActivitiesResponse {
+export interface ListAddressAirdropActivitiesResponse {
     status: string;
-    data: AddressActivity[];
+    data: AddressActivityAirdrop[];
 }
 
-export interface UpdateAddressActivityRequest {
+export interface UpdateAddressActivityAirdropRequest {
     address_group_ids: number[];
     notification_group_ids: number[];
     notification_subscriber_ids: number[];
@@ -45,7 +45,7 @@ export interface UpdateAddressActivityRequest {
     active?: boolean;
 }
 
-export interface DeleteAddressActivityResponse {
+export interface DeleteAddressActivityAirdropResponse {
     message: string;
 }
 

@@ -26,9 +26,9 @@ interface listTransactionDetailsAAW extends BaseServiceParams {
     limit: number;
 }
 
-const AAWDETAILS_ENDPOINTS = {
-    GROUP_INFO: (watcherId: number, start_cursor: string, end_cursor: string, filter_by: string) => `/api/notifications/aaw-group-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}`,
-    TRSACTION_DETAILS: (watcherId: number, filter_by: string, filter_value: string, start_cursor: string, end_cursor: string, page: number, limit: number) => `/api/notifications/aaw-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}&filter_value=${filter_value}&page=${page}&limit=${limit}`,
+const AAAWDETAILS_ENDPOINTS = {
+    GROUP_INFO: (watcherId: number, start_cursor: string, end_cursor: string, filter_by: string) => `/api/notifications/aaaw-group-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}`,
+    TRSACTION_DETAILS: (watcherId: number, filter_by: string, filter_value: string, start_cursor: string, end_cursor: string, page: number, limit: number) => `/api/notifications/aaaw-txn-details?watcher_id=${watcherId}&start_cursor=${start_cursor}&end_cursor=${end_cursor}&filter_by=${filter_by}&filter_value=${filter_value}&page=${page}&limit=${limit}`,
 };
 
 
@@ -52,7 +52,7 @@ export const listAAWDetails = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(AAWDETAILS_ENDPOINTS.GROUP_INFO(watcher_id, start_cursor, end_cursor, filter_by), {
+        const response = await fetch(AAAWDETAILS_ENDPOINTS.GROUP_INFO(watcher_id, start_cursor, end_cursor, filter_by), {
             method: 'GET',
             headers: buildHeaderJSON(false),
         });
@@ -105,7 +105,7 @@ export const listTransactionDetailsAAW = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(AAWDETAILS_ENDPOINTS.TRSACTION_DETAILS(watcher_id, filter_by, filter_value, start_cursor, end_cursor, page, limit), {
+        const response = await fetch(AAAWDETAILS_ENDPOINTS.TRSACTION_DETAILS(watcher_id, filter_by, filter_value, start_cursor, end_cursor, page, limit), {
             method: 'GET',
             headers: buildHeaderJSON(false),
         });

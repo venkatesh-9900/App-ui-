@@ -30,6 +30,11 @@ const menuItems = [
     icon: Activity,
   },
   {
+    name: "Airdrop Activity",
+    url: "/web3/address-activity-airdrop",
+    icon: Activity,
+  },
+  {
     name: "Address Group",
     url: "/web3/address-group",
     icon: Group,
@@ -38,6 +43,11 @@ const menuItems = [
     name: "Address Analytics",
     url: "/web3/address",
     icon: Network
+  },
+  {
+    name: "Top Accounts",
+    url: "/web3/top-accounts",
+    icon: Activity
   }
 ]
 
@@ -53,6 +63,9 @@ export function Web3Monitoring() {
       return true
     }
     if (url === "/web3/address-activity" && pathname === "/web3/address-activity") {
+      return true
+    }
+    if (url === "/web3/address-activity-airdrop" && pathname === "/web3/address-activity-airdrop") {
       return true
     }
     if (url === "/web3/address-group" && pathname === "/web3/address-group") {
@@ -86,9 +99,9 @@ export function Web3Monitoring() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Alerts and Monitoring" className="cursor-pointer">
+          <SidebarMenuButton tooltip="Web3 Monitoring" className="cursor-pointer">
             <Activity onClick={subMenuExpansion} className="h-4 w-4" />
-            <span>Alerts and Monitoring</span>
+            <span>Web3 Monitoring</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
