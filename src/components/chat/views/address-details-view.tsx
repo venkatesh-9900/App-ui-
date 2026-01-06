@@ -594,12 +594,47 @@ function AnalyticsTransactionsChart({ data }: { data: AddressViewResponse["data"
   )
 }
 
+// Helper to parse USD value string to number
+function parseUsdToNumber(usdStr: string | null | undefined): number {
+  if (!usdStr) return 0
+  const match = usdStr.match(/[\d,.]+/)
+  return match ? parseFloat(match[0].replace(/,/g, '')) : 0
+}
+
+// Helper to format number as USD
+function formatUsd(value: number): string {
+  if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(2)}M`
+  } else if (value >= 1000) {
+    return `$${(value / 1000).toFixed(2)}K`
+  } else if (value >= 1) {
+    return `$${value.toFixed(2)}`
+  } else if (value > 0) {
+    return `$${value.toFixed(4)}`
+  }
+  return "$0.00"
+}
+
 export function AddressDetailsView({ response }: AddressDetailsViewProps) {
   const { chain, data } = response
   const { overview, token_holdings, transactions, token_transfers, analytics } = data
   
   const [mainTab, setMainTab] = useState<MainTab>("transactions")
   const [analyticsSubTab, setAnalyticsSubTab] = useState<AnalyticsSubTab>("overview")
+  
+  // Calculate total token holdings value from individual tokens
+  const totalTokenHoldingsValue = token_holdings?.reduce((sum, token) => {
+    // First try to use pre-calculated value_usd
+    if (token.value_usd) {
+      return sum + parseUsdToNumber(token.value_usd)
+    }
+    // Otherwise calculate from balance * price_usd
+    if (token.price_usd && token.balance) {
+      const balance = parseFloat(token.balance) || 0
+      return sum + (balance * token.price_usd)
+    }
+    return sum
+  }, 0) || 0
 
   return (
     <div className="w-full max-w-5xl space-y-3">
@@ -646,10 +681,12 @@ export function AddressDetailsView({ response }: AddressDetailsViewProps) {
         <Card className="p-3">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Token Holdings</div>
           <div className="text-sm font-bold mt-1">
-            {overview.token_holdings_value_usd || "$0.00"}
+            {totalTokenHoldingsValue > 0 
+              ? formatUsd(totalTokenHoldingsValue)
+              : (overview.token_holdings_value_usd || "$0.00")}
           </div>
           <div className="text-[10px] text-muted-foreground">
-            {overview.token_holdings_count || 0} Tokens
+            {token_holdings?.length || overview.token_holdings_count || 0} Tokens
           </div>
         </Card>
         
@@ -758,20 +795,29 @@ export function AddressDetailsView({ response }: AddressDetailsViewProps) {
             Token Holdings ({token_holdings.length})
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {token_holdings.slice(0, 10).map((token, idx) => (
-              <div key={idx} className="flex items-center justify-between bg-muted/30 rounded p-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{token.token_symbol}</Badge>
-                  <span className="text-xs truncate max-w-[120px]">{token.token_name}</span>
+            {token_holdings.slice(0, 10).map((token, idx) => {
+              // Calculate token value if not provided
+              const tokenValue = token.value_usd 
+                ? parseUsdToNumber(token.value_usd)
+                : (token.price_usd && token.balance)
+                  ? parseFloat(token.balance) * token.price_usd
+                  : 0
+              
+              return (
+                <div key={idx} className="flex items-center justify-between bg-muted/30 rounded p-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{token.token_symbol}</Badge>
+                    <span className="text-xs truncate max-w-[120px]">{token.token_name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-mono">{token.balance}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {tokenValue > 0 ? formatUsd(tokenValue) : "$0.00"}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-xs font-mono">{token.balance}</div>
-                  {token.value_usd && (
-                    <div className="text-[10px] text-muted-foreground">{token.value_usd}</div>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
           {token_holdings.length > 10 && (
             <div className="text-[10px] text-muted-foreground text-center mt-2">
@@ -787,6 +833,7 @@ export function AddressDetailsView({ response }: AddressDetailsViewProps) {
 // Neighbors Sankey Chart - Flow visualization
 function NeighborsSankey({ neighbors, centerAddress }: { neighbors: Neighbor[]; centerAddress: string }) {
   const [hoveredLink, setHoveredLink] = useState<number | null>(null)
+  const [hoveredAddress, setHoveredAddress] = useState<{ x: number; y: number; address: string; label?: string; side: 'left' | 'center' | 'right' } | null>(null)
   
   // Parse USD values to numbers
   const parseUsdValue = (value: string): number => {
@@ -896,7 +943,7 @@ function NeighborsSankey({ neighbors, centerAddress }: { neighbors: Neighbor[]; 
                     x={(leftX + centerX) / 2}
                     y={sourceY + (targetY - sourceY) / 2}
                     textAnchor="middle"
-                    className="fill-emerald-600 text-[10px] font-semibold pointer-events-none"
+                    className="fill-current text-[10px] font-semibold pointer-events-none"
                   >
                     {neighbor.inflow_usd}
                   </text>
@@ -930,7 +977,7 @@ function NeighborsSankey({ neighbors, centerAddress }: { neighbors: Neighbor[]; 
                     x={(centerX + rightX) / 2}
                     y={sourceY + (targetY - sourceY) / 2}
                     textAnchor="middle"
-                    className="fill-amber-600 text-[10px] font-semibold pointer-events-none"
+                    className="fill-current text-[10px] font-semibold pointer-events-none"
                   >
                     {neighbor.outflow_usd}
                   </text>
@@ -943,7 +990,13 @@ function NeighborsSankey({ neighbors, centerAddress }: { neighbors: Neighbor[]; 
           {inflowNeighbors.map((neighbor, idx) => {
             const y = 30 + idx * 50
             return (
-              <g key={`left-node-${idx}`}>
+              <g 
+                key={`left-node-${idx}`}
+                className="cursor-pointer"
+                onMouseEnter={() => setHoveredAddress({ x: leftX - 8, y: y - 10, address: neighbor.address, label: neighbor.label || undefined, side: 'left' })}
+                onMouseLeave={() => setHoveredAddress(null)}
+                onClick={() => copyToClipboard(neighbor.address, "Address")}
+              >
                 <rect
                   x={leftX}
                   y={y}
@@ -977,7 +1030,12 @@ function NeighborsSankey({ neighbors, centerAddress }: { neighbors: Neighbor[]; 
           })}
           
           {/* Center node (analyzed address) */}
-          <g>
+          <g
+            className="cursor-pointer"
+            onMouseEnter={() => setHoveredAddress({ x: centerX, y: centerNodeY - 35, address: centerAddress, side: 'center' })}
+            onMouseLeave={() => setHoveredAddress(null)}
+            onClick={() => copyToClipboard(centerAddress, "Address")}
+          >
             <rect
               x={centerX - nodeWidth/2}
               y={centerNodeY}
@@ -1008,7 +1066,13 @@ function NeighborsSankey({ neighbors, centerAddress }: { neighbors: Neighbor[]; 
           {outflowNeighbors.map((neighbor, idx) => {
             const y = 30 + idx * 50
             return (
-              <g key={`right-node-${idx}`}>
+              <g 
+                key={`right-node-${idx}`}
+                className="cursor-pointer"
+                onMouseEnter={() => setHoveredAddress({ x: rightX - 8, y: y - 10, address: neighbor.address, label: neighbor.label || undefined, side: 'right' })}
+                onMouseLeave={() => setHoveredAddress(null)}
+                onClick={() => copyToClipboard(neighbor.address, "Address")}
+              >
                 <rect
                   x={rightX - nodeWidth}
                   y={y}
@@ -1048,6 +1112,55 @@ function NeighborsSankey({ neighbors, centerAddress }: { neighbors: Neighbor[]; 
             <rect x={70} y={0} width={12} height={12} rx={2} className="fill-amber-500" />
             <text x={88} y={10} className="fill-muted-foreground text-[10px]">Outflow</text>
           </g>
+          
+          {/* Address Tooltip */}
+          {hoveredAddress && (() => {
+            const tooltipWidth = hoveredAddress.address.length * 5.5 + 16
+            const tooltipHeight = hoveredAddress.label ? 34 : 22
+            // For right side, position tooltip to the left; for center, center it; for left, position to the right
+            const xOffset = hoveredAddress.side === 'right' 
+              ? -tooltipWidth - 4 
+              : hoveredAddress.side === 'center' 
+                ? -tooltipWidth / 2 
+                : -4
+            return (
+              <g transform={`translate(${hoveredAddress.x}, ${hoveredAddress.y})`}>
+                <rect
+                  x={xOffset}
+                  y={-16}
+                  width={tooltipWidth}
+                  height={tooltipHeight}
+                  rx={4}
+                  className="fill-popover stroke-border"
+                  style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' }}
+                />
+                <text
+                  x={xOffset + 8}
+                  y={-2}
+                  className="fill-current text-[9px] font-mono"
+                >
+                  {hoveredAddress.address}
+                </text>
+                {hoveredAddress.label && (
+                  <text
+                    x={xOffset + 8}
+                    y={12}
+                    className="fill-muted-foreground text-[8px]"
+                  >
+                    {hoveredAddress.label}
+                  </text>
+                )}
+                <text
+                  x={xOffset + tooltipWidth / 2}
+                  y={tooltipHeight - 6}
+                  textAnchor="middle"
+                  className="fill-muted-foreground text-[7px]"
+                >
+                  Click to copy
+                </text>
+              </g>
+            )
+          })()}
         </svg>
       </div>
       
