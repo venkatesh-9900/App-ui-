@@ -24,9 +24,10 @@ interface ChatMessageProps {
   attachments?: FileDetails[]
   sessionId: string | null
   readOnly: boolean
+  isStreaming?: boolean  // True while message is being streamed
 }
 
-export function ChatMessage({ role, content, timestamp, attachments, sessionId, readOnly }: ChatMessageProps) {
+export function ChatMessage({ role, content, timestamp, attachments, sessionId, readOnly, isStreaming = false }: ChatMessageProps) {
   const { userInfo } = useAuth()
   const isUser = role === "user"
   const vizUrls = extractRenderVizUrls(content)
@@ -114,7 +115,8 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
   }
 
   // Check if content is a structured agent response
-  const isStructuredResponse = mightBeAgentResponse(cleanContent)
+  // Only check for structured response when NOT streaming (to avoid parsing incomplete JSON)
+  const isStructuredResponse = !isStreaming && mightBeAgentResponse(cleanContent)
 
   // Default content renderer (markdown/HTML)
   const renderDefaultContent = (contentToRender: string) => {

@@ -374,7 +374,7 @@ function TransactionHeatmap({ heatmapData }: { heatmapData: HeatmapDay[] }) {
     return "bg-emerald-600 dark:bg-emerald-500"
   }
   
-  // Generate weeks of data (52 weeks)
+  // Generate weeks of data (~13 weeks for 90 days)
   const weeks: { date: Date; count: number }[][] = []
   
   // Start from the beginning of the week containing startDate
@@ -408,10 +408,14 @@ function TransactionHeatmap({ heatmapData }: { heatmapData: HeatmapDay[] }) {
     }
   })
 
-  const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', '']
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+  }
+  
+  const formatShortDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
   
   const handleMouseEnter = (e: React.MouseEvent, date: Date, count: number) => {
@@ -428,15 +432,15 @@ function TransactionHeatmap({ heatmapData }: { heatmapData: HeatmapDay[] }) {
   }
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 w-full">
       <div className="flex items-center justify-between mb-4">
-        <div className="text-sm font-semibold">Transaction Heatmap</div>
+        <div className="text-sm font-semibold">Transaction Heatmap (Last 3 Months)</div>
         <div className="text-xs text-muted-foreground">
-          {formatDate(startDate)} - {formatDate(endDate)}
+          {formatShortDate(startDate)} - {formatShortDate(endDate)}
         </div>
       </div>
       
-      <div className="flex gap-1 heatmap-container relative">
+      <div className="flex gap-2 heatmap-container relative w-full">
         {/* Tooltip */}
         {tooltip && (
           <div 
@@ -452,23 +456,23 @@ function TransactionHeatmap({ heatmapData }: { heatmapData: HeatmapDay[] }) {
         )}
         
         {/* Day labels */}
-        <div className="flex flex-col gap-[3px] pr-2">
+        <div className="flex flex-col gap-1 pr-1 flex-shrink-0">
           {dayLabels.map((label, idx) => (
-            <div key={idx} className="h-[11px] text-[10px] text-muted-foreground leading-[11px]">
+            <div key={idx} className="h-5 text-[9px] text-muted-foreground leading-5 w-6">
               {label}
             </div>
           ))}
         </div>
         
-        {/* Heatmap grid */}
-        <div className="flex-1 overflow-x-auto">
-          <div className="flex gap-[3px]">
+        {/* Heatmap grid - full width */}
+        <div className="flex-1 min-w-0">
+          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${weeks.length}, 1fr)` }}>
             {weeks.map((week, weekIdx) => (
-              <div key={weekIdx} className="flex flex-col gap-[3px]">
+              <div key={weekIdx} className="flex flex-col gap-1">
                 {week.map((day, dayIdx) => (
                   <div
                     key={dayIdx}
-                    className={`w-[11px] h-[11px] rounded-sm ${getColorClass(day.count)} cursor-pointer transition-all hover:ring-2 hover:ring-foreground/30 hover:scale-125`}
+                    className={`aspect-square w-full min-h-4 max-h-6 rounded-sm ${getColorClass(day.count)} cursor-pointer transition-all hover:ring-2 hover:ring-foreground/30 hover:scale-110`}
                     onMouseEnter={(e) => handleMouseEnter(e, day.date, day.count)}
                     onMouseLeave={() => setTooltip(null)}
                   />
@@ -477,14 +481,10 @@ function TransactionHeatmap({ heatmapData }: { heatmapData: HeatmapDay[] }) {
             ))}
           </div>
           
-          {/* Month labels */}
-          <div className="flex mt-1 relative h-4">
+          {/* Month labels - evenly distributed */}
+          <div className="flex justify-between mt-2 px-1">
             {monthLabels.map((label, idx) => (
-              <div
-                key={idx}
-                className="absolute text-[10px] text-muted-foreground"
-                style={{ left: `${label.weekIndex * 14}px` }}
-              >
+              <div key={idx} className="text-[10px] text-muted-foreground">
                 {label.month}
               </div>
             ))}
@@ -495,11 +495,11 @@ function TransactionHeatmap({ heatmapData }: { heatmapData: HeatmapDay[] }) {
       {/* Legend */}
       <div className="flex items-center justify-end gap-1.5 mt-4">
         <span className="text-[10px] text-muted-foreground">Less</span>
-        <div className="w-[11px] h-[11px] rounded-sm bg-muted/30" />
-        <div className="w-[11px] h-[11px] rounded-sm bg-emerald-200 dark:bg-emerald-900/50" />
-        <div className="w-[11px] h-[11px] rounded-sm bg-emerald-400 dark:bg-emerald-700" />
-        <div className="w-[11px] h-[11px] rounded-sm bg-emerald-500 dark:bg-emerald-600" />
-        <div className="w-[11px] h-[11px] rounded-sm bg-emerald-600 dark:bg-emerald-500" />
+        <div className="w-3 h-3 rounded-sm bg-muted/30" />
+        <div className="w-3 h-3 rounded-sm bg-emerald-200 dark:bg-emerald-900/50" />
+        <div className="w-3 h-3 rounded-sm bg-emerald-400 dark:bg-emerald-700" />
+        <div className="w-3 h-3 rounded-sm bg-emerald-500 dark:bg-emerald-600" />
+        <div className="w-3 h-3 rounded-sm bg-emerald-600 dark:bg-emerald-500" />
         <span className="text-[10px] text-muted-foreground">More</span>
       </div>
     </Card>

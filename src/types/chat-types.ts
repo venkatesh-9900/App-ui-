@@ -162,6 +162,7 @@ export interface ChatMessage {
     content: string;
     timestamp: string;
     attached_files: FileDetails[] | null;
+    isStreaming?: boolean;  // True while message is being streamed
 }
 
 export interface ChatGroup {
