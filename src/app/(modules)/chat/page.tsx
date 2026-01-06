@@ -185,6 +185,7 @@ export default function ChatPage() {
                         content: msg.content,
                         timestamp: new Date(msg.timestamp),
                         attachments: msg.attached_files || [],
+                        isStreaming: msg.isStreaming,  // Pass streaming state
                     }))
                     setMessages(convertedMessages)
                 },
