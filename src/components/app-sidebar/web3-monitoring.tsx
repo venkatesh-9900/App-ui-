@@ -8,6 +8,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   Collapsible,
@@ -64,6 +65,13 @@ export function Web3Monitoring() {
   }
   const isAnySubmenuActive = menuItems.some(item => isActive(item.url));
   const [open, setOpen] = useState(isAnySubmenuActive);
+  const { open: sidebarOpen, toggleSidebar } = useSidebar();
+
+  function subMenuExpansion() {
+    if( !sidebarOpen ) {
+      toggleSidebar();
+    }
+  }
 
   // Auto-open when route changes
   useEffect(() => {
@@ -79,7 +87,7 @@ export function Web3Monitoring() {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip="Alerts and Monitoring" className="cursor-pointer">
-            <Activity className="h-4 w-4" />
+            <Activity onClick={subMenuExpansion} className="h-4 w-4" />
             <span>Alerts and Monitoring</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>

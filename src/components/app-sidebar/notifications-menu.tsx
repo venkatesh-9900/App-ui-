@@ -8,6 +8,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   Collapsible,
@@ -35,6 +36,13 @@ export function NotificationsMenu() {
   const isActive = (url: string) => {
     return pathname === url
   }
+  const { open, toggleSidebar } = useSidebar();
+
+  function subMenuExpansion() {
+    if( !open ) {
+      toggleSidebar();
+    }
+  }
 
   return (
     <Collapsible
@@ -44,7 +52,7 @@ export function NotificationsMenu() {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip="Notifications" className="cursor-pointer">
-            <Bell className="h-4 w-4" />
+            <Bell onClick={subMenuExpansion} className="h-4 w-4" />
             <span>Notifications</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>

@@ -56,6 +56,7 @@ export function ChatGroupsList() {
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
   const [openAddGroupDialog, setOpenAddGroupDialog] = useState(false)
   const { isMobile } = useSidebar()
+  const { open, toggleSidebar } = useSidebar();
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
@@ -256,6 +257,12 @@ export function ChatGroupsList() {
     router.push(`/chat-group?groupId=${groupId}`)
   }
 
+  function subMenuExpansion() {
+    if( !open ) {
+      toggleSidebar();
+    }
+  }
+
   const setCollapsed = (open: boolean, index: number) => {
     setChatGroups(currentChatGroups =>
       currentChatGroups.map((group, i) =>
@@ -278,7 +285,7 @@ export function ChatGroupsList() {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip="Chat Groups" className="cursor-pointer">
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare onClick={subMenuExpansion} className="h-4 w-4" />
             <span>Chat Groups</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
