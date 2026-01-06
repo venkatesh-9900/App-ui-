@@ -22,6 +22,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
+import { AddressWatcherInfo } from '@/components/web3/address-activity/address-activity-info'
 
 export default function AddressActivityPage() {
     const [activities, setActivities] = useState<AddressActivity[]>([])
@@ -227,22 +228,23 @@ export default function AddressActivityPage() {
                 <div className="@container/main flex flex-1 flex-col gap-2">
                     <div className="flex flex-col gap-4 px-2 py-2 md:gap-6 md:py-4 md:px-4">
                         <Card className="shadow-lg">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-primary/10 rounded-lg">
-                                            <Activity className="w-6 h-6 text-primary" />
-                                        </div>
-                                        <div>
-                                            <CardTitle className="text-sm sm:text-2xl">Address Activity Watchers</CardTitle>
-          </div>
-        </div>
-                                    <Button onClick={handleCreateClick} size="lg" className="cursor-pointer">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Create Watcher
-                                    </Button>
-        </div>
-                            </CardHeader>
+                          <CardHeader>
+                              <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                      <div className="p-2 bg-primary/10 rounded-lg">
+                                          <Activity className="w-6 h-6 text-primary" />
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                          <CardTitle className="text-sm sm:text-2xl">Address Activity Watchers</CardTitle>
+                                          <AddressWatcherInfo />
+                                      </div>
+                                  </div>
+                                  <Button onClick={handleCreateClick} size="lg" className="cursor-pointer">
+                                      <Plus className="w-4 h-4 mr-2" />
+                                      Create Watcher
+                                  </Button>
+                              </div>
+                          </CardHeader>
                             <CardContent>
                                 <AddressActivityTable
                                     activities={activities}
