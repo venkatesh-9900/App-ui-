@@ -7,24 +7,27 @@
 export * from "./transaction-details"
 export * from "./address-details"
 export * from "./block-details"
+export * from "./contract-details"
 export * from "./standard-conversation"
 
 // Import for union type
 import { TransactionViewResponse } from "./transaction-details"
 import { AddressViewResponse } from "./address-details"
 import { BlockViewResponse } from "./block-details"
+import { ContractViewResponse } from "./contract-details"
 import { StandardConversationResponse } from "./standard-conversation"
 
 // ============================================
 // Shared Types
 // ============================================
 
-export type ViewType = "transaction_details" | "address_details" | "block_details" | "standard_conversation"
+export type ViewType = "transaction_details" | "address_details" | "block_details" | "contract_details" | "standard_conversation"
 
 export type AgentResponse = 
   | TransactionViewResponse 
   | AddressViewResponse 
   | BlockViewResponse
+  | ContractViewResponse
   | StandardConversationResponse
 
 // ============================================
@@ -36,7 +39,7 @@ export function isAgentResponse(obj: unknown): obj is AgentResponse {
   const response = obj as Record<string, unknown>
   return (
     typeof response.view === "string" &&
-    ["transaction_details", "address_details", "block_details", "standard_conversation"].includes(response.view) &&
+    ["transaction_details", "address_details", "block_details", "contract_details", "standard_conversation"].includes(response.view) &&
     typeof response.data === "object"
   )
 }

@@ -4,13 +4,15 @@ import {
   parseAgentResponse, 
   isTransactionView, 
   isAddressView,
-  isBlockView, 
+  isBlockView,
+  isContractView,
   isStandardConversation,
   mightBeAgentResponse
 } from "@/types/basic-agent-views"
 import { TransactionDetailsView } from "./transaction-details-view"
 import { AddressDetailsView } from "./address-details-view"
 import { BlockDetailsView } from "./block-details-view"
+import { ContractDetailsView } from "./contract-details-view"
 
 interface ViewRendererProps {
   content: string
@@ -52,6 +54,11 @@ export function ViewRenderer({ content, fallbackRenderer }: ViewRendererProps) {
   // Handle block details view
   if (isBlockView(agentResponse)) {
     return <BlockDetailsView response={agentResponse} />
+  }
+  
+  // Handle contract details view
+  if (isContractView(agentResponse)) {
+    return <ContractDetailsView response={agentResponse} />
   }
   
   // Unknown view type - use fallback
