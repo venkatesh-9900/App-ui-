@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { TransactionDetails } from '@/types/aaw-details';
 
 // Define the grouping type options (export this if not done elsewhere)
 type GroupingType = 'asset' | 'category';
@@ -16,9 +17,11 @@ const GROUPING_OPTIONS: { label: string; value: GroupingType }[] = [
 interface TxnFilterBarProps {
     groupingType: GroupingType;
     setGroupingType: (type: GroupingType) => void;
+    onAskAI: () => void;
+    selectedTxns: Map<string, TransactionDetails>
 }
 
-export default function TxnFilterBar({ groupingType, setGroupingType }: TxnFilterBarProps) {
+export default function TxnFilterBar({ groupingType, setGroupingType, onAskAI, selectedTxns }: TxnFilterBarProps) {
     return (
 
         <Card className="w-80 shadow-lg p-4 flex flex-col h-full bg-card text-card-foreground">
@@ -51,7 +54,9 @@ export default function TxnFilterBar({ groupingType, setGroupingType }: TxnFilte
                 {/* --- Bottom Section: AI Analysis Prompt --- */}
                 <div className="pt-4 border-t border-border mt-auto">
                     <Button
-                        className="w-full flex justify-start items-center space-x-2"
+                        className="w-full flex justify-start items-center space-x-2 cursor-pointer"
+                         onClick={onAskAI}
+                         disabled={selectedTxns.size === 0}
                     // Add an onClick handler for the AI feature here
                     >
                         <span className="text-lg">🔍</span>

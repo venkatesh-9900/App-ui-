@@ -107,7 +107,8 @@ export async function handleStreamMessage({
             author: 'model',
             content: '',
             timestamp: new Date().toISOString(),
-            attached_files: null
+            attached_files: null,
+            isStreaming: true  // Mark as streaming while receiving chunks
         };
         const updatedMessages = [...newMessages, botMessage];
         setMessages(updatedMessages);
@@ -196,6 +197,7 @@ export async function handleStreamMessage({
         }
         const trimmed = result.trim();
         updatedMessages[index].content = trimmed;
+        updatedMessages[index].isStreaming = false;  // Mark streaming as complete
         // updatedMessages[index].text = vizUrls.length > 0
         //     ? {
         //         summary: trimmed,

@@ -14,6 +14,7 @@ export interface Message {
   content: string
   timestamp: Date
   attachments: FileDetails[]
+  isStreaming?: boolean  // True while message is being streamed
 }
 
 interface ChatMessagesProps {
@@ -72,6 +73,7 @@ export function ChatMessages({ messages, isLoading = false, isLoadingSession = f
               attachments={message.attachments}
               sessionId={sessionId}
               readOnly={readOnly}
+              isStreaming={message.isStreaming}
             />
           ))}
 

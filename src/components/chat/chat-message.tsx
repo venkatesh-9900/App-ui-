@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { FileDetails } from "@/types/files"
 import { FileAttachments } from "./file-attachments"
 import MarkdownHTMLRenderer from "./html-markdown-renderer"
+import { ViewRenderer, mightBeAgentResponse } from "./views"
 
 interface ChatMessageProps {
   role: "user" | "assistant"
@@ -23,9 +24,10 @@ interface ChatMessageProps {
   attachments?: FileDetails[]
   sessionId: string | null
   readOnly: boolean
+  isStreaming?: boolean  // True while message is being streamed
 }
 
-export function ChatMessage({ role, content, timestamp, attachments, sessionId, readOnly }: ChatMessageProps) {
+export function ChatMessage({ role, content, timestamp, attachments, sessionId, readOnly, isStreaming = false }: ChatMessageProps) {
   const { userInfo } = useAuth()
   const isUser = role === "user"
   const vizUrls = extractRenderVizUrls(content)
@@ -112,7 +114,28 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
     )
   }
 
-  // Assistant message - full width with markdown or HTML support
+  // Check if content is a structured agent response
+  // Only check for structured response when NOT streaming (to avoid parsing incomplete JSON)
+  const isStructuredResponse = !isStreaming && mightBeAgentResponse(cleanContent)
+
+  // Default content renderer (markdown/HTML)
+  const renderDefaultContent = (contentToRender: string) => {
+    const isHtml = /<[^>]*>/.test(contentToRender)
+    
+    if (isHtml) {
+      return <MarkdownHTMLRenderer content={contentToRender} />
+    }
+    
+    return (
+      <div className="text-sm leading-7 break-words prose prose-sm dark:prose-invert max-w-none prose-p:m-0 prose-headings:my-1">
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+          {contentToRender.replace(/\\n/g, "\n")}
+        </ReactMarkdown>
+      </div>
+    )
+  }
+
+  // Assistant message - full width with view-based or markdown/HTML rendering
   return (
     <div className="mb-4 py-4">
       <div className="flex gap-3 px-3">
@@ -124,18 +147,15 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
         <div className="flex flex-col items-start gap-3 flex-1 w-full" ref={containerRef}>
           {cleanContent && (
             <>
-              {/* {isHtmlContent ? ( */}
-              {isHtmlContent ? (
-                <MarkdownHTMLRenderer content={cleanContent} /> 
+              {isStructuredResponse ? (
+                // Use ViewRenderer for structured agent responses
+                <ViewRenderer 
+                  content={cleanContent} 
+                  fallbackRenderer={renderDefaultContent}
+                />
               ) : (
-                // Render markdown content
-                <div className="text-sm leading-7 break-words prose prose-sm dark:prose-invert max-w-none prose-p:m-0 prose-headings:my-1">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm, remarkBreaks]}
-                  >
-                    {cleanContent.replace(/\\n/g, "\n")}
-                  </ReactMarkdown>
-                </div>
+                // Use default rendering for non-structured content
+                renderDefaultContent(cleanContent)
               )}
             </>
           )}
@@ -155,7 +175,7 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
             </div>
           )}
 
-          {cleanContent && (
+          {cleanContent && !isStructuredResponse && (
             <Button
               onClick={handleCopy}
               size="sm"
