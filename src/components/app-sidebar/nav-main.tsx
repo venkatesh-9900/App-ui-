@@ -12,6 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { ChatGroupsList } from "@/components/chat/chat-groups"
 import { ChatSessionsList } from "@/components/chat/chat-sessions"
@@ -29,6 +30,7 @@ export function NavMain({
 }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { open, toggleSidebar } = useSidebar();
   const isNewChat = searchParams.get('new') === 'true'
   const hasPrompt = searchParams.get('prompt') !== null
   const sessionId = searchParams.get('sessionId')
@@ -49,6 +51,12 @@ export function NavMain({
     return false
   }
 
+  function itemClickHandler() {
+    if( !open ) {
+      toggleSidebar();
+    }
+  }
+
   return (
     <SidebarGroup>
       {/* <SidebarGroupLabel>Your Space</SidebarGroupLabel> */}
@@ -57,7 +65,7 @@ export function NavMain({
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild isActive={isActive(item.url)}>
               <Link href={item.url}>
-                <item.icon />
+                <item.icon onClick={itemClickHandler} />
                 <span>{item.name}</span>
               </Link>
             </SidebarMenuButton>

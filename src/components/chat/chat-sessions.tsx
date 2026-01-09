@@ -28,6 +28,7 @@ export function ChatSessionsList() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const currentSessionId = searchParams.get('sessionId')
+  const { open, toggleSidebar } = useSidebar();
 
   const [chatSessions, setChatSessions] = useState<ChatSessions[]>([])
   const [isLoadingChats, setIsLoadingChats] = useState(false)
@@ -96,6 +97,12 @@ export function ChatSessionsList() {
     router.push(`/chat?sessionId=${sessionId}`)
   }
 
+  function subMenuExpansion() {
+    if( !open ) {
+      toggleSidebar();
+    }
+  }
+
   return (
     <Collapsible
       asChild
@@ -110,7 +117,7 @@ export function ChatSessionsList() {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip="All Chats" className="cursor-pointer">
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare onClick={subMenuExpansion} className="h-4 w-4" />
             <span>All Chats</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
