@@ -183,7 +183,7 @@ export function NotificationLog({
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
-                                            className="p-1 rounded hover:bg-muted"
+                                            className="p-1 rounded hover:bg-muted cursor-pointer"
                                             onClick={() => onToggleRead(n.id, !n.read_status)}
                                         >
                                             {n.read_status ? (
@@ -202,7 +202,7 @@ export function NotificationLog({
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
-                                            className="p-1 rounded hover:bg-destructive/10"
+                                            className="p-1 rounded hover:bg-destructive/10 cursor-pointer"
                                             onClick={() => onDelete(n.id)}
                                         >
                                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -237,6 +237,9 @@ export function NotificationLog({
                         <Button
                             variant="outline"
                             size="sm"
+                            className={cn(
+                                page > 1 && "cursor-pointer"
+                            )}
                             onClick={onPrev}
                             disabled={page === 1}
                         >
@@ -249,6 +252,9 @@ export function NotificationLog({
 
                         <Button
                             variant="outline"
+                            className={cn(
+                                    page < totalPages && "cursor-pointer"
+                                )}
                             size="sm"
                             onClick={onNext}
                             disabled={page >= totalPages}
