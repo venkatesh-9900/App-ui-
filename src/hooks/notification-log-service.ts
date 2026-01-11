@@ -12,6 +12,7 @@ interface BaseServiceParams {
 interface listNotificationLog extends BaseServiceParams {
     page: number;
     limit: number;
+    filter_by?: boolean;
 }
 
 interface updateNotificationLog extends BaseServiceParams {
@@ -26,7 +27,7 @@ interface DeleteNotificationLogParams extends BaseServiceParams {
 
 
 const NOTIFICATION_LOG_ENDPOINTS = {
-    GET: (page: number, limit: number) => `/api/notifications/log?page=${page}&limit=${limit}`,
+    GET: (page: number, limit: number, filter_by?: boolean) => `/api/notifications/log?page=${page}&limit=${limit}${filter_by !== undefined ? `&filter_by=${filter_by}` : ''    }`,
     UPDATE: (id: number) => `/api/notifications/log?id=${id}`,
     DELETE: (id: number) => `/api/notifications/log?id=${id}`,
 };
@@ -35,6 +36,7 @@ const NOTIFICATION_LOG_ENDPOINTS = {
 export const listNotificationLog = async ({
     page,
     limit,
+    filter_by,
     successTask,
     failureTask,
     errorTask,
@@ -46,7 +48,7 @@ export const listNotificationLog = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(NOTIFICATION_LOG_ENDPOINTS.GET(page, limit), {
+        const response = await fetch(NOTIFICATION_LOG_ENDPOINTS.GET(page, limit, filter_by), {
             method: 'GET',
             headers: buildHeaderJSON(false),
         });
