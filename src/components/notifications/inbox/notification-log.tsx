@@ -143,7 +143,7 @@ export function NotificationLog({
                                             {n.emails.slice(0, 3).map((email, idx) => (
                                                 <div
                                                     key={idx}
-                                                    className="text-sm text-muted-foreground truncate"
+                                                    className="text-xs truncate"
                                                     title={email}
                                                 >
                                                     {email}
@@ -151,7 +151,7 @@ export function NotificationLog({
                                             ))}
 
                                             {n.emails.length > 3 && (
-                                                <div className="text-sm text-muted-foreground font-medium">
+                                                <div className="text-xs  font-medium">
                                                     +{n.emails.length - 3} more
                                                 </div>
                                             )}
