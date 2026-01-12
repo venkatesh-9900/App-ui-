@@ -38,6 +38,7 @@ export function ChatSessionsList() {
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
+    loadChatSessions()
     const unsubscribe = onChatHistoryUpdate((payload) => {
       const tempSession = {
         session_id: payload?.sessionId || `temp-${Date.now()}`,
