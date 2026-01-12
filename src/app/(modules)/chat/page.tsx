@@ -203,7 +203,14 @@ export default function ChatPage() {
                 currentChatId: sessionId,
                 setCurrentChatId: (newId: string) => {
                     console.log("Created new chat with ID:", newId)
+                    const firstMessage = !sessionId;
                     setSessionId(newId)
+                    if (firstMessage) {
+                        triggerChatHistoryUpdate({
+                            sessionId: newId,
+                            initialText: content,
+                        });
+                    }
                 },
                 selectedAgent: selectedModel,
                 attachedFiles: attachedFiles,
@@ -231,11 +238,11 @@ export default function ChatPage() {
                 //         errorTask: () => {
                 //             console.error("Error updating chat title")
                 //         },
-                //     });
+            //     });
                 // } else {
                 //     console.log("Failed to update chat title: no session ID")
-                // }
-                triggerChatHistoryUpdate();
+            // }
+                // triggerChatHistoryUpdate();
             }
             console.log("Message streaming completed")
         } catch (err) {
