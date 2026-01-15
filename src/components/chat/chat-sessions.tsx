@@ -23,6 +23,7 @@ import { ChatSessions } from "@/types/chat-types"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { IconDots, IconFolder, IconShare3, IconTrash } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { onChatHistoryUpdate } from "@/utils/eventBus"
 
 export function ChatSessionsList() {
   const searchParams = useSearchParams()
@@ -38,6 +39,21 @@ export function ChatSessionsList() {
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
     loadChatSessions()
+    const unsubscribe = onChatHistoryUpdate((payload) => {
+      const tempSession = {
+        session_id: payload?.sessionId || `temp-${Date.now()}`,
+        initial_text: payload?.initialText || "New chat",
+        is_sharable: false
+      }
+
+      setChatSessions(prev => {
+        return [tempSession, ...prev]
+      })
+    })
+
+    return () => {
+      unsubscribe();
+    };
   }, [])
 
   const extractUserMessage = (text: string) => {
