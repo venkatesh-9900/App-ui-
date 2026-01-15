@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { ChevronRight, MessageSquare } from "lucide-react"
+import { ChevronRight, MessageSquare, Clock } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -138,6 +138,9 @@ export function ChatSessionsList() {
                     isActive={currentSessionId === session.session_id}
                   >
                     <Link href={`/chat?sessionId=${session.session_id}`}>
+                      {session.session_id.includes("scheduled-chat") && (
+                        <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      )}
                       <span className="truncate">{extractUserMessage(session.initial_text)}</span>
                     </Link>
                   </SidebarMenuSubButton>
