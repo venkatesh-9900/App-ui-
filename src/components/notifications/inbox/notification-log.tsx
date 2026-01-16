@@ -61,7 +61,7 @@ export function NotificationLog({
             case "SCEDULED_EMAIL":
                 return "Scheduled Email"
             default:
-                return "General"
+                return "General" // Keep default for unknown types
         }
     }
 
