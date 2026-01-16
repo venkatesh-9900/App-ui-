@@ -761,3 +761,255 @@ export async function deleteGroup({groupId, successTask, failureTask, errorTask,
         errorTask();
     }
 }
+
+// Schedule management functions
+
+export interface ScheduleItem {
+    id: number;
+    type: string;
+    status: string;
+    cron?: string;
+    on_datetime?: string;
+    payload: unknown;
+    created_at: string;
+    updated_at: string;
+    notification_workflow_id: number;
+}
+
+export interface ScheduleListResponse {
+    schedules: ScheduleItem[];
+    count: number;
+}
+
+interface FetchSchedulesParams {
+    retry?: boolean;
+    successTask: (schedules: ScheduleItem[]) => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
+interface ScheduleActionParams {
+    scheduleId: string;
+    retry?: boolean;
+    successTask: () => void;
+    failureTask: (message?: string) => void;
+    errorTask: () => void;
+}
+
+/**
+ * Extract schedule ID from a scheduled chat session ID
+ * Session format: "scheduled-chat-{scheduleId}"
+ */
+export function extractScheduleId(sessionId: string): string | null {
+    const match = sessionId.match(/^scheduled-chat-(\d+)$/);
+    return match ? match[1] : null;
+}
+
+/**
+ * Check if a session is a scheduled chat
+ */
+export function isScheduledChat(sessionId: string): boolean {
+    return sessionId.includes("scheduled-chat");
+}
+
+/**
+ * Schedule status constants
+ */
+export const SCHEDULE_STATUS = {
+    PENDING: 'PENDING',
+    RUNNING: 'RUNNING',
+    PAUSED: 'PAUSED',
+    PENDING_RESUME: 'PENDING_RESUME',
+    COMPLETED: 'COMPLETED',
+    DELETED: 'DELETED',
+    PERMANENTLY_STOPPED: 'PERMANENTLY_STOPPED'
+} as const;
+
+/**
+ * Check if a schedule can be paused (status is RUNNING or PENDING)
+ */
+export function canPauseSchedule(status: string): boolean {
+    return status === SCHEDULE_STATUS.RUNNING || status === SCHEDULE_STATUS.PENDING;
+}
+
+/**
+ * Check if a schedule can be resumed (status is PAUSED or PENDING_RESUME)
+ */
+export function canResumeSchedule(status: string): boolean {
+    return status === SCHEDULE_STATUS.PAUSED || status === SCHEDULE_STATUS.PENDING_RESUME;
+}
+
+/**
+ * Fetch all schedules for the current user
+ */
+export async function fetchUserSchedules({successTask, failureTask, errorTask, retry = false}: FetchSchedulesParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask, errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.LIST, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await fetchUserSchedules({
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            const response_data: ScheduleListResponse = await response.json();
+            successTask(response_data.schedules || []);
+        } else {
+            console.error("Failed to fetch schedules with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to fetch schedules:", error);
+        errorTask();
+    }
+}
+
+/**
+ * Pause a scheduled chat
+ */
+export async function pauseSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask: () => failureTask(), errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.TOGGLE(scheduleId, 'pause'), {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await pauseSchedule({
+                    scheduleId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            successTask();
+        } else {
+            const response_data = await response.json();
+            console.error("Failed to pause schedule with status code:", response.status);
+            failureTask(response_data?.error || "Failed to pause schedule");
+        }
+    } catch (error) {
+        console.error(`Failed to pause schedule ${scheduleId}`, error);
+        errorTask();
+    }
+}
+
+/**
+ * Resume a paused scheduled chat
+ */
+export async function resumeSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask: () => failureTask(), errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.TOGGLE(scheduleId, 'resume'), {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await resumeSchedule({
+                    scheduleId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            successTask();
+        } else {
+            const response_data = await response.json();
+            console.error("Failed to resume schedule with status code:", response.status);
+            failureTask(response_data?.error || "Failed to resume schedule");
+        }
+    } catch (error) {
+        console.error(`Failed to resume schedule ${scheduleId}`, error);
+        errorTask();
+    }
+}
+
+/**
+ * Delete a scheduled chat permanently
+ */
+export async function deleteSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask: () => failureTask(), errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.DELETE(scheduleId), {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await deleteSchedule({
+                    scheduleId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            successTask();
+        } else {
+            const response_data = await response.json();
+            console.error("Failed to delete schedule with status code:", response.status);
+            failureTask(response_data?.error || "Failed to delete schedule");
+        }
+    } catch (error) {
+        console.error(`Failed to delete schedule ${scheduleId}`, error);
+        errorTask();
+    }
+}
