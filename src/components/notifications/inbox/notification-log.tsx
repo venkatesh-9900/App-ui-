@@ -56,6 +56,10 @@ export function NotificationLog({
                 return "Address Activity"
             case "WEB3_ADDRESS_ACTIVITY_AIRDROP":
                 return "Address Activity Airdrop"
+            case "SCHEDULED_CHAT":
+                return "Scheduled Chat"
+            case "SCEDULED_EMAIL":
+                return "Scheduled Email"
             default:
                 return "General"
         }
