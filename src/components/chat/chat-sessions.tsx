@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { ChevronRight, MessageSquare } from "lucide-react"
+import { ChevronRight, MessageSquare, Clock } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -18,11 +18,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { fetchUserChatSessions, removeChat } from "@/hooks/chat-service"
+import { fetchUserChatSessions, removeChat, pauseSchedule, resumeSchedule, deleteSchedule, extractScheduleId, isScheduledChat, fetchUserSchedules, canPauseSchedule, canResumeSchedule } from "@/hooks/chat-service"
 import { ChatSessions } from "@/types/chat-types"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { IconDots, IconFolder, IconShare3, IconTrash } from "@tabler/icons-react"
+import { IconDots, IconFolder, IconShare3, IconTrash, IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { onChatHistoryUpdate } from "@/utils/eventBus"
 
 export function ChatSessionsList() {
   const searchParams = useSearchParams()
@@ -33,11 +34,30 @@ export function ChatSessionsList() {
   const [chatSessions, setChatSessions] = useState<ChatSessions[]>([])
   const [isLoadingChats, setIsLoadingChats] = useState(false)
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
+  const [scheduleActionSessionId, setScheduleActionSessionId] = useState<string | null>(null)
+  // Map of scheduleId -> status for showing pause/resume conditionally
+  const [scheduleStatusMap, setScheduleStatusMap] = useState<Map<string, string>>(new Map())
   const { isMobile } = useSidebar()
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
     loadChatSessions()
+    loadSchedules()
+    const unsubscribe = onChatHistoryUpdate((payload) => {
+      const tempSession = {
+        session_id: payload?.sessionId || `temp-${Date.now()}`,
+        initial_text: payload?.initialText || "New chat",
+        is_sharable: false
+      }
+
+      setChatSessions(prev => {
+        return [tempSession, ...prev]
+      })
+    })
+
+    return () => {
+      unsubscribe();
+    };
   }, [])
 
   const extractUserMessage = (text: string) => {
@@ -66,8 +86,51 @@ export function ChatSessionsList() {
     })
   }
 
+  const loadSchedules = () => {
+    fetchUserSchedules({
+      successTask: (schedules) => {
+        console.log("Schedules loaded", schedules)
+        // Create a map of scheduleId -> status
+        const statusMap = new Map<string, string>()
+        schedules.forEach((schedule) => {
+          statusMap.set(schedule.id.toString(), schedule.status)
+        })
+        setScheduleStatusMap(statusMap)
+      },
+      failureTask: () => {
+        console.error("Failed to load schedules")
+      },
+      errorTask: () => {
+        console.error("Error loading schedules")
+      },
+    })
+  }
+
   const handleDeleteChat = (sessionId: string) => {
     setDeletingSessionId(sessionId)
+    
+    // If it's a scheduled chat, also stop the scheduler
+    if (isScheduledChat(sessionId)) {
+      const scheduleId = extractScheduleId(sessionId)
+      if (scheduleId) {
+        // Stop the scheduler first, then delete the chat
+        deleteSchedule({
+          scheduleId,
+          successTask: () => {
+            console.log("Schedule stopped successfully")
+          },
+          failureTask: (message) => {
+            console.warn("Failed to stop schedule:", message)
+            // Continue with chat deletion even if schedule stop fails
+          },
+          errorTask: () => {
+            console.warn("Error stopping schedule")
+            // Continue with chat deletion even if schedule stop fails
+          }
+        })
+      }
+    }
+    
     removeChat({
       sessionId,
       successTask: () => {
@@ -95,6 +158,66 @@ export function ChatSessionsList() {
 
   const handleOpenChat = (sessionId: string) => {
     router.push(`/chat?sessionId=${sessionId}`)
+  }
+
+  const handlePauseSchedule = (sessionId: string) => {
+    const scheduleId = extractScheduleId(sessionId)
+    if (!scheduleId) {
+      toast.error("Invalid scheduled chat")
+      return
+    }
+    setScheduleActionSessionId(sessionId)
+    pauseSchedule({
+      scheduleId,
+      successTask: () => {
+        toast.success("Schedule paused successfully")
+        setScheduleActionSessionId(null)
+        // Update local status map to PAUSED
+        setScheduleStatusMap(prev => {
+          const newMap = new Map(prev)
+          newMap.set(scheduleId, 'PAUSED')
+          return newMap
+        })
+      },
+      failureTask: (message) => {
+        toast.error(message || "Failed to pause schedule")
+        setScheduleActionSessionId(null)
+      },
+      errorTask: () => {
+        toast.error("Error pausing schedule")
+        setScheduleActionSessionId(null)
+      }
+    })
+  }
+
+  const handleResumeSchedule = (sessionId: string) => {
+    const scheduleId = extractScheduleId(sessionId)
+    if (!scheduleId) {
+      toast.error("Invalid scheduled chat")
+      return
+    }
+    setScheduleActionSessionId(sessionId)
+    resumeSchedule({
+      scheduleId,
+      successTask: () => {
+        toast.success("Schedule resumed successfully")
+        setScheduleActionSessionId(null)
+        // Update local status map to PENDING (will become RUNNING when picked up)
+        setScheduleStatusMap(prev => {
+          const newMap = new Map(prev)
+          newMap.set(scheduleId, 'PENDING')
+          return newMap
+        })
+      },
+      failureTask: (message) => {
+        toast.error(message || "Failed to resume schedule")
+        setScheduleActionSessionId(null)
+      },
+      errorTask: () => {
+        toast.error("Error resuming schedule")
+        setScheduleActionSessionId(null)
+      }
+    })
   }
 
   function subMenuExpansion() {
@@ -138,6 +261,9 @@ export function ChatSessionsList() {
                     isActive={currentSessionId === session.session_id}
                   >
                     <Link href={`/chat?sessionId=${session.session_id}`}>
+                      {session.session_id.includes("scheduled-chat") && (
+                        <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      )}
                       <span className="truncate">{extractUserMessage(session.initial_text)}</span>
                     </Link>
                   </SidebarMenuSubButton>
@@ -152,7 +278,7 @@ export function ChatSessionsList() {
                       </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                      className="w-24 rounded-lg"
+                      className="w-36 rounded-lg"
                       side={isMobile ? "bottom" : "right"}
                       align={isMobile ? "end" : "start"}
                     >
@@ -162,6 +288,38 @@ export function ChatSessionsList() {
                         <IconFolder />
                         <span>Open</span>
                       </DropdownMenuItem>
+                      {isScheduledChat(session.session_id) && (() => {
+                        const scheduleId = extractScheduleId(session.session_id)
+                        const status = scheduleId ? scheduleStatusMap.get(scheduleId) : undefined
+                        const showPause = status && canPauseSchedule(status)
+                        const showResume = status && canResumeSchedule(status)
+                        
+                        return (
+                          <>
+                            {(showPause || showResume) && <DropdownMenuSeparator />}
+                            {showPause && (
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                disabled={scheduleActionSessionId === session.session_id}
+                                onClick={() => handlePauseSchedule(session.session_id)}
+                              >
+                                <IconPlayerPause />
+                                <span>Pause</span>
+                              </DropdownMenuItem>
+                            )}
+                            {showResume && (
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                disabled={scheduleActionSessionId === session.session_id}
+                                onClick={() => handleResumeSchedule(session.session_id)}
+                              >
+                                <IconPlayerPlay />
+                                <span>Resume</span>
+                              </DropdownMenuItem>
+                            )}
+                          </>
+                        )
+                      })()}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="cursor-pointer"
                         variant="destructive"

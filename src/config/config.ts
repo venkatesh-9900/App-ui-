@@ -115,7 +115,12 @@ export const ENDPOINTS = {
     DELETE_GROUP: `/api/interaction/delete-group`,
     FETCH_ALL_GROUPS: `/api/interaction/fetch-all-groups`,
     FETCH_GROUP_SESSIONS: `/api/interaction/fetch-group-sessions`,
-    GET_CHAT_TITLE: `/api/interaction/get-chat-title`
+    GET_CHAT_TITLE: `/api/interaction/get-chat-title`,
+    SCHEDULE: {
+        LIST: `/api/schedules`,
+        DELETE: (id: string) => `/api/schedules?id=${id}`,
+        TOGGLE: (id: string, action: 'pause' | 'resume') => `/api/schedules/toggle?id=${id}&action=${action}`
+    }
 };
 export const SELECTED_ENDPOINT =
     ENDPOINTS.INTERACTIONS.STREAM_STANDARD;
