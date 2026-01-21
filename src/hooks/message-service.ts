@@ -18,6 +18,7 @@ export async function handleStreamMessage({
                                               setIsSplitMode,
                                               selectedAgent,
                                               attachedFiles,
+                                              groupId,
                                               showError,
                                               router
                                           }: any) {
@@ -38,7 +39,13 @@ export async function handleStreamMessage({
     if (attachedFiles.length > 0) {
         attached_file_ids = attachedFiles.map((file: FileDetails) => file.file_id);
     }
-    const payload = { query: text, agent: selectedAgent, attached_file_ids: attached_file_ids};
+    const payload = { 
+        query: text, agent: 
+        selectedAgent, 
+        attached_file_ids: attached_file_ids, 
+        ...(groupId ? { group_id: groupId } : {})
+    };
+    console.log('payload:', payload);
     const newChatId: string = window.crypto.randomUUID() + '-' + new Date().toISOString();
     setIsThinking(true);
     try {
@@ -100,7 +107,8 @@ export async function handleStreamMessage({
             author: 'model',
             content: '',
             timestamp: new Date().toISOString(),
-            attached_files: null
+            attached_files: null,
+            isStreaming: true  // Mark as streaming while receiving chunks
         };
         const updatedMessages = [...newMessages, botMessage];
         setMessages(updatedMessages);
@@ -189,6 +197,7 @@ export async function handleStreamMessage({
         }
         const trimmed = result.trim();
         updatedMessages[index].content = trimmed;
+        updatedMessages[index].isStreaming = false;  // Mark streaming as complete
         // updatedMessages[index].text = vizUrls.length > 0
         //     ? {
         //         summary: trimmed,
@@ -203,6 +212,18 @@ export async function handleStreamMessage({
         setMessages([...updatedMessages]);
         if (updateURL) {
             router.replace(`/chat?sessionId=${newChatId}`);
+            getChatTitle({
+                sessionId: newChatId,
+                successTask: (title: string) => {
+                    console.log('Chat title set:', title);
+                },
+                failureTask: () => {
+                    console.error('Failed to set chat title');
+                },
+                errorTask: () => {
+                    console.error('Error encountered while setting chat title');
+                }
+            });
             //redirect(`/chat?sessionId=${newChatId}`);
         }
     } catch (error: any) {
@@ -269,5 +290,66 @@ async function updateSessionIdForAttachedFilesInNewChat(attachedFiles: FileDetai
         }
     } catch (error: any) {
         console.error('Error in updateSessionIdForAttachedFilesInNewChat:', error);
+    }
+}
+
+interface GetChatTitleParams {
+    sessionId: string;
+    retry?: boolean | null;
+    successTask: (title: string) => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
+export async function getChatTitle({sessionId, successTask, failureTask, errorTask, retry = false}: GetChatTitleParams) {
+    if (retry) {
+        console.log("Refreshing access token");
+        await refreshAccessToken({
+            failureTask: () => {
+                console.log("Failed to refresh token while sending message")
+            }, 
+            errorTask: () => {
+                console.log("Error encountered while refreshing token on send message")
+            }
+        });
+    }
+    try {
+        const response = await fetch(ENDPOINTS.GET_CHAT_TITLE, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                'x-app-name': app_name,
+                'x-session-id': sessionId
+            }
+        })
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                await getChatTitle({
+                    sessionId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+            return;
+        }
+        if (response.status == 200) {
+            const response_data = await response.json();
+            const { chat_title: title, errors: response_errors } = response_data;
+            if (response_errors && response_errors.length > 0) {
+                throw new Error(`Failed to get chat title due to these error(s): ${response_errors.join(', ')}`); 
+            }
+            successTask(title);
+        } else {
+            console.error("Failed to get chat title with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error(`Failed to get chat title for chatId=${sessionId}`, error);
+        errorTask();
     }
 }

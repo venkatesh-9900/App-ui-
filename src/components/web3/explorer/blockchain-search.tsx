@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select"
 import { searchBlockchainTransaction } from "@/hooks/web3/explorer-service"
 import { toast } from "sonner"
+import { getChainlist } from "@/hooks/web3/metadata.service"
+import { Chain, ChainListResponse } from "@/types/matadata"
 
 interface BlockchainSearchProps {
   onSearchResults?: (data: SearchResultsData, params: SearchParams) => void,
@@ -47,6 +49,44 @@ export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearc
   const [chainId, setChainId] = useState("1")
   const [txnHash, setTxnHash] = useState("")
   const [address, setAddress] = useState("")
+  const [chainList, setChainList] = useState<Array<Chain>>([])
+  const [chainsLoading, setChainsLoading] = useState(false)
+
+  useEffect(() => {
+    // Fetch chain list on component mount
+    const fetchChainList = async () => {
+      setChainsLoading(true);
+      try {
+        await getChainlist({
+          successTask: (response: ChainListResponse) => {
+            // response is of type ChainListResponse
+            const apiResponse = response;
+            setChainsLoading(false);
+            if (apiResponse?.errors && apiResponse.errors.length > 0) {
+              setChainList([]);
+              toast.error(apiResponse.errors[0]);
+            }
+
+            const fetchedChains: Chain[] = apiResponse?.data?.chains || [];
+            setChainList(fetchedChains);
+          },
+          failureTask: () => {
+            setChainsLoading(false);
+            toast.error("Failed to fetch chain list");
+          },
+          errorTask: () => {
+            setChainsLoading(false);
+            toast.error("An error occurred while fetching chain list");
+          },
+        });
+      } catch (err) {
+        console.error("fetchChainList: unexpected error", err);
+        toast.error("Unexpected error while fetching chain list");
+      }
+    };
+
+    fetchChainList();
+  }, []); // run once on mount
 
   const handleSearch = async () => {
     if (!txnHash && !address) {
@@ -98,16 +138,35 @@ export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearc
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-3">
       <div className="flex cursor-pointer flex-col gap-2 md:w-48">
-        <Select value={chainId} onValueChange={setChainId}>
+        <Select value={chainId} onValueChange={(v) => setChainId(v)}>
           <SelectTrigger id="chain-select" className="w-full cursor-pointer">
             <SelectValue placeholder="Select a chain" />
           </SelectTrigger>
+
           <SelectContent>
-            <SelectItem className="cursor-pointer" value="1">Ethereum</SelectItem>
-            <SelectItem className="cursor-pointer" value="137">Polygon</SelectItem>
-            <SelectItem className="cursor-pointer" value="42161">Arbitrum</SelectItem>
-            <SelectItem className="cursor-pointer" value="10">Optimism</SelectItem>
-            <SelectItem className="cursor-pointer" value="8453">Base</SelectItem>
+            {chainsLoading ? (
+              // show a disabled loading item while fetching
+              <SelectItem value="1" className="cursor-not-allowed" disabled>
+                Loading chains...
+              </SelectItem>
+            ) : chainList.length === 0 ? (
+              // fallback when no chains returned
+              <SelectItem value="1" className="cursor-not-allowed" disabled>
+                No chains available
+              </SelectItem>
+            ) : (
+              // map fetched chains to SelectItem components
+              chainList.map((c,index) => {
+                // prefer chainId; if missing, fallback to chain numeric id
+                const value = c.chain_id ? c.chain_id : String(c.id);
+                const label = c.name ? c.name : c.alechemy_network_id;
+                return (
+                  <SelectItem key={value} className="cursor-pointer" value={value}>
+                    {label}
+                  </SelectItem>
+                );
+              })
+            )}
           </SelectContent>
         </Select>
       </div>

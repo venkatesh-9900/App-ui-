@@ -1,13 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Activity, TrendingUp } from "lucide-react"
+import { ChevronRight, Activity, Group, Network } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   Collapsible,
@@ -15,6 +16,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 
 const menuItems = [
   {
@@ -27,6 +29,26 @@ const menuItems = [
     url: "/web3/address-activity",
     icon: Activity,
   },
+  {
+    name: "Airdrop Activity",
+    url: "/web3/address-activity-airdrop",
+    icon: Activity,
+  },
+  {
+    name: "Address Group",
+    url: "/web3/address-group",
+    icon: Group,
+  },
+  {
+    name: "Address Analytics",
+    url: "/web3/address",
+    icon: Network
+  },
+  {
+    name: "Top Accounts",
+    url: "/web3/top-accounts",
+    icon: Activity
+  }
 ]
 
 export function Web3Monitoring() {
@@ -43,18 +65,42 @@ export function Web3Monitoring() {
     if (url === "/web3/address-activity" && pathname === "/web3/address-activity") {
       return true
     }
+    if (url === "/web3/address-activity-airdrop" && pathname === "/web3/address-activity-airdrop") {
+      return true
+    }
+    if (url === "/web3/address-group" && pathname === "/web3/address-group") {
+      return true
+    }
+    if (url === "/web3/address" && pathname === "/web3/address") {
+      return true
+    }
     return false
   }
+  const isAnySubmenuActive = menuItems.some(item => isActive(item.url));
+  const [open, setOpen] = useState(isAnySubmenuActive);
+  const { open: sidebarOpen, toggleSidebar } = useSidebar();
 
+  function subMenuExpansion() {
+    if( !sidebarOpen ) {
+      toggleSidebar();
+    }
+  }
+
+  // Auto-open when route changes
+  useEffect(() => {
+    if (isAnySubmenuActive) setOpen(true);
+  }, [isAnySubmenuActive]);
+  
   return (
     <Collapsible
-      defaultOpen={false}
+      open={open}
+      onOpenChange={setOpen}
       className="group/collapsible"
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip="Web3 Monitoring" className="cursor-pointer">
-            <Activity className="h-4 w-4" />
+            <Activity onClick={subMenuExpansion} className="h-4 w-4" />
             <span>Web3 Monitoring</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>

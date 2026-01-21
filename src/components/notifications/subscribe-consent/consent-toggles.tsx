@@ -45,7 +45,7 @@ export function ConsentToggles({
         />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      {/* <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <Phone className="w-5 h-5 text-muted-foreground shrink-0" />
           <div className="space-y-0.5 min-w-0">
@@ -64,7 +64,7 @@ export function ConsentToggles({
           disabled={smsDisabled}
           className="shrink-0"
         />
-      </div>
+      </div> */}
     </div>
   )
 }

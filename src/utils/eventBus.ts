@@ -1,4 +1,9 @@
-type EventCallback = () => void;
+export type ChatHistoryPayload = {
+  sessionId?: string
+  initialText?: string
+}
+
+type EventCallback = (payload?: ChatHistoryPayload) => void;
 const listeners = new Set<EventCallback>();
 
 export const onChatHistoryUpdate = (cb: EventCallback) => {
@@ -6,6 +11,6 @@ export const onChatHistoryUpdate = (cb: EventCallback) => {
     return () => listeners.delete(cb); // for cleanup
 };
 
-export const triggerChatHistoryUpdate = () => {
-    listeners.forEach(cb => cb());
+export const triggerChatHistoryUpdate = (payload?: ChatHistoryPayload) => {
+    listeners.forEach(cb => cb(payload));
 };

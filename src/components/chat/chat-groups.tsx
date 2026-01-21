@@ -1,0 +1,450 @@
+"use client"
+
+import Link from "next/link"
+import { useState, useEffect, use } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { ChevronRight, MessageSquare, MessageSquarePlus, Folder, FolderOpen, FolderPlus } from "lucide-react"
+import {
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarMenuAction,
+  useSidebar,
+} from "@/components/ui/sidebar"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+// import { fetchUserChatSessions, removeChat } from "@/hooks/chat-service"
+import { ChatGroup } from "@/types/chat-types"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { IconDots, IconFolder, IconTrash } from "@tabler/icons-react"
+import { createChatGroup, deleteGroup, fetchChatGroupSessions, fetchUserChatGroups, removeChat } from "@/hooks/chat-service"
+import { toast } from "sonner"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { onChatHistoryUpdate } from "@/utils/eventBus"
+
+interface ChatGroupWithCollapseState extends ChatGroup {
+  is_collapsed: boolean
+}
+  
+
+export function ChatGroupsList() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const currentSessionId = searchParams.get('sessionId')
+
+  const [addGroupName, setAddGroupName] = useState("")
+  const [chatGroups, setChatGroups] = useState<ChatGroupWithCollapseState[]>([])
+  const [isLoadingChats, setIsLoadingChats] = useState(false)
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null)
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
+  const [openAddGroupDialog, setOpenAddGroupDialog] = useState(false)
+  const { isMobile } = useSidebar()
+  const { open, toggleSidebar } = useSidebar();
+
+  // Load chat sessions on mount since collapsible is open by default
+  useEffect(() => {
+    loadChatGroups()
+  }, [])
+
+  useEffect(() => {
+    const unsubscribe = onChatHistoryUpdate(() => {
+      void loadChatGroups();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [])
+
+  useEffect(() => {
+    if (openAddGroupDialog) {
+      setAddGroupName("")
+    }
+  }, [openAddGroupDialog])
+
+  const extractUserMessage = (text: string) => {
+    const match = text.match(/User Request:\s*(.+?)(?:\n|$)/)
+    return match ? match[1].trim() : text
+  }
+
+  const loadChatGroups = () => {
+    setIsLoadingChats(true)
+    fetchUserChatGroups({
+        successTask: (groups) => {
+          console.log("Chat groups loaded", groups)
+          setChatGroups(groups.map((group) => {
+            return {
+              ...group,
+              is_collapsed: true
+            }
+          }));
+          setIsLoadingChats(false)
+        },
+      failureTask: () => {
+        console.error("Failed to load chat sessions")
+        toast.error("Failed to load chat sessions")
+        setIsLoadingChats(false)
+      },
+      errorTask: () => {
+        console.error("Error loading chat sessions")
+        toast.error("Error loading chat sessions")
+        setIsLoadingChats(false)
+      },
+    });
+    // setChatGroups([
+    //   {
+    //     group_id: "371e2a04-ab03-4050-8adf-9dda95fb6cfc",
+    //     group_name: "Group 1",
+    //     is_collapsed: true,
+    //     sessions: [
+    //       {
+    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6dfc",
+    //         initial_text: "Find out the solution of",
+    //         is_sharable: false
+    //       },
+    //       {
+    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6efc",
+    //         initial_text: "What is meant by the term",
+    //         is_sharable: false
+    //       }
+    //     ]
+    //   },
+    //   {
+    //     group_id: "371e2a04-ab03-4050-8adf-9dda95fb6cfd",
+    //     group_name: "Group 2",
+    //     is_collapsed: true,
+    //     sessions: [
+    //       {
+    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6efc",
+    //         initial_text: "Give me 3 examples of the",
+    //         is_sharable: false
+    //       },
+    //       {
+    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6ffc",
+    //         initial_text: "Where can I find the best",
+    //         is_sharable: false
+    //       },
+    //       {
+    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6ffc",
+    //         initial_text: "I want the recipe for my fav",
+    //         is_sharable: false
+    //       }
+    //     ]
+    //   }
+    // ])
+    setIsLoadingChats(false)
+  }
+
+  const handleDeleteGroup = (groupId: string) => {
+    setDeletingGroupId(groupId)
+    deleteGroup({
+      groupId,
+      successTask: () => {
+        console.log("Chat group deleted successfully")
+        toast.success("Chat group deleted successfully")
+        setDeletingGroupId(null)
+        // Remove the deleted chat from the UI
+        setChatGroups((prevGroups) => 
+          prevGroups.filter((group) => group.group_id !== groupId)
+        )
+      },
+      failureTask: () => {
+        console.error("Failed to delete chat")
+        toast.error("Failed to delete chat")
+        setDeletingGroupId(null)
+      },
+      errorTask: () => {
+        console.error("Error deleting chat")
+        toast.error("Error deleting chat")
+        setDeletingGroupId(null)
+      },
+    })
+  }
+
+  const handleDeleteChat = (sessionId: string, group_id: string) => {
+    setDeletingSessionId(sessionId)
+    removeChat({
+      sessionId,
+      successTask: () => {
+        console.log("Chat deleted successfully")
+        toast.success("Chat deleted successfully")
+        setDeletingSessionId(null)
+        // Remove the deleted chat from the UI
+        fetchChatGroupSessions({
+          groupId: group_id, 
+          successTask: (sessions) => {
+            setChatGroups(prevGroups => {
+              return prevGroups.map(group => {
+                if (group.group_id === group_id) {
+                  return {
+                    ...group,
+                    sessions: sessions
+                  }
+                }
+                return group;
+              });
+            });
+          },
+          failureTask: () => {
+            console.error("Failed to load chat sessions for group_id: " + group_id)
+          },
+          errorTask: () => {
+            console.error("Error loading chat sessions for group_id: " + group_id)
+          },
+        });
+      },
+      failureTask: () => {
+        console.error("Failed to delete chat")
+        toast.error("Failed to delete chat")
+        setDeletingSessionId(null)
+      },
+      errorTask: () => {
+        console.error("Error deleting chat")
+        toast.error("Error deleting chat")
+        setDeletingSessionId(null)
+      },
+      group_id: group_id
+    })
+  }
+
+  const handleAddGroup = () => {
+    createChatGroup({
+      groupName: addGroupName,
+      successTask: () => {
+        console.log("Chat group created successfully")
+        toast.success("Chat group created successfully")
+        setAddGroupName("")
+        setOpenAddGroupDialog(false)
+        loadChatGroups()
+      },
+      failureTask: () => {
+        console.error("Failed to create chat group")
+        toast.error("Failed to create chat group")
+      },
+      errorTask: () => {
+        console.error("Error creating chat group")
+        toast.error("Error creating chat group")
+      },
+    });
+  }
+
+  const handleOpenNewChat = (groupId: string) => {
+    router.push(`/chat?new=true&groupId=${groupId}`)
+  }
+
+  const handleOpenChat = (sessionId: string) => {
+    router.push(`/chat?sessionId=${sessionId}`)
+  }
+
+  const handleOpenGroup = (groupId: string) => {
+    router.push(`/chat-group?groupId=${groupId}`)
+  }
+
+  function subMenuExpansion() {
+    if( !open ) {
+      toggleSidebar();
+    }
+  }
+
+  const setCollapsed = (open: boolean, index: number) => {
+    setChatGroups(currentChatGroups =>
+      currentChatGroups.map((group, i) =>
+        i === index ? { ...group, is_collapsed: !open } : group
+      )
+    )
+  }
+
+  return (
+    <Collapsible
+      asChild
+      defaultOpen={false}
+      className="group/collapsible"
+      onOpenChange={(open) => {
+        if (open && chatGroups.length === 0) {
+          loadChatGroups()
+        }
+      }}
+    >
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton tooltip="Chat Groups" className="cursor-pointer">
+            <MessageSquare onClick={subMenuExpansion} className="h-4 w-4" />
+            <span>Chat Groups</span>
+            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            <SidebarMenuSubItem key={"new-group"}>
+              <Dialog open={openAddGroupDialog} onOpenChange={setOpenAddGroupDialog}>
+                <DialogTrigger asChild>
+                  <SidebarMenuSubButton>
+                    <FolderPlus className="h-4 w-4" />
+                    <span>New Group</span>
+                  </SidebarMenuSubButton>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add a New Group</DialogTitle>
+                    {/* <DialogDescription>
+                      Anyone who has this link will be able to view this.
+                    </DialogDescription> */}
+                  </DialogHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="grid flex-1 gap-2">
+                      <Label htmlFor="link" className="sr-only">
+                        Group Name
+                      </Label>
+                      <Input
+                        id="link"
+                        value={addGroupName}
+                        onChange={(e) => setAddGroupName(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter className="sm:justify-start">
+                    <DialogClose asChild>
+                      <Button type="button" variant="secondary">
+                        Close
+                      </Button>
+                    </DialogClose>
+                    <Button type="submit" onClick={() => { handleAddGroup() }}>Add</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+            </SidebarMenuSubItem>
+            {isLoadingChats ? (
+              <SidebarMenuSubItem>
+                <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
+                  <span>Loading...</span>
+                </div>
+              </SidebarMenuSubItem>
+            ) : chatGroups.map((group, idx) => (
+                <Collapsible open={!group.is_collapsed} onOpenChange={(open) => {setCollapsed(open, idx)}} key={group.group_id}>
+                  {/* <SidebarMenuSubItem> */}
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuSubItem>
+                        <div className="flex flex-row gap-2">
+                          <SidebarMenuButton tooltip="Chat Groups" className="cursor-pointer">
+                            {group.is_collapsed ? <Folder className="h-4 w-4" /> : <FolderOpen className="h-4 w-4" />}
+                            <span>{group.group_name}</span>
+                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </SidebarMenuButton>
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <SidebarMenuAction
+                                  showOnHover
+                                  className="cursor-pointer data-[state=open]:bg-accent rounded-sm"
+                                >
+                                  <IconDots />
+                                  <span className="sr-only">More</span>
+                                </SidebarMenuAction>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                className="w-24 rounded-lg"
+                                side={isMobile ? "bottom" : "right"}
+                                align={isMobile ? "end" : "start"}
+                              >
+                                {/* <DropdownMenuItem className="cursor-pointer"
+                                  onClick={() => handleOpenGroup(group.group_id)}
+                                >
+                                  <IconFolder />
+                                  <span>Open</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator /> */}
+                                <DropdownMenuItem className="cursor-pointer"
+                                  variant="destructive"
+                                  disabled={deletingGroupId === group.group_id}
+                                  onClick={() => handleDeleteGroup(group.group_id)}
+                                >
+                                  <IconTrash />
+                                  <span>
+                                    {deletingGroupId === group.group_id ? "Deleting..." : "Delete"}
+                                  </span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                      </SidebarMenuSubItem>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-4">
+                      <SidebarMenuSubItem key={`${group.group_id}-new-session`}>
+                          <SidebarMenuSubButton onClick={() => { handleOpenNewChat(group.group_id) }}>
+                            <MessageSquarePlus className="h-4 w-4" />
+                            <span>New Chat</span>
+                          </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      {group.sessions.map((session) => (
+                        <SidebarMenuSubItem key={session.session_id}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={currentSessionId === session.session_id}
+                          >
+                            <Link href={`/chat?sessionId=${session.session_id}`} className="w-37">
+                              <span className="truncate">{extractUserMessage(session.initial_text)}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <SidebarMenuAction
+                                showOnHover
+                                className="cursor-pointer data-[state=open]:bg-accent rounded-sm"
+                              >
+                                <IconDots />
+                                <span className="sr-only">More</span>
+                              </SidebarMenuAction>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              className="w-24 rounded-lg"
+                              side={isMobile ? "bottom" : "right"}
+                              align={isMobile ? "end" : "start"}
+                            >
+                              <DropdownMenuItem className="cursor-pointer"
+                                onClick={() => handleOpenChat(session.session_id)}
+                              >
+                                <IconFolder />
+                                <span>Open</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="cursor-pointer"
+                                variant="destructive"
+                                disabled={deletingSessionId === session.session_id}
+                                onClick={() => handleDeleteChat(session.session_id, group.group_id)}
+                              >
+                                <IconTrash />
+                                <span>
+                                  {deletingSessionId === session.session_id ? "Deleting..." : "Delete"}
+                                </span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </CollapsibleContent>
+                  {/* </SidebarMenuSubItem> */}
+                </Collapsible>
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  )
+}

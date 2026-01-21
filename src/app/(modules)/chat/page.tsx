@@ -6,12 +6,13 @@ import { ChatMessages, Message } from "@/components/chat/chat-messages"
 import { ChatInput } from "@/components/chat/chat-input"
 import { ProtectedRoute } from "@/components/protected-route"
 import { loadChatMessages } from "@/hooks/chat-service"
-import { handleStreamMessage } from "@/hooks/message-service"
+import { getChatTitle, handleStreamMessage } from "@/hooks/message-service"
 import { ChatMessage } from "@/types/chat-types"
 import { ChatContext } from "@/contexts"
 import { FileDetails } from "@/types"
 import { fetchSessionDetails } from "@/hooks/chat-service"
 import { useRouter } from "next/navigation"
+import { triggerChatHistoryUpdate } from "@/utils/eventBus"
 
 export default function ChatPage() {
     const searchParams = useSearchParams()
@@ -21,47 +22,77 @@ export default function ChatPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [initialMessage, setInitialMessage] = useState<string>("")
     const [sessionId, setSessionId] = useState<string | null>(null)
+    const [groupId, setGroupId] = useState<string | null>(null)
     const [isLoadingSession, setIsLoadingSession] = useState(false)
     const [hasLoadedInitialSession, setHasLoadedInitialSession] = useState(false)
     const [readOnly, setReadOnly] = useState(false)
 
+    const session = searchParams.get("sessionId");
+    const prompt = searchParams.get("prompt");
+    const isNew = searchParams.get("new");
+    const userid = searchParams.get("userid");
+    const groupIdParam = searchParams.get("groupId");
+    const [lastLoadedSession, setLastLoadedSession] = useState<string | null>(null);
+
+
     useEffect(() => {
-        // Get params here
-        const session = searchParams.get('sessionId')
-        const prompt = searchParams.get('prompt')
-        const isNew = searchParams.get('new')
-        const userid = searchParams.get('userid')
-        
-        console.log('ChatPage useEffect - sessionId:', session, 'prompt:', prompt, 'isNew:', isNew, 'userid:', userid)
-        
+        console.log("ChatPage useEffect - session:", session, "prompt:", prompt, "isNew:", isNew, "userid:", userid, "groupId:", groupIdParam);
+
+        // CASE 1: Existing session selected
         if (session) {
-            // Loading an existing session
-            console.log('Loading existing session:', session, 'with userid:', userid)
-            setSessionId(session)
-            setMessages([])
-            setInitialMessage("")
-            loadExistingSession(session, userid)
-            setHasLoadedInitialSession(true)
-        } else if (isNew === 'true') {
-            console.log('Fresh new chat')
-            setSessionId(null)
-            setMessages([])
-            setInitialMessage("")
-            setHasLoadedInitialSession(true)
-        } else if (prompt) {
-            console.log('Loading with prompt:', prompt)
-            setInitialMessage(prompt)
-            setSessionId(null)
-            setMessages([])
-            setHasLoadedInitialSession(true)
-        } else if (!hasLoadedInitialSession) {
-            console.log('Initial load - fresh new chat')
-            setSessionId(null)
-            setMessages([])
-            setInitialMessage("")
-            setHasLoadedInitialSession(true)
+            if (lastLoadedSession !== session && lastLoadedSession !== "new") {
+                setLastLoadedSession(session);
+                console.log("Setting sessionId to:", session);
+                setSessionId(session);
+                setMessages([]);
+                setInitialMessage("");
+                loadExistingSession(session, userid);
+            }
+            if (lastLoadedSession === "new")
+                setLastLoadedSession(session);
+            setGroupId(null);
+            return;
         }
-    }, [searchParams.get('sessionId'), searchParams.get('prompt'), searchParams.get('new'), searchParams.get('userid'), hasLoadedInitialSession])
+
+        if (isNew === "true" && prompt) {
+            console.log("Starting new chat with prompt:", prompt);
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage(prompt);
+            setLastLoadedSession("new");
+            return;
+        }
+
+        // CASE 2: New chat
+        if (isNew === "true") {
+            console.log("Starting new chat");
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage("");
+            setLastLoadedSession("new");
+            setGroupId(groupIdParam);
+            return;
+        }
+
+        // CASE 3: Chat started with prompt
+        if (prompt) {
+            console.log("Starting prompt chat:", prompt);
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage(prompt);
+            setLastLoadedSession("prompt");
+            return;
+        }
+
+        // CASE 4: Empty state (first load)
+        if (lastLoadedSession !== "empty") {
+            console.log("Empty chat");
+            setSessionId(null);
+            setMessages([]);
+            setInitialMessage("");
+            setLastLoadedSession("empty");
+        }
+    }, [session, prompt, isNew, userid, groupIdParam]);
 
     const loadExistingSession = async (id: string, userid?: string | null) => {
         setIsLoadingSession(true)
@@ -152,7 +183,6 @@ export default function ChatPage() {
 
         try {
             console.log("Sending message to API with sessionId:", sessionId)
-            
             await handleStreamMessage({
                 text: content,
                 newMessages,
@@ -165,6 +195,7 @@ export default function ChatPage() {
                         content: msg.content,
                         timestamp: new Date(msg.timestamp),
                         attachments: msg.attached_files || [],
+                        isStreaming: msg.isStreaming,  // Pass streaming state
                     }))
                     setMessages(convertedMessages)
                 },
@@ -172,10 +203,18 @@ export default function ChatPage() {
                 currentChatId: sessionId,
                 setCurrentChatId: (newId: string) => {
                     console.log("Created new chat with ID:", newId)
+                    const firstMessage = !sessionId;
                     setSessionId(newId)
+                    if (firstMessage) {
+                        triggerChatHistoryUpdate({
+                            sessionId: newId,
+                            initialText: content,
+                        });
+                    }
                 },
                 selectedAgent: selectedModel,
                 attachedFiles: attachedFiles,
+                groupId: groupId,
                 showError: (error: string) => {
                     console.error("Error from API:", error)
                 },
@@ -185,7 +224,26 @@ export default function ChatPage() {
                 setIsSplitMode: () => {},
                 router: router,
             })
-            
+            if (isNew === "true") {
+                // if (sessionId) {
+                //     await getChatTitle({
+                //         sessionId: sessionId,
+                //         successTask: (title: string) => {
+                //             console.log("Chat title updated:", title)
+                //             //setInitialMessage(title)
+                //         },
+                //         failureTask: () => {
+                //             console.error("Failed to update chat title")
+                //         },
+                //         errorTask: () => {
+                //             console.error("Error updating chat title")
+                //         },
+            //     });
+                // } else {
+                //     console.log("Failed to update chat title: no session ID")
+            // }
+                // triggerChatHistoryUpdate();
+            }
             console.log("Message streaming completed")
         } catch (err) {
             console.error("Error sending message:", err)

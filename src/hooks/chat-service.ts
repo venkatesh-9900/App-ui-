@@ -1,14 +1,38 @@
 import axiosAuthServices, {buildHeader} from "@/utils/axios/auth-axios";
 import {ENDPOINTS} from "@/config/config";
 import {FileDetails } from "@/types";
-import { ChatSessions, ChatMessage } from "@/types/chat-types";
+import { ChatSessions, ChatMessage, ChatGroup } from "@/types/chat-types";
 import {extractAttachedFilesPublicLinks, extractRenderVizUrls} from "@/utils/utils";
 import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 import { app_name } from "@/constants/constants";
+import { success } from "zod";
 
 interface ApiParams {
     retry?: boolean;
     successTask: (chat_sessions: ChatSessions[]) => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
+interface GroupApiParams {
+    retry?: boolean;
+    successTask: (groups: ChatGroup[]) => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
+interface ChatGroupSessionsParams {
+    groupId: string;
+    retry?: boolean;
+    successTask: (sessions: ChatSessions[]) => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
+interface CreateChatGroupParams{
+    groupName: string;
+    retry?: boolean;
+    successTask: (groupId: string) => void;
     failureTask: () => void;
     errorTask: () => void;
 }
@@ -40,6 +64,15 @@ interface fetchSharedUserInteractionParams extends fetchUserInteractionParams {
 interface removeChatParams {
     retry?: boolean;
     sessionId: string;
+    successTask: () => void;
+    failureTask: () => void;
+    errorTask: () => void;
+    group_id?: string | null;
+}
+
+interface deleteGroupParams {
+    retry?: boolean;
+    groupId: string;
     successTask: () => void;
     failureTask: () => void;
     errorTask: () => void;
@@ -429,7 +462,7 @@ export async function checkIsSessionNew(sessionId: string): Promise<boolean> {
 /**
  * Delete a chat session by ID
  */
-export async function removeChat({sessionId, successTask, failureTask, errorTask, retry = false} : removeChatParams) {
+export async function removeChat({sessionId, successTask, failureTask, errorTask, retry = false, group_id = null} : removeChatParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -444,6 +477,7 @@ export async function removeChat({sessionId, successTask, failureTask, errorTask
                 'x-app-name': app_name,
                 'x-session-id': sessionId
             },
+            ...(group_id ? { body: JSON.stringify({ group_id: group_id }) } : {})
         });
         console.log(response);
         if (response.status == 401) {
@@ -455,7 +489,8 @@ export async function removeChat({sessionId, successTask, failureTask, errorTask
                     successTask,
                     failureTask,
                     errorTask,
-                    retry: true
+                    retry: true,
+                    group_id
                 });
             }
         } else if (response.status == 200) {
@@ -532,3 +567,449 @@ export const hasAnyVisualizationInText = (message: ChatMessage): boolean => {
     const urls = extractRenderVizUrls(content);
     return urls.length > 0;
 };
+
+export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, retry = false}: GroupApiParams) => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask, errorTask});
+        }
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.FETCH_ALL_GROUPS, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                await fetchUserChatGroups({
+                    retry: true, 
+                    successTask,
+                    failureTask,
+                    errorTask
+                });
+            }
+        } else if (response.status == 200) {
+            const response_data = await response.json();
+            if (response_data.errors && response_data.errors.length > 0) {
+                throw new Error(`Failed to load chat groups due to these error(s): ${response_data.errors.join(', ')}`); 
+            }
+            const chat_groups = response_data.data.groups;
+            console.log(chat_groups);
+            successTask(chat_groups);
+        } else {
+            console.error("Failed to fetch chat sessions with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to fetch chat sessions:", error);
+        errorTask();
+    }
+}
+
+export const fetchChatGroupSessions = async ({ groupId, successTask, failureTask, errorTask, retry = false }: ChatGroupSessionsParams) => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask, errorTask});
+        }
+        const token = localStorage.getItem('access_token');
+        const payload = { group_id: groupId };
+        const response = await fetch(ENDPOINTS.FETCH_GROUP_SESSIONS, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                await fetchChatGroupSessions({
+                    retry: true, 
+                    groupId,
+                    successTask,
+                    failureTask,
+                    errorTask
+                });
+            }
+        } else if (response.status == 200) {
+            const response_data = await response.json();
+            if (response_data.errors && response_data.errors.length > 0) {
+                throw new Error(`Failed to load chat groups due to these error(s): ${response_data.errors.join(', ')}`); 
+            }
+            const group_sessions = response_data.data;
+            console.log(group_sessions);
+            successTask(group_sessions);
+        } else {
+            console.error("Failed to fetch chat sessions with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to fetch chat sessions:", error);
+        errorTask();
+    }
+}
+
+export const createChatGroup = async ({ groupName, successTask, failureTask, errorTask, retry = false }: CreateChatGroupParams) => {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask, errorTask});
+        }
+        const token = localStorage.getItem('access_token');
+        const payload = { group_name: groupName };
+        const response = await fetch(ENDPOINTS.CREATE_GROUP, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                await createChatGroup({
+                    retry: true, 
+                    groupName,
+                    successTask,
+                    failureTask,
+                    errorTask
+                });
+            }
+        } else if (response.status == 200) {
+            const response_data = await response.json();
+            if (response_data.errors && response_data.errors.length > 0) {
+                throw new Error(`Failed to load chat groups due to these error(s): ${response_data.errors.join(', ')}`); 
+            }
+            if (response_data.status == "success" && response_data.data) {
+                successTask(response_data.data);
+            } else {
+                failureTask();
+            }
+        } else {
+            console.error("Failed to fetch chat sessions with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to fetch chat sessions:", error);
+        errorTask();
+    }
+}
+
+export async function deleteGroup({groupId, successTask, failureTask, errorTask, retry = false} : deleteGroupParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask, errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const payload = { group_id: groupId };
+        const response = await fetch(ENDPOINTS.DELETE_GROUP, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await deleteGroup({
+                    groupId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            const response_data = await response.json();
+            const { status: status, errors: response_errors } = response_data;
+            if (status == "success") {
+                successTask();
+            } else {
+                if (response_errors && response_errors.length > 0) {
+                    throw new Error(`Failed to delete selected group due to these error(s): ${response_errors.join(', ')}`); 
+                }
+                failureTask();
+            }
+        } else {
+            console.error("Failed to fetch group sessions with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error(`Failed to load chat group sessions for groupId=${groupId}`, error);
+        errorTask();
+    }
+}
+
+// Schedule management functions
+
+export interface ScheduleItem {
+    id: number;
+    type: string;
+    status: string;
+    cron?: string;
+    on_datetime?: string;
+    payload: unknown;
+    created_at: string;
+    updated_at: string;
+    notification_workflow_id: number;
+}
+
+export interface ScheduleListResponse {
+    schedules: ScheduleItem[];
+    count: number;
+}
+
+interface FetchSchedulesParams {
+    retry?: boolean;
+    successTask: (schedules: ScheduleItem[]) => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
+interface ScheduleActionParams {
+    scheduleId: string;
+    retry?: boolean;
+    successTask: () => void;
+    failureTask: (message?: string) => void;
+    errorTask: () => void;
+}
+
+/**
+ * Extract schedule ID from a scheduled chat session ID
+ * Session format: "scheduled-chat-{scheduleId}"
+ */
+export function extractScheduleId(sessionId: string): string | null {
+    const match = sessionId.match(/^scheduled-chat-(\d+)$/);
+    return match ? match[1] : null;
+}
+
+/**
+ * Check if a session is a scheduled chat
+ */
+export function isScheduledChat(sessionId: string): boolean {
+    return sessionId.includes("scheduled-chat");
+}
+
+/**
+ * Schedule status constants
+ */
+export const SCHEDULE_STATUS = {
+    PENDING: 'PENDING',
+    RUNNING: 'RUNNING',
+    PAUSED: 'PAUSED',
+    PENDING_RESUME: 'PENDING_RESUME',
+    COMPLETED: 'COMPLETED',
+    DELETED: 'DELETED',
+    PERMANENTLY_STOPPED: 'PERMANENTLY_STOPPED'
+} as const;
+
+/**
+ * Check if a schedule can be paused (status is RUNNING or PENDING)
+ */
+export function canPauseSchedule(status: string): boolean {
+    return status === SCHEDULE_STATUS.RUNNING || status === SCHEDULE_STATUS.PENDING;
+}
+
+/**
+ * Check if a schedule can be resumed (status is PAUSED or PENDING_RESUME)
+ */
+export function canResumeSchedule(status: string): boolean {
+    return status === SCHEDULE_STATUS.PAUSED || status === SCHEDULE_STATUS.PENDING_RESUME;
+}
+
+/**
+ * Fetch all schedules for the current user
+ */
+export async function fetchUserSchedules({successTask, failureTask, errorTask, retry = false}: FetchSchedulesParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask, errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.LIST, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await fetchUserSchedules({
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            const response_data: ScheduleListResponse = await response.json();
+            successTask(response_data.schedules || []);
+        } else {
+            console.error("Failed to fetch schedules with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error("Failed to fetch schedules:", error);
+        errorTask();
+    }
+}
+
+/**
+ * Pause a scheduled chat
+ */
+export async function pauseSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask: () => failureTask(), errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.TOGGLE(scheduleId, 'pause'), {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await pauseSchedule({
+                    scheduleId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            successTask();
+        } else {
+            const response_data = await response.json();
+            console.error("Failed to pause schedule with status code:", response.status);
+            failureTask(response_data?.error || "Failed to pause schedule");
+        }
+    } catch (error) {
+        console.error(`Failed to pause schedule ${scheduleId}`, error);
+        errorTask();
+    }
+}
+
+/**
+ * Resume a paused scheduled chat
+ */
+export async function resumeSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask: () => failureTask(), errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.TOGGLE(scheduleId, 'resume'), {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await resumeSchedule({
+                    scheduleId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            successTask();
+        } else {
+            const response_data = await response.json();
+            console.error("Failed to resume schedule with status code:", response.status);
+            failureTask(response_data?.error || "Failed to resume schedule");
+        }
+    } catch (error) {
+        console.error(`Failed to resume schedule ${scheduleId}`, error);
+        errorTask();
+    }
+}
+
+/**
+ * Delete a scheduled chat permanently
+ */
+export async function deleteSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+    try {
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({failureTask: () => failureTask(), errorTask});
+        }
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(ENDPOINTS.SCHEDULE.DELETE(scheduleId), {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            }
+        });
+        console.log(response);
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await deleteSchedule({
+                    scheduleId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            successTask();
+        } else {
+            const response_data = await response.json();
+            console.error("Failed to delete schedule with status code:", response.status);
+            failureTask(response_data?.error || "Failed to delete schedule");
+        }
+    } catch (error) {
+        console.error(`Failed to delete schedule ${scheduleId}`, error);
+        errorTask();
+    }
+}

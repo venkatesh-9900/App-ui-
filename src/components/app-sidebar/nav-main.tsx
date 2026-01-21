@@ -12,7 +12,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import { ChatGroupsList } from "@/components/chat/chat-groups"
 import { ChatSessionsList } from "@/components/chat/chat-sessions"
 import { Web3Monitoring } from "@/components/app-sidebar/web3-monitoring"
 import { NotificationsMenu } from "@/components/app-sidebar/notifications-menu"
@@ -28,6 +30,7 @@ export function NavMain({
 }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { open, toggleSidebar } = useSidebar();
   const isNewChat = searchParams.get('new') === 'true'
   const hasPrompt = searchParams.get('prompt') !== null
   const sessionId = searchParams.get('sessionId')
@@ -38,7 +41,7 @@ export function NavMain({
       return true
     }
     // Check for new chat (includes ?new=true or ?prompt=xxx)
-    if (url === "/chat?new=true" && pathname === "/chat" && (isNewChat || hasPrompt)) {
+    if (url.indexOf("/chat?new=true") != -1 && pathname === "/chat" && (isNewChat || hasPrompt)) {
       return true
     }
     // Check for regular chat (not new, not with sessionId, not with prompt)
@@ -46,6 +49,12 @@ export function NavMain({
       return true
     }
     return false
+  }
+
+  function itemClickHandler() {
+    if( !open ) {
+      toggleSidebar();
+    }
   }
 
   return (
@@ -56,13 +65,13 @@ export function NavMain({
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild isActive={isActive(item.url)}>
               <Link href={item.url}>
-                <item.icon />
+                <item.icon onClick={itemClickHandler} />
                 <span>{item.name}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
-
+        <ChatGroupsList />
         <ChatSessionsList />
         <Web3Monitoring />
         <NotificationsMenu />

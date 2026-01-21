@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -20,20 +20,28 @@ import { AddressActivityFormDialog } from '@/components/web3/address-activity/ad
 import { AddressActivityTable } from '@/components/web3/address-activity/address-activity-table'
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
+import { AddressGroup } from '@/types/address-group'
+import { listAddressGroups } from '@/hooks/web3/address-group-service'
+import { AddressWatcherInfo } from '@/components/web3/address-activity/address-activity-info'
 
 export default function AddressActivityPage() {
     const [activities, setActivities] = useState<AddressActivity[]>([])
     const [groups, setGroups] = useState<NotificationGroup[]>([])
     const [subscribers, setSubscribers] = useState<NotificationSubscriber[]>([])
+    const [addressGroups, setAddressGroups] = useState<AddressGroup[]>([]); // Adjust type as needed
     const [isLoadingActivities, setIsLoadingActivities] = useState(true)
     const [isLoadingGroups, setIsLoadingGroups] = useState(false)
     const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false)
+    const [isLoadingAddressGroups, setIsLoadingAddressGroups] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
 
     // Fetch activities on mount
     useEffect(() => {
         fetchActivities()
+        fetchAddressGroups();
+        fetchGroups()
+        fetchSubscribers()
     }, [])
 
     const fetchActivities = async () => {
@@ -101,10 +109,30 @@ export default function AddressActivityPage() {
         })
     }
 
+    const fetchAddressGroups = async () => {
+        setIsLoadingAddressGroups(true)
+        await listAddressGroups({
+            successTask: (response) => {
+                if (response.data && Array.isArray(response.data)) {
+                    setAddressGroups(response.data)
+                }
+                setIsLoadingAddressGroups(false)
+            },
+            failureTask: () => {
+                toast.error('Failed to load address groups')
+                setIsLoadingAddressGroups(false)
+            },
+            errorTask: () => {
+                toast.error('Error loading address groups')
+                setIsLoadingAddressGroups(false)
+            },
+        })
+    }
+
     const handleCreateClick = () => {
         // Load groups and subscribers when dialog opens
-        fetchGroups()
-        fetchSubscribers()
+        // fetchGroups()
+        // fetchSubscribers()
         setDialogOpen(true)
     }
 
@@ -115,7 +143,7 @@ export default function AddressActivityPage() {
             request: formData,
             successTask: (data) => {
                 toast.success('Address activity watcher created!', {
-                    description: `Now monitoring ${formData.addresses.length} address(es).`,
+                    description: `Now monitoring this address group ${formData.address_group_ids}`,
                 })
                 setDialogOpen(false)
                 setIsSubmitting(false)
@@ -158,13 +186,13 @@ export default function AddressActivityPage() {
         })
     }
 
-    const handleToggleActivity = async (id: number, isActive: boolean) => {
+    const handleToggleActivity = async (id: number, active: boolean) => {
         await toggleAddressActivity({
             id,
-            isActive,
+            active,
             successTask: () => {
-                toast.success(`Watcher ${isActive ? 'activated' : 'paused'} successfully!`, {
-                    description: `The watcher is now ${isActive ? 'active' : 'paused'}.`,
+                toast.success(`Watcher ${active ? 'activated' : 'paused'} successfully!`, {
+                    description: `The watcher is now ${active ? 'active' : 'paused'}.`,
                 })
                 fetchActivities() // Refresh the list
             },
@@ -187,6 +215,12 @@ export default function AddressActivityPage() {
         }
     }, [dialogOpen])
 
+    const activeWatcherCount = useMemo(
+        () => activities.filter(a => a.active).length,
+        [activities]
+    )
+
+
   return (
         <ProtectedRoute>
             <DashboardNavbar />
@@ -194,33 +228,38 @@ export default function AddressActivityPage() {
                 <div className="@container/main flex flex-1 flex-col gap-2">
                     <div className="flex flex-col gap-4 px-2 py-2 md:gap-6 md:py-4 md:px-4">
                         <Card className="shadow-lg">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-primary/10 rounded-lg">
-                                            <Activity className="w-6 h-6 text-primary" />
-                                        </div>
-                                        <div>
-                                            <CardTitle className="text-sm sm:text-2xl">Address Activity Watchers</CardTitle>
-          </div>
-        </div>
-                                    <Button onClick={handleCreateClick} size="lg" className="cursor-pointer">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Create Watcher
-                                    </Button>
-        </div>
-                            </CardHeader>
+                          <CardHeader>
+                              <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                      <div className="p-2 bg-primary/10 rounded-lg">
+                                          <Activity className="w-6 h-6 text-primary" />
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                          <CardTitle className="text-sm sm:text-2xl">Address Activity Watchers</CardTitle>
+                                          <AddressWatcherInfo />
+                                      </div>
+                                  </div>
+                                  <Button onClick={handleCreateClick} size="lg" className="cursor-pointer">
+                                      <Plus className="w-4 h-4 mr-2" />
+                                      Create Watcher
+                                  </Button>
+                              </div>
+                          </CardHeader>
                             <CardContent>
                                 <AddressActivityTable
                                     activities={activities}
+                                    addressGroups={addressGroups}
+                                    groups={groups}
+                                    subscribers={subscribers}
                                     isLoading={isLoadingActivities}
+                                    loadingAddressGroups={isLoadingAddressGroups}
                                     onDelete={handleDeleteActivity}
                                     onToggle={handleToggleActivity}
                                 />
 
-                                {!isLoadingActivities && activities.length > 0 && (
+                                {!isLoadingActivities && activeWatcherCount > 0 && (
                                     <div className="mt-4 text-sm text-muted-foreground text-center">
-                                        {activities.length} {activities.length === 1 ? 'watcher' : 'watchers'} active
+                                        {activeWatcherCount} {activeWatcherCount === 1 ? 'watcher' : 'watchers'} active
           </div>
                                 )}
                             </CardContent>
@@ -233,8 +272,10 @@ export default function AddressActivityPage() {
                             onSubmit={handleFormSubmit}
                             isSubmitting={isSubmitting}
                             groups={groups}
+                            addressGroups={addressGroups}
                             subscribers={subscribers}
                             loadingGroups={isLoadingGroups}
+                            loadingAddressGroups={isLoadingAddressGroups}
                             loadingSubscribers={isLoadingSubscribers}
                         />
         </div>

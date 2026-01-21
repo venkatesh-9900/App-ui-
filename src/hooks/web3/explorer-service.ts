@@ -35,6 +35,13 @@ interface SearchTxnResponse {
   offset: number
 }
 
+interface SearchTxnResponse {
+  data: TransactionData[]
+  total: number
+  page: number
+  offset: number
+}
+
 interface SearchTxnApiParams extends SearchTxnParams {
   retry?: boolean
   successTask: (response: SearchTxnResponse) => void
@@ -69,7 +76,7 @@ export async function searchBlockchainTransaction({
     const token = localStorage.getItem("access_token")
 
     const payload = {
-      chainId,
+      chain_id: chainId,
       module: module || "account",
       action: action || "txlist",
       ...(txhash && { txhash }),

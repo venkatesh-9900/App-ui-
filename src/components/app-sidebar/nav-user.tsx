@@ -5,6 +5,7 @@ import {
   Bell,
   ChevronsUpDown,
   CreditCard,
+  FolderCode,
   LogOut,
   Sparkles,
 } from "lucide-react"
@@ -30,10 +31,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { userInfo, logout, isAuthenticated } = useAuth()
+  const router = useRouter()
 
   // Don't render if not authenticated
   if (!isAuthenticated || !userInfo) {
@@ -53,6 +56,10 @@ export function NavUser() {
 
   const handleLogout = async () => {
     await logout()
+  }
+  
+  const handleDeveloperSettings = () => {
+    router.push('/developer/api-keys')
   }
 
   return (
@@ -96,9 +103,9 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer">
-                <BadgeCheck />
-                Account
+              <DropdownMenuItem className="cursor-pointer" onClick={handleDeveloperSettings}>
+                <FolderCode />
+                Developer Settings
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">
                 <CreditCard />
