@@ -100,7 +100,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-8 cursor-pointer"
             onClick={() => onPageChange(1)}
             disabled={page === 1 || loading}
             title="First page"
@@ -112,7 +112,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-8 cursor-pointer"
             onClick={() => onPageChange(page - 1)}
             disabled={page === 1 || loading}
             title="Previous page"
@@ -124,7 +124,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-8 cursor-pointer"
             onClick={() => onPageChange(page + 1)}
             disabled={page === pageCount || loading}
             title="Next page"
@@ -136,7 +136,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-8 cursor-pointer"
             onClick={() => onPageChange(pageCount)}
             disabled={page === pageCount || loading}
             title="Last page"
