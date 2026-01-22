@@ -174,9 +174,9 @@ export function AddressActivityAirdropFormDialog({
     }
 
     // Validate channels
-    if (selectedChannels.length === 0) {
-      newErrors.channels = 'Select the notification channel'
-    }
+    // if (selectedChannels.length === 0) {
+    //   newErrors.channels = 'Select the notification channel'
+    // }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -392,7 +392,7 @@ export function AddressActivityAirdropFormDialog({
             </div>
 
             {/* Channels Section */}
-            <div className="grid gap-3 border-t pt-4">
+            {/* <div className="grid gap-3 border-t pt-4">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-primary" />
                 <Label className="text-left font-semibold">
@@ -425,7 +425,7 @@ export function AddressActivityAirdropFormDialog({
               {errors.channels && (
                 <p className="text-sm text-destructive">{errors.channels}</p>
               )}
-            </div>
+            </div> */}
           </div>
 
           <DialogFooter>

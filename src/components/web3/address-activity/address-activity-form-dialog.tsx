@@ -173,10 +173,10 @@ export function AddressActivityFormDialog({
       newErrors.subscribers = 'Select at least one group or subscriber'
     }
 
-    // Validate channels
-    if (selectedChannels.length === 0) {
-      newErrors.channels = 'Select the notification channel'
-    }
+    // // Validate channels
+    // if (selectedChannels.length === 0) {
+    //   newErrors.channels = 'Select the notification channel'
+    // }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -392,7 +392,7 @@ export function AddressActivityFormDialog({
             </div>
 
             {/* Channels Section */}
-            <div className="grid gap-3 border-t pt-4">
+            {/* <div className="grid gap-3 border-t pt-4">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-primary" />
                 <Label className="text-left font-semibold">
@@ -425,7 +425,7 @@ export function AddressActivityFormDialog({
               {errors.channels && (
                 <p className="text-sm text-destructive">{errors.channels}</p>
               )}
-            </div>
+            </div> */}
           </div>
 
           <DialogFooter>
