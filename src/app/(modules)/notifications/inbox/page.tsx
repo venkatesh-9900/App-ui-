@@ -192,15 +192,17 @@ export default function NotificationsPage() {
                   onToggleRead={toggleRead}
                   onDelete={deleteNotification}
                 />
+                {!loading && totalCount > limit && (
+                  <Pagination
+                    page={page}
+                    pageSize={limit}
+                    totalCount={totalCount}
+                    loading={loading}
+                    onPageChange={setPage}
+                    onPageSizeChange={setLimit}
+                  />
+                )}
 
-                <Pagination
-                  page={page}
-                  pageSize={limit}
-                  totalCount={totalCount}
-                  loading={loading}
-                  onPageChange={setPage}
-                  onPageSizeChange={setLimit}
-                />
               </CardContent>
             </Card>
           </div>

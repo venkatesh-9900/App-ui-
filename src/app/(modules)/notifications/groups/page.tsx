@@ -100,9 +100,10 @@ export default function NotificationGroupsPage() {
         } else if (selectedGroup) {
             await updateTopic({
                 topicKey: selectedGroup.novu_topic_key,
-                request: { 
+                request: {
                     name: formData.name,
-                    description: formData.description 
+                    description: formData.description,
+                    channel_instance_ids: formData.channel_instance_ids ?? []
                 },
                 successTask: (data) => {
                     toast.success('Group updated successfully!', {
@@ -208,14 +209,16 @@ export default function NotificationGroupsPage() {
                             mode={dialogMode}
                             initialData={
                                 selectedGroup
-                                    ? { 
-                                        name: selectedGroup.name, 
-                                        description: selectedGroup.description || '',
-                                        topicKey: selectedGroup.novu_topic_key
-                                      }
+                                    ? {
+                                        name: selectedGroup.name,
+                                        description: selectedGroup.description || "",
+                                        topicKey: selectedGroup.novu_topic_key,
+                                        channel_instance_ids: selectedGroup.channel_instance_ids ?? [],
+                                    }
                                     : undefined
                             }
                         />
+
                     </div>
                 </div>
             </div>

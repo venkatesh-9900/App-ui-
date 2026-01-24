@@ -204,7 +204,7 @@ export default function NotificationChannelInstancesPage() {
                                 />
 
                                 {/* ---------- Pagination ---------- */}
-                                {!isLoading && totalCount > 0 && (
+                                {!isLoading && totalCount > pageSize && (
                                     <Pagination
                                         page={page}
                                         pageSize={pageSize}

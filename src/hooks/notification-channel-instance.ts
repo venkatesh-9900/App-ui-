@@ -29,13 +29,13 @@ interface DeleteNotificationChannelInstanceParams extends BaseServiceParams {
 }
 
 interface ListNotificationChannelInstanceParams extends BaseServiceParams {
-    page: number;
-    limit: number;
+    page?: number;
+    limit?: number;
 }
 
 const ENDPOINTS = {
     CREATE: '/api/notification-channel-instances',
-    LIST: (page: number, limit: number) => `/api/notification-channel-instances?page=${page}&limit=${limit}`,
+    LIST: `/api/notification-channel-instances`,
     UPDATE: (id: number) => `/api/notification-channel-instances?id=${id}`,
     DELETE: (id: number) => `/api/notification-channel-instances?id=${id}`,
 }
@@ -87,8 +87,16 @@ export const listNotificationChannelInstances = async ({
 }: ListNotificationChannelInstanceParams) => {
     try {
         if (retry) await refreshAccessToken({ failureTask, errorTask })
+        const params = new URLSearchParams()
+        if (page !== undefined) params.append('page', String(page))
+        if (limit !== undefined) params.append('limit', String(limit))
 
-        const res = await fetch(ENDPOINTS.LIST(page, limit), {
+        const url =
+            params.toString().length > 0
+                ? `${ENDPOINTS.LIST}?${params.toString()}`
+                : ENDPOINTS.LIST
+
+        const res = await fetch(url, {
             method: 'GET',
             headers: buildHeaderJSON(false),
         })

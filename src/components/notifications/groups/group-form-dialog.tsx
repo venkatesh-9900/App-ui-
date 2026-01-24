@@ -21,6 +21,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { getActiveHumanSubscribers } from '@/hooks/subscriber-service'
 import { addSubscriptionsToTopic, listTopicSubscriptions, removeSubscriptionsFromTopic } from '@/hooks/topic-service'
 import { toast } from 'sonner'
+import { listNotificationChannelInstances } from '@/hooks/notification-channel-instance'
+import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 
 interface GroupFormDialogProps {
   open: boolean
@@ -28,8 +30,10 @@ interface GroupFormDialogProps {
   onSubmit: (data: CreateTopicRequest) => void
   isSubmitting: boolean
   mode: 'create' | 'edit'
-  initialData?: CreateTopicRequest & { topicKey?: string }
+  initialData?: CreateTopicRequest & { topicKey?: string } & { channel_instance_ids?: number[] }
 }
+type EditableField = "name" | "description"
+
 
 export function GroupFormDialog({
   open,
@@ -41,7 +45,7 @@ export function GroupFormDialog({
 }: GroupFormDialogProps) {
   const [formData, setFormData] = useState<CreateTopicRequest>({
     name: '',
-    description: '',
+    description: ''
   })
   const [errors, setErrors] = useState<{
     name?: string
@@ -53,6 +57,22 @@ export function GroupFormDialog({
   const [loadingSubscribers, setLoadingSubscribers] = useState(false)
   const [addingSubscriptions, setAddingSubscriptions] = useState(false)
   const [removingSubscriberId, setRemovingSubscriberId] = useState<string | null>(null) // Track which subscriber is being removed
+const [channelInstances, setChannelInstances] = useState<NotificationChannelInstance[]>([])
+const [selectedChannelInstanceIds, setSelectedChannelInstanceIds] = useState<number[]>([])
+
+const loadChannelInstances = useCallback(() => {
+  listNotificationChannelInstances({
+    successTask: (res) => {
+      setChannelInstances(res.data ?? [])
+    },
+    failureTask: () => {
+      toast.error("Failed to load channel instances")
+    },
+    errorTask: () => {
+      toast.error("Something went wrong while loading channels")
+    },
+  })
+}, [])
 
   // Load existing subscriptions for the group
   const loadExistingSubscriptions = useCallback((topicKey: string) => {
@@ -100,25 +120,53 @@ export function GroupFormDialog({
     // Only run when dialog opens, not when closing
     if (!open) return
 
+    // Always load channel instances
+    loadChannelInstances()
+
+    // Init form state
     if (initialData) {
-      setFormData(initialData)
+      setFormData({
+        name: initialData.name,
+        description: initialData.description,
+        channel_instance_ids: initialData.channel_instance_ids ?? [],
+      })
     } else {
-      setFormData({ name: '', description: '' })
+      setFormData({ name: '', description: '', channel_instance_ids: [] })
     }
+
+    // Reset common state
     setErrors({})
     setSelectedSubscribers([])
     setExistingSubscriberIds([])
 
-    // Load subscribers and existing subscriptions only in edit mode
+    //Channel preselection
+    if (mode === 'edit') {
+      setSelectedChannelInstanceIds(
+        initialData?.channel_instance_ids
+          ? [...initialData.channel_instance_ids]
+          : []
+      )
+    } else {
+      setSelectedChannelInstanceIds([])
+    }
+
+    // Edit-only side effects
     if (mode === 'edit') {
       loadSubscribers()
-      
-      // Load existing subscriptions if we have a topicKey
-      if (initialData && 'topicKey' in initialData && initialData.topicKey) {
+
+      if (initialData?.topicKey) {
         loadExistingSubscriptions(initialData.topicKey)
       }
     }
-  }, [open, mode, initialData, loadSubscribers, loadExistingSubscriptions])
+  }, [
+    open,
+    mode,
+    initialData,
+    loadChannelInstances,
+    loadSubscribers,
+    loadExistingSubscriptions,
+  ])
+
 
   const validateForm = useCallback((): boolean => {
     const newErrors: {
@@ -139,11 +187,17 @@ export function GroupFormDialog({
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
-      onSubmit(formData)
-    }
-  }, [formData, onSubmit, validateForm])
+      onSubmit(
+        {
+          ...formData,
+        channel_instance_ids: selectedChannelInstanceIds,
+        }
 
-  const handleInputChange = useCallback((field: keyof CreateTopicRequest, value: string) => {
+      )
+    }
+  }, [formData, selectedChannelInstanceIds, onSubmit, validateForm])
+
+  const handleInputChange = useCallback((field: EditableField, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     setErrors(prev => {
@@ -241,6 +295,17 @@ export function GroupFormDialog({
       }
     })
   }, [initialData, loadExistingSubscriptions])
+
+  const handleChannelToggle = useCallback((topicKey: number) => {
+      setSelectedChannelInstanceIds(prev => {
+        if (prev.includes(topicKey)) {
+          return prev.filter(key => key !== topicKey)
+        } else {
+          return [...prev, topicKey]
+        }
+      })
+      
+    }, [])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -400,6 +465,44 @@ export function GroupFormDialog({
                 )}
               </div>
             )}
+            {/* Channel Instance Selector */}
+            <div className="grid gap-2 border-t pt-4">
+              <Label className="font-semibold">
+                Channel Instances
+              </Label>
+
+              <p className="text-xs text-muted-foreground">
+                Select one or more channels for this group
+              </p>
+
+              <div className="border rounded-lg max-h-72 overflow-y-auto">
+                {channelInstances.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No channel instances found
+                  </p>
+                ) : (
+                  channelInstances.map((ci) => (
+                    <div
+                      key={ci.id}
+                      className="flex items-center gap-2 p-2 hover:bg-muted rounded"
+                    >
+                      <Checkbox
+                        checked={selectedChannelInstanceIds.includes(ci.id)}
+                        onCheckedChange={() => handleChannelToggle(ci.id)}
+                      />
+
+                      <div className="flex-1 text-sm">
+                        <div className="font-medium">{ci.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {ci.channel_id === 3 ? "Custom Webhook" : "Teams Webhook"}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
           </div>
 
           <DialogFooter>
