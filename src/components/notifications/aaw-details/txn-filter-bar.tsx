@@ -4,13 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { TransactionDetails } from '@/types/aaw-details';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from '@/lib/utils';
 
 // Define the grouping type options (export this if not done elsewhere)
 type GroupingType = 'asset' | 'category';
 
 const GROUPING_OPTIONS: { label: string; value: GroupingType }[] = [
-  { label: 'Asset', value: 'asset' },
-  { label: 'Category', value: 'category' },
+    { label: 'Asset', value: 'asset' },
+    { label: 'Category', value: 'category' },
 ];
 
 
@@ -51,19 +58,41 @@ export default function TxnFilterBar({ groupingType, setGroupingType, onAskAI, s
                     </div>
                 </div>
 
-                {/* --- Bottom Section: AI Analysis Prompt --- */}
                 <div className="pt-4 border-t border-border mt-auto">
-                    <Button
-                        className="w-full flex justify-start items-center space-x-2 cursor-pointer"
-                         onClick={onAskAI}
-                         disabled={selectedTxns.size === 0}
-                    // Add an onClick handler for the AI feature here
-                    >
-                        <span className="text-lg">🔍</span>
-                        <span>Ask AI</span>
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                {/* Wrapper is key */}
+                                <div
+                                    className={cn(
+                                        "w-full",
+                                        selectedTxns.size === 0
+                                            ? "cursor-not-allowed"
+                                            : "cursor-pointer"
+                                    )}
+                                >
+                                    <Button
+                                        className="w-full flex justify-start items-center gap-2"
+                                        onClick={onAskAI}
+                                        disabled={selectedTxns.size === 0}
+                                    >
+                                        <span className="text-lg">🔍</span>
+                                        <span>Analyze transaction with AI</span>
+                                    </Button>
+                                </div>
+                            </TooltipTrigger>
+
+                            {/* Tooltip only when disabled */}
+                            {selectedTxns.size === 0 && (
+                                <TooltipContent side="top" align="center">
+                                    Select one or more transactions to enable AI analysis
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    </TooltipProvider>
+
                     <p className="text-xs text-muted-foreground mt-2">
-                        How can I analyze the clusters?
+                        Use AI to analyze patterns and relationships across selected transaction clusters.
                     </p>
                 </div>
             </CardContent>
