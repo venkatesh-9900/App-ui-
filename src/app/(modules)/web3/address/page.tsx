@@ -8,6 +8,8 @@ import { BlockchainAddressSearch } from "@/components/web3/address/blockchain-ad
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar";
 import { NeighboursView } from "@/components/web3/address/neighbours-view";
 import { NeighbourResponse, NeighboursColumn } from "@/types/blockchain";
+import { AddressNeighboursGraph } from "@/components/web3/address/address-neighbours-graph"
+import { AddressNeighboursGraphCanvas } from "@/components/web3/address/address-neighbours-graph-canvas"
 import { closestCenter, DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import React from "react";
@@ -94,8 +96,8 @@ export default function AddressPage() {
                                         id={sortableId}
                                     >
                                         <div className="flex flex-row justify-end items-center gap-2">  
-                                        </div>
-                                        <NeighboursView 
+                                                    </div>
+                                                    {/* <NeighboursView 
                                             chain_id={selectedChainId} 
                                             start_date={new Date(startTime * 1000)} 
                                             end_date={new Date(endTime * 1000)} 
@@ -104,7 +106,33 @@ export default function AddressPage() {
                                             depth={1} 
                                             data={addressData} 
                                             tx_count={txNumber}
-                                        />
+                                        /> */}
+                                                    {/* <AddressNeighboursGraph
+                                                        chainId={selectedChainId}
+                                                        rootAddress={addressId}
+                                                        rootTxCount={txNumber}   // ✅ ADD THIS
+                                                        startDate={new Date(startTime * 1000)}
+                                                        endDate={new Date(endTime * 1000)}
+                                                        direction={selectedDirection}
+                                                        initialNeighbours={addressData.map(n => ({
+                                                            address: n.address,
+                                                            tx_count: n.txns_no,
+                                                        }))}
+                                                    /> */}
+
+                                                    <AddressNeighboursGraphCanvas
+                                                        chainId={selectedChainId}
+                                                        rootAddress={addressId}
+                                                        rootTxCount={txNumber}   // ✅ ADD THIS
+                                                        startDate={new Date(startTime * 1000)}
+                                                        endDate={new Date(endTime * 1000)}
+                                                        direction={selectedDirection}
+                                                        initialNeighbours={addressData.map(n => ({
+                                                        address: n.address,
+                                                        tx_count: n.txns_no,
+                                                    }))}
+                                                    />
+
                                     </DndContext>
                                 </div>}
                             </TabsContent>
