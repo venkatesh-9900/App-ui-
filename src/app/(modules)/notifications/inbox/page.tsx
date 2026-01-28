@@ -184,7 +184,7 @@ export default function NotificationsPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="px-0">
+              <CardContent className="px-0 mb-2 mt-2 pr-2">
                 <NotificationLog
                   data={data}
                   loading={loading}
