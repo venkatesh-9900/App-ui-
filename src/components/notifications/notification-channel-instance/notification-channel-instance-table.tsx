@@ -141,7 +141,7 @@ export function NotificationChannelInstanceTable({
                                 </TableHead>
                                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
                                     <div className="flex items-center gap-1">
-                                         <Clock className="w-4 h-4" />
+                                        <Clock className="w-4 h-4" />
                                         <span>Updated </span>
                                     </div>
                                 </TableHead>
