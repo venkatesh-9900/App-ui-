@@ -3,11 +3,13 @@
 export interface CreateTopicRequest {
   name: string;
   description?: string;
+  channel_instance_ids?: number[];
 }
 
 export interface UpdateTopicRequest {
   name?: string;
   description?: string;
+  channel_instance_ids?: number[]
 }
 
 export interface Topic {
@@ -24,6 +26,7 @@ export interface NotificationGroup {
   name: string;
   description?: string;
   novu_topic_key: string;
+  channel_instance_ids: number[];
   user_id?: string;
   organization_id: string;
   created_at: string;

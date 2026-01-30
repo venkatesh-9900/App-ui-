@@ -10,11 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Inbox, Filter } from "lucide-react"
 
 import { NotificationLog } from "@/components/notifications/inbox/notification-log"
+import { Pagination } from "@/components/common/pagniation"
+
 import {
   listNotificationLog,
   updateNotificationLog,
   deleteNotificationLog,
 } from "@/hooks/notification-log-service"
+
 import { NotificationLog as NotificationLogType } from "@/types/notifcation-log"
 import {
   DropdownMenu,
@@ -22,7 +25,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu"
-
 
 type ReadFilter = "all" | "read" | "unread"
 
@@ -33,12 +35,12 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(false)
   const [readFilter, setReadFilter] = useState<ReadFilter>("all")
   const [page, setPage] = useState(1)
-  const limit = 10
+  const [limit, setLimit] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
 
   useEffect(() => {
     fetchLogs()
-  }, [page, readFilter])
+  }, [page, limit, readFilter])
 
   const fetchLogs = async () => {
     setLoading(true)
@@ -63,19 +65,17 @@ export default function NotificationsPage() {
     })
   }
 
-  const handleNotificationClick = async (n: NotificationLogType) => {
+  const handleRowClick = async (n: NotificationLogType) => {
     if (!n.read_status) {
-      await updateNotification(n.id, !n.read_status)
-
+      await toggleRead(n.id, true)
     }
-
     if (n.details_url) router.push(n.details_url)
   }
 
-  const updateNotification = async (id: number, readStatus: boolean) => {
+  const toggleRead = async (id: number, readStatus: boolean) => {
     setData((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, read_status: readStatus } : i
+      prev.map((n) =>
+        n.id === id ? { ...n, read_status: readStatus } : n
       )
     )
     await updateNotificationLog({
@@ -150,15 +150,15 @@ export default function NotificationsPage() {
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuCheckboxItem
+                          <DropdownMenuCheckboxItem
                         checked={readFilter === "all"}
-                        onCheckedChange={() => {
+                            onCheckedChange={() => {
                           setReadFilter("all")
-                          setPage(1)
-                        }}
-                      >
+                              setPage(1)
+                            }}
+                          >
                         All
-                      </DropdownMenuCheckboxItem>
+                          </DropdownMenuCheckboxItem>
 
                       <DropdownMenuCheckboxItem
                         checked={readFilter === "read"}
@@ -184,23 +184,25 @@ export default function NotificationsPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="px-0">
+              <CardContent className="px-0 mb-2 mt-2 pr-2">
                 <NotificationLog
                   data={data}
                   loading={loading}
-                  page={page}
-                  limit={limit}
-                  totalCount={totalCount}
-                  onPrev={() => setPage((p) => Math.max(1, p - 1))}
-                  onNext={() =>
-                    setPage((p) =>
-                      p * limit < totalCount ? p + 1 : p
-                    )
-                  }
-                  onRowClick={handleNotificationClick}
-                  onToggleRead={updateNotification}
+                  onRowClick={handleRowClick}
+                  onToggleRead={toggleRead}
                   onDelete={deleteNotification}
                 />
+                {!loading && totalCount > limit && (
+                  <Pagination
+                    page={page}
+                    pageSize={limit}
+                    totalCount={totalCount}
+                    loading={loading}
+                    onPageChange={setPage}
+                    onPageSizeChange={setLimit}
+                  />
+                )}
+
               </CardContent>
             </Card>
           </div>

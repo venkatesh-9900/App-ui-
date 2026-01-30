@@ -12,6 +12,7 @@ import TxnTable from '@/components/notifications/aaw-details/txn-table';
 import TxnDetailsSideBar from '@/components/notifications/aaw-details/txn-details-side-bar';
 import TxnFilterBar from '@/components/notifications/aaw-details/txn-filter-bar'; // NEW IMPORT
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/common/pagniation';
 
 // Define the grouping type options
 type GroupingType = 'asset' | 'category';
@@ -19,7 +20,6 @@ type GroupingType = 'asset' | 'category';
 export default function AAWDetailsPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const LIMIT = 10;
     const CARD_LIMIT = 3;
     const watcher_id = searchParams.get('watcher_id');
     const start_cursor = searchParams.get('start_cursor');
@@ -29,6 +29,7 @@ export default function AAWDetailsPage() {
     const [transactions, setTransactions] = useState<TransactionDetails[] | null>([]);
     const [selectedKey, setSelectedKey] = useState<string>("ETH");
     const [page, setPage] = useState(1);
+    const [limit, setPageSize] = useState(10);
     const [isLocading, setIsLoading] = useState(default_loading_state);
     const [isGroupLoading, setIsGroupLoading] = useState(false);
     const [isTransactionLoading, setIsTransactionLoading] = useState(false);
@@ -82,7 +83,7 @@ export default function AAWDetailsPage() {
             filter_by: groupingType.toLowerCase(),
             filter_value: selectedKey,
             page,
-            limit: LIMIT,
+            limit,
             successTask: (res) => {
                 setTransactions(res.data);
                 setIsTransactionLoading(false);
@@ -96,7 +97,7 @@ export default function AAWDetailsPage() {
                 setIsTransactionLoading(false);
             },
         });
-    }, [selectedKey, page, groupingType]);
+    }, [selectedKey, page, limit, groupingType]);
 
     // On page load & grouping change
     useEffect(() => {
@@ -310,25 +311,29 @@ export default function AAWDetailsPage() {
 
 
                                 {/* Txn Table (Below the selected card) */}
-                                <div className='min-h-124'>
+                                <div className="min-h-124">
                                     {isTransactionLoading ? (
                                         <div className="flex justify-center items-center py-12">
                                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                                         </div>
                                     ) : (
-                                        <div>
+                                        <>
                                             <TxnTable
                                                 txn={transactions}
-                                                page={page}
-                                                limit={LIMIT}
-                                                totalCount={groupInfo.data[selectedKey]?.count ?? 0}
-                                                onNext={() => setPage((p) => p + 1)}
-                                                onPrev={() => setPage((p) => Math.max(1, p - 1))}
                                                 onRowClick={(txn) => setSelectedTxn(txn)}
                                                 selectedTxnIds={new Set(selectedTxns.keys())}
                                                 onToggleTxn={toggleTxnSelection}
                                             />
-                                        </div>
+
+                                            <Pagination
+                                                page={page}
+                                                pageSize={limit}
+                                                totalCount={groupInfo.data[selectedKey]?.count ?? 0}
+                                                loading={isTransactionLoading}
+                                                onPageChange={setPage}
+                                                onPageSizeChange={setPageSize} // fixed page size here
+                                            />
+                                        </>
                                     )}
                                 </div>
 

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Bell, UserPlus, Settings, Users, Inbox } from "lucide-react"
+import { ChevronRight, Bell, UserPlus, Settings, Users, Inbox, Webhook } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -32,6 +32,11 @@ const menuItems = [
     name: "Inbox",
     url: "/notifications/inbox",
     icon: Inbox,
+  },
+  {
+    name: "Channels",
+    url: "/notifications/channels",
+    icon: Webhook,
   }
 ]
 
