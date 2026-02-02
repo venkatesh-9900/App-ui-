@@ -211,7 +211,7 @@ export function NotificationChannelInstanceFormDialog({
                                 onValueChange={(v) =>
                                     setPublishType(v as "batch" | "realtime")
                                 }
-                                disabled={channelId === 4 || channelId === 3 || isSubmitting}
+                                disabled={channelId === 4 || isSubmitting}
                             >
                                 <SelectTrigger className="w-full">
                                     <SelectValue />
