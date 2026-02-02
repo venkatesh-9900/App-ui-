@@ -27,7 +27,7 @@ interface AddressActivityFormDialogProps {
   onSubmit: (data: CreateAddressActivityRequest) => void
   isSubmitting: boolean
 
-  mode?: "create" | "edit"
+  mode?: "create" | "edit" | "view"
   initialData?: {
     id?: number
     name?: string
@@ -73,6 +73,7 @@ export function AddressActivityFormDialog({
   const [selectedGroups, setSelectedGroups] = useState<number[]>([])
   const [selectedSubscribers, setSelectedSubscribers] = useState<number[]>([])
   const [selectedChannels, setSelectedChannels] = useState<string[]>([])
+  const isReadOnly = mode === "view";
   const [errors, setErrors] = useState<{
     name?: string
     addressGroups?: string
@@ -202,7 +203,7 @@ export function AddressActivityFormDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {mode === "edit" ? "Update Address Activity Watcher" : "Create Address Activity Watcher"}
+              {mode === "edit" ? "Update" : mode === "create" ? "Create" : ""} Address Activity Watcher
             </DialogTitle>
             <DialogDescription>
               Monitor blockchain addresses for activity and send notifications to selected groups and subscribers.
@@ -220,7 +221,7 @@ export function AddressActivityFormDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className={errors.name ? 'border-destructive' : ''}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isReadOnly}
               />
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name}</p>
@@ -259,7 +260,7 @@ export function AddressActivityFormDialog({
                           id={`group-${AddressGroup.id}`}
                           checked={selectedAddressGroups.includes(AddressGroup.id)}
                           onCheckedChange={() => handleAddressGroupToggle(AddressGroup.id)}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isReadOnly}
                           className='cursor-pointer'
                         />
                         <Label
@@ -313,7 +314,7 @@ export function AddressActivityFormDialog({
                           id={`group-${group.id}`}
                           checked={selectedGroups.includes((group.id))}
                           onCheckedChange={() => handleGroupToggle((group.id))}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isReadOnly}
                           className='cursor-pointer'
                         />
                         <Label
@@ -367,7 +368,7 @@ export function AddressActivityFormDialog({
                           id={`sub-${subscriber.id}`}
                           checked={selectedSubscribers.includes((subscriber.id))}
                           onCheckedChange={() => handleSubscriberToggle((subscriber.id))}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isReadOnly}
                           className='cursor-pointer'
                         />
                         <Label
@@ -428,7 +429,7 @@ export function AddressActivityFormDialog({
             </div> */}
           </div>
 
-          <DialogFooter>
+          {!isReadOnly && <DialogFooter>
             <Button
               type="button"
               variant="outline"
@@ -452,7 +453,7 @@ export function AddressActivityFormDialog({
                 mode === "edit" ? "Update Watcher" : "Create Watcher"
               )}
             </Button>
-          </DialogFooter>
+          </DialogFooter>}
         </form>
       </DialogContent>
     </Dialog>

@@ -66,6 +66,7 @@ export function AddressActivityAirdropTable({
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit" | "view">("view");
   const { userInfo } = useAuth()
 
   const handleDeleteClick = (activity: AddressActivityAirdrop) => {
@@ -268,7 +269,13 @@ export function AddressActivityAirdropTable({
               {activities.map((activity) => {
                 const addresses = getAddresses(activity)
                 return (
-                  <TableRow key={activity.id} className="hover:bg-muted/50">
+                  <TableRow key={activity.id} className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => {
+                      setMode("view")
+                      setSelectedActivity(activity)
+                      setDialogOpen(true)
+                    }}
+                  >
                     <TableCell className="px-4 py-3 w-2/5 min-w-max">
                       <div className="flex flex-wrap gap-1">
                         { activity.name }
@@ -322,7 +329,7 @@ export function AddressActivityAirdropTable({
                     <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm text-muted-foreground">
                       {formatTime(activity.updated_at)}
                     </TableCell>
-                    <TableCell className="px-4 py-3 w-20 min-w-max text-right">
+                    <TableCell className="px-4 py-3 w-20 min-w-max text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button 
@@ -357,6 +364,7 @@ export function AddressActivityAirdropTable({
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => {
+                              setMode("edit")
                               setSelectedActivity(activity);
                               setDialogOpen(true);
                             }}
@@ -413,7 +421,7 @@ export function AddressActivityAirdropTable({
         onOpenChange={setDialogOpen}
         onSubmit={(data) => handleUpdateActivity(selectedActivity.id, data)}
         isSubmitting={isUpdating}
-        mode="edit"
+        mode={mode}
         initialData={{
           id: selectedActivity.id,
           name: selectedActivity.name,
