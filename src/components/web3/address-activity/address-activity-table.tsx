@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -40,6 +40,7 @@ import { NotificationGroup } from '@/types/topic'
 import { AddressActivityFormDialog } from './address-activity-form-dialog'
 import { updateAddressActivity } from '@/hooks/web3/address-activity-service'
 import { toast } from 'sonner'
+import { Input } from '@/components/ui/input'
 interface AddressActivityTableProps {
   activities: AddressActivity[]
   addressGroups: AddressGroup[]
@@ -66,8 +67,40 @@ export function AddressActivityTable({
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false);
-  const [mode, setMode] = useState<'view' | 'edit'>('view')
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const [filteredActivities, setFilteredActivities] = useState<AddressActivity[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<boolean[]>([true, false]);
+  const [statusCount, setStatusCount] = useState<{ active: number; inactive: number }>({
+    active: 0,
+    inactive: 0
+  });
   const { userInfo } = useAuth()
+
+  useEffect(() => {
+    setFilteredActivities(activities);
+    calculateStatusCount(activities);
+  }, [activities]);
+
+  useEffect(() => {
+    const filtered = activities.filter(activity =>
+      activity.name.toLowerCase().includes(searchQuery.toLowerCase()) && statusFilter.includes(activity.active as boolean)
+    );
+    setFilteredActivities(filtered);
+  }, [searchQuery, statusFilter]);
+
+  const toggleStatusFilter = (status: boolean) => {
+    if (statusFilter.includes(status)) {
+      setStatusFilter(statusFilter.filter(s => s !== status));
+    } else {
+      setStatusFilter([...statusFilter, status]);
+    }
+  }
+
+  const calculateStatusCount = (activities: AddressActivity[]) => {
+    const activeCount = activities.filter(activity => activity.active).length;
+    setStatusCount({ active: activeCount, inactive: activities.length - activeCount });
+  }
 
   const handleDeleteClick = (activity: AddressActivity) => {
     setSelectedActivity(activity)
@@ -231,196 +264,218 @@ export function AddressActivityTable({
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <div className="searchbar w-1/3">
+          <Input
+            placeholder="Search address activity..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className='status-filter flex gap-2'>
+          <Badge onClick={() => toggleStatusFilter(true)} className='cursor-pointer' variant={statusFilter.includes(true) ? 'default' : 'outline'}>Active <span className='ml-1'>({statusCount.active})</span></Badge>
+          <Badge onClick={() => toggleStatusFilter(false)} className='cursor-pointer' variant={statusFilter.includes(false) ? 'default' : 'outline'}>Inactive <span className='ml-1'>({statusCount.inactive})</span></Badge>
+        </div>
+      </div>
       <div className="overflow-hidden rounded-lg border relative flex flex-col">
-        <div className="overflow-x-auto flex-1">
-          <Table className="w-full border-collapse">
-            <TableHeader className="bg-muted sticky top-0 z-10">
-              <TableRow>
-              <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
-                  <div className="flex items-center gap-1">
-                    <Activity className="w-4 h-4" />
-                    <span>Name</span>
-                  </div>
-                </TableHead>
-                <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
-                  <div className="flex items-center gap-1">
-                    <Group className="w-4 h-4" />
-                    <span>Address Groups</span>
-                  </div>
-                </TableHead>
-                <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>Notification Groups</span>
-                  </div>
-                </TableHead>
-                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
-                  <div className="flex items-center gap-1">
-                    <span>Status</span>
-                  </div>
-                </TableHead>
-                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>Created</span>
-                  </div>
-                </TableHead>
-                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>Updated</span>
-                  </div>
-                </TableHead>
-                <TableHead className="px-4 py-2 text-right w-20 min-w-max">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activities.map((activity) => {
-                const addresses = getAddresses(activity)
-                return (
-                  <TableRow key={activity.id} className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => {
-                      setMode('view');
-                      setSelectedActivity(activity);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <TableCell className="px-4 py-3 w-2/5 min-w-max">
-                      <div className="flex flex-wrap gap-1">
-                        { activity.name }
+        {
+          !filteredActivities.length
+            ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No matching address activity watchers found.</p>
+              </div>
+            )
+            :
+            <div className="overflow-x-auto flex-1">
+              <Table className="w-full border-collapse">
+                <TableHeader className="bg-muted sticky top-0 z-10">
+                  <TableRow>
+                    <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
+                      <div className="flex items-center gap-1">
+                        <Activity className="w-4 h-4" />
+                        <span>Name</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 w-2/5 min-w-max">
-                      <div className="flex flex-wrap gap-1">
-                        {(() => {
-                          const groups = getGroupsByIds(activity.web3_address_group_ids);
-
-                          return groups.length > 0 ? (
-                            <>
-                              {groups.slice(0, 3).map((group, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="text-xs"
-                                  title={`${group.name}: ${group.addresses.length} addresses`}
-                                >
-                                  {group.name}
-                                </Badge>
-                              ))}
-
-                              {groups.length > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{groups.length - 3} more
-                                </Badge>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              No groups
-                            </span>
-                          );
-                        })()}
+                    </TableHead>
+                    <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
+                      <div className="flex items-center gap-1">
+                        <Group className="w-4 h-4" />
+                        <span>Address Groups</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 w-2/5 min-w-max">
-                      <div className="flex flex-wrap gap-1">
-                        {(() => {
-                          const groups = getNotificationGroupsByIds(activity.web3_address_group_ids);
-                          return groups.length > 0 ? (
-                            <>
-                              {groups.slice(0, 3).map((group, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="text-xs"
-                                  title={group.name}
-                                >
-                                  {group.name}
-                                </Badge>
-                              ))}
-
-                              {groups.length > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{groups.length - 3} more
-                                </Badge>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              No groups
-                            </span>
-                          );
-                        })()}
+                    </TableHead>
+                    <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        <span>Notification Groups</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 w-1/6 min-w-max">
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={activity.active}
-                          onClick={() => handleToggleClick(activity)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full
+                    </TableHead>
+                    <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                      <div className="flex items-center gap-1">
+                        <span>Status</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>Created</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        <span>Updated</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="px-4 py-2 text-right w-20 min-w-max">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredActivities.map((activity) => {
+                    const addresses = getAddresses(activity)
+                    return (
+                      <TableRow key={activity.id} className="hover:bg-muted/50 cursor-pointer"
+                        onClick={() => {
+                          setMode('view');
+                          setSelectedActivity(activity);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        <TableCell className="px-4 py-3 w-2/5 min-w-max">
+                          <div className="flex flex-wrap gap-1">
+                            { activity.name }
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 w-2/5 min-w-max">
+                          <div className="flex flex-wrap gap-1">
+                            {(() => {
+                              const groups = getGroupsByIds(activity.web3_address_group_ids);
+
+                              return groups.length > 0 ? (
+                                <>
+                                  {groups.slice(0, 3).map((group, idx) => (
+                                    <Badge
+                                      key={idx}
+                                      variant="secondary"
+                                      className="text-xs"
+                                      title={`${group.name}: ${group.addresses.length} addresses`}
+                                    >
+                                      {group.name}
+                                    </Badge>
+                                  ))}
+
+                                  {groups.length > 3 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{groups.length - 3} more
+                                    </Badge>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  No groups
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 w-2/5 min-w-max">
+                          <div className="flex flex-wrap gap-1">
+                            {(() => {
+                              const groups = getNotificationGroupsByIds(activity.web3_address_group_ids);
+                              return groups.length > 0 ? (
+                                <>
+                                  {groups.slice(0, 3).map((group, idx) => (
+                                    <Badge
+                                      key={idx}
+                                      variant="secondary"
+                                      className="text-xs"
+                                      title={group.name}
+                                    >
+                                      {group.name}
+                                    </Badge>
+                                  ))}
+
+                                  {groups.length > 3 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{groups.length - 3} more
+                                    </Badge>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  No groups
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 w-1/6 min-w-max">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={activity.active}
+                              onClick={() => handleToggleClick(activity)}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full
                             transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer
                             ${activity.active ? "bg-blue-600" : "bg-gray-300"}`}>
-                          <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform
+                              <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform
                               ${activity.active ? "translate-x-5" : ""}`} />
-                        </button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm">
-                      {formatDate(activity.created_at)}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm text-muted-foreground">
-                      {formatTime(activity.updated_at)}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 w-20 min-w-max text-right" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="h-8 w-8 p-0 cursor-pointer"
-                          >
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setMode('edit');
-                              setSelectedActivity(activity);
-                              setDialogOpen(true);
-                            }}
-                            disabled={activity?.user_id !== userInfo?.email}
-                            className="cursor-pointer"
-                          >
-                            <Edit2 className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteClick(activity)}
-                            className="text-destructive focus:text-destructive cursor-pointer"
-                            disabled={activity.user_id !== userInfo?.email}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                            </button>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm">
+                          {formatDate(activity.created_at)}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm text-muted-foreground">
+                          {formatTime(activity.updated_at)}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 w-20 min-w-max text-right" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 p-0 cursor-pointer"
+                              >
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setMode('edit');
+                                  setSelectedActivity(activity);
+                                  setDialogOpen(true);
+                                }}
+                                disabled={activity?.user_id !== userInfo?.email}
+                                className="cursor-pointer"
+                              >
+                                <Edit2 className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(activity)}
+                                className="text-destructive focus:text-destructive cursor-pointer"
+                                disabled={activity.user_id !== userInfo?.email}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+        }
       </div>
 
       {/* Delete Confirmation Dialog */}

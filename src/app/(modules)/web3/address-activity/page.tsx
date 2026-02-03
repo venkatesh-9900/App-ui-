@@ -215,10 +215,6 @@ export default function AddressActivityPage() {
         }
     }, [dialogOpen])
 
-    const activeWatcherCount = useMemo(
-        () => activities.filter(a => a.active).length,
-        [activities]
-    )
 
 
   return (
@@ -257,11 +253,6 @@ export default function AddressActivityPage() {
                                     onToggle={handleToggleActivity}
                                 />
 
-                                {!isLoadingActivities && activeWatcherCount > 0 && (
-                                    <div className="mt-4 text-sm text-muted-foreground text-center">
-                                        {activeWatcherCount} {activeWatcherCount === 1 ? 'watcher' : 'watchers'} active
-          </div>
-                                )}
                             </CardContent>
                         </Card>
 
