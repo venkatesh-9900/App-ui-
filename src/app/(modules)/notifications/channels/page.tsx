@@ -20,6 +20,8 @@ import {
     NotificationChannelInstanceFormDialog,
     NotificationChannelInstanceFormData,
 } from "@/components/notifications/notification-channel-instance/notification-channel-instance-form-dialog"
+import { NotificationChannel } from "@/types/notification-channel"
+import { listNotificationChannel } from "@/hooks/notification-channel-service"
 import { NotificationChannelInstanceTable } from "@/components/notifications/notification-channel-instance/notification-channel-instance-table"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
@@ -27,6 +29,7 @@ import { Pagination } from "@/components/common/pagniation"
 
 export default function NotificationChannelInstancesPage() {
     const [instances, setInstances] = useState<NotificationChannelInstance[]>([])
+    const [channels, setChannels] = useState<NotificationChannel[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -64,9 +67,36 @@ export default function NotificationChannelInstancesPage() {
         })
     }
 
+    // ---------------- Fetch ----------------
+    const fetchChannels = async () => {
+        setIsLoading(true)
+
+        await listNotificationChannel({
+            novu_supported: false,
+            successTask: (response) => {
+                if (Array.isArray(response?.data)) {
+                    setChannels(response.data)
+                }
+                setIsLoading(false)
+            },
+            failureTask: () => {
+                toast.error("Failed to load notification channels")
+                setIsLoading(false)
+            },
+            errorTask: () => {
+                toast.error("Something went wrong")
+                setIsLoading(false)
+            },
+        })
+    }
+
     useEffect(() => {
         fetchInstances()
     }, [page, pageSize])
+
+    useEffect(() => {
+        fetchChannels()
+    }, [])
 
     // ---------------- Create ----------------
     const handleCreateFromForm = async (
@@ -224,6 +254,7 @@ export default function NotificationChannelInstancesPage() {
                             onOpenChange={handleDialogChange}
                             isSubmitting={isSubmitting}
                             mode={selectedInstance ? "edit" : "create"}
+                            channels={channels}
                             initialData={
                                 selectedInstance
                                     ? {
