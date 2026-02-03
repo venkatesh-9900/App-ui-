@@ -72,7 +72,7 @@ export default function AddressActivityAirdropPage() {
         setIsLoadingGroups(true)
         await listTopics({
             successTask: (response) => {
-                if (response.data && response.data) {
+                if (response.data && Array.isArray(response.data)) {
                     setGroups(response.data)
                 }
                 setIsLoadingGroups(false)
