@@ -314,13 +314,18 @@ export function AddressActivityAirdropTable({
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max">
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant={(activity.active !== undefined && activity.active !== null ? activity.active : true) ? "default" : "secondary"} 
-                          className={`text-xs ${(activity.active !== undefined && activity.active !== null ? activity.active : true) ? "bg-green-500 hover:bg-green-600" : ""}`}
-                        >
-                          {(activity.active !== undefined && activity.active !== null ? activity.active : true) ? "Active" : "Paused"}
-                        </Badge>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={activity.active}
+                          onClick={() => handleToggleClick(activity)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full
+                            transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer
+                            ${activity.active ? "bg-blue-600" : "bg-gray-300"}`}>
+                          <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform
+                              ${activity.active ? "translate-x-5" : ""}`} />
+                        </button>
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm">
@@ -343,24 +348,6 @@ export function AddressActivityAirdropTable({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleToggleClick(activity)}
-                            disabled={togglingId === activity.id || activity.user_id !== userInfo?.email}
-                            className="cursor-pointer"
-                          >
-                            {(activity.active !== undefined && activity.active !== null ? activity.active : true) ? (
-                              <>
-                                <Pause className="mr-2 h-4 w-4" />
-                                Pause Watcher
-                              </>
-                            ) : (
-                              <>
-                                <Play className="mr-2 h-4 w-4" />
-                                Activate Watcher
-                              </>
-                            )}
-                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => {
