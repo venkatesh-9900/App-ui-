@@ -257,10 +257,12 @@ export function AddressActivityTable({
         toast.success('Updating address acitivity successful!', {
           description: `Updates to the address acitivity have been saved.`,
         })
-        const index = activities.findIndex(g => g.id === id);
+        const index = localActivities.findIndex(g => g.id === id);
+        const updatedActivities = [...localActivities];
         if (index !== -1) {
-          activities[index] = updatedActivity;
+          updatedActivities[index] = updatedActivity;
         }
+        setLocalActivities(updatedActivities);
         setDialogOpen(false)
         setIsUpdating(false)
       },
