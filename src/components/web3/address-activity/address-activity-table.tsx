@@ -350,12 +350,12 @@ export function AddressActivityTable({
                         <span>Address Groups</span>
                       </div>
                     </TableHead>
-                    <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
+                    {/* <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
                         <span>Notification Groups</span>
                       </div>
-                    </TableHead>
+                    </TableHead> */}
                     <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
                       <div className="flex items-center gap-1">
                         <span>Status</span>
@@ -426,7 +426,7 @@ export function AddressActivityTable({
                             })()}
                           </div>
                         </TableCell>
-                        <TableCell className="px-4 py-3 w-2/5 min-w-max">
+                        {/* <TableCell className="px-4 py-3 w-2/5 min-w-max">
                           <div className="flex flex-wrap gap-1">
                             {(() => {
                               const groups = getNotificationGroupsByIds(activity.web3_address_group_ids);
@@ -456,7 +456,7 @@ export function AddressActivityTable({
                               );
                             })()}
                           </div>
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell className="px-4 py-3 w-1/6 min-w-max">
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button
