@@ -20,6 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Loader2, Webhook } from "lucide-react"
+import { NotificationChannel } from "@/types/notification-channel"
 
 export interface NotificationChannelInstanceFormData {
     name: string
@@ -34,6 +35,7 @@ interface Props {
     onOpenChange: (open: boolean) => void
     onSubmit: (data: NotificationChannelInstanceFormData) => void
     isSubmitting: boolean
+    channels: NotificationChannel[]
     mode?: "create" | "edit"
     initialData?: {
         id?: number
@@ -58,6 +60,7 @@ export function NotificationChannelInstanceFormDialog({
     onOpenChange,
     onSubmit,
     isSubmitting,
+    channels,
     mode = "create",
     initialData,
 }: Props) {
@@ -191,9 +194,9 @@ export function NotificationChannelInstanceFormDialog({
                                 </SelectTrigger>
 
                                 <SelectContent>
-                                    {CHANNEL_OPTIONS.map((c) => (
-                                        <SelectItem key={c.id} value={c.id.toString()}>
-                                            {c.label}
+                                    {channels.map((c) => (
+                                        <SelectItem key={c.id} value={c.id.toString()} disabled={c.id == 5}>
+                                            {c.display_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -211,7 +214,7 @@ export function NotificationChannelInstanceFormDialog({
                                 onValueChange={(v) =>
                                     setPublishType(v as "batch" | "realtime")
                                 }
-                                disabled={channelId === 4 || channelId === 3 || isSubmitting}
+                                disabled={channelId === 4 || isSubmitting}
                             >
                                 <SelectTrigger className="w-full">
                                     <SelectValue />
