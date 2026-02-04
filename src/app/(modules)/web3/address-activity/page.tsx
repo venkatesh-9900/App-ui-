@@ -164,51 +164,6 @@ export default function AddressActivityPage() {
         })
     }
 
-    const handleDeleteActivity = async (id: number) => {
-        await deleteAddressActivity({
-            id,
-            successTask: () => {
-                toast.success('Watcher deleted successfully!', {
-                    description: 'The address activity watcher has been removed.',
-                })
-                fetchActivities() // Refresh the list
-            },
-            failureTask: () => {
-                toast.error('Failed to delete watcher', {
-                    description: 'Please try again.',
-                })
-            },
-            errorTask: () => {
-                toast.error('An error occurred', {
-                    description: 'Please check your connection and try again.',
-                })
-            },
-        })
-    }
-
-    const handleToggleActivity = async (id: number, active: boolean) => {
-        await toggleAddressActivity({
-            id,
-            active,
-            successTask: () => {
-                toast.success(`Watcher ${active ? 'activated' : 'paused'} successfully!`, {
-                    description: `The watcher is now ${active ? 'active' : 'paused'}.`,
-                })
-                fetchActivities() // Refresh the list
-            },
-            failureTask: () => {
-                toast.error('Failed to toggle watcher', {
-                    description: 'Please try again.',
-                })
-            },
-            errorTask: () => {
-                toast.error('An error occurred', {
-                    description: 'Please check your connection and try again.',
-                })
-            },
-        })
-    }
-
     const handleDialogOpenChange = useCallback((next: boolean) => {
         if (dialogOpen !== next) {
             setDialogOpen(next)
@@ -249,8 +204,6 @@ export default function AddressActivityPage() {
                                     subscribers={subscribers}
                                     isLoading={isLoadingActivities}
                                     loadingAddressGroups={isLoadingAddressGroups}
-                                    onDelete={handleDeleteActivity}
-                                    onToggle={handleToggleActivity}
                                 />
 
                             </CardContent>

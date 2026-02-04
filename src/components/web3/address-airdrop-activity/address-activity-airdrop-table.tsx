@@ -38,7 +38,7 @@ import { useAuth } from '@/contexts'
 import { NotificationSubscriber } from '@/types/subscriber'
 import { NotificationGroup } from '@/types/topic'
 import { AddressActivityAirdropFormDialog } from './address-activity-airdrop-form-dialog'
-import { updateAddressActivityAirdrop } from '@/hooks/web3/address-activity-airdrop-service'
+import { deleteAddressActivityAirdrop, toggleAddressActivityAirdrop, updateAddressActivityAirdrop } from '@/hooks/web3/address-activity-airdrop-service'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 interface AddressActivityAirdropTableProps {
@@ -48,8 +48,6 @@ interface AddressActivityAirdropTableProps {
   subscribers: NotificationSubscriber[]
   isLoading: boolean
   loadingAddressGroups: boolean
-  onDelete: (id: number) => void
-  onToggle: (id: number, isActive: boolean) => void
 }
 
 export function AddressActivityAirdropTable({
@@ -59,8 +57,6 @@ export function AddressActivityAirdropTable({
   loadingAddressGroups,
   groups,
   subscribers,
-  onDelete,
-  onToggle,
 }: AddressActivityAirdropTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<AddressActivityAirdrop | null>(null)
@@ -75,19 +71,20 @@ export function AddressActivityAirdropTable({
     active: 0,
     inactive: 0
   });
+  const [localActivities, setLocalActivities] = useState<AddressActivityAirdrop[]>(activities);
   const { userInfo } = useAuth()
 
   useEffect(() => {
-    setFilteredActivities(activities);
+    setLocalActivities(activities);
     calculateStatusCount(activities);
   }, [activities]);
 
   useEffect(() => {
-    const filtered = activities.filter(activity =>
+    const filtered = localActivities.filter(activity =>
       activity.name.toLowerCase().includes(searchQuery.toLowerCase()) && statusFilter.includes(activity.active as boolean)
     );
     setFilteredActivities(filtered);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, localActivities]);
 
   const toggleStatusFilter = (status: boolean) => {
     if (statusFilter.includes(status)) {
@@ -109,7 +106,7 @@ export function AddressActivityAirdropTable({
 
   const handleDeleteConfirm = () => {
     if (selectedActivity) {
-      onDelete(selectedActivity.id)
+      handleDeleteActivity(selectedActivity.id)
     }
     setDeleteDialogOpen(false)
     setSelectedActivity(null)
@@ -120,7 +117,7 @@ export function AddressActivityAirdropTable({
     const currentStatus = activity.active !== undefined && activity.active !== null ? activity.active : true
     const newStatus = !currentStatus
     setTogglingId(activity.id)
-    onToggle(activity.id, newStatus)
+    handleToggleActivity(activity.id, newStatus)
     // Reset toggling state after a delay
     setTimeout(() => setTogglingId(null), 1000)
   }
@@ -180,6 +177,57 @@ export function AddressActivityAirdropTable({
     } catch {
       return []
     }
+  }
+
+  const handleDeleteActivity = async (id: number) => {
+    await deleteAddressActivityAirdrop({
+      id,
+      successTask: () => {
+        toast.success('Watcher deleted successfully!', {
+          description: 'The address activity airdrop watcher has been removed.',
+        })
+        const updatedActivities = localActivities.filter(activity => activity.id !== id)
+        setLocalActivities(updatedActivities)
+        calculateStatusCount(updatedActivities)
+      },
+      failureTask: () => {
+        toast.error('Failed to delete watcher', {
+          description: 'Please try again.',
+        })
+      },
+      errorTask: () => {
+        toast.error('An error occurred', {
+          description: 'Please check your connection and try again.',
+        })
+      },
+    })
+  }
+
+  const handleToggleActivity = async (id: number, active: boolean) => {
+    await toggleAddressActivityAirdrop({
+      id,
+      active,
+      successTask: () => {
+        toast.success(`Watcher ${active ? 'activated' : 'paused'} successfully!`, {
+          description: `The watcher is now ${active ? 'active' : 'paused'}.`,
+        })
+        const updatedActivities = localActivities.map(activity =>
+          activity.id === id ? { ...activity, active } : activity
+        )
+        setLocalActivities(updatedActivities)
+        calculateStatusCount(updatedActivities)
+      },
+      failureTask: () => {
+        toast.error('Failed to toggle watcher', {
+          description: 'Please try again.',
+        })
+      },
+      errorTask: () => {
+        toast.error('An error occurred', {
+          description: 'Please check your connection and try again.',
+        })
+      },
+    })
   }
 
   async function handleUpdateActivity(id: number, formData: UpdateAddressActivityAirdropRequest) {
@@ -413,11 +461,12 @@ export function AddressActivityAirdropTable({
                           <button
                             type="button"
                             role="switch"
+                            disabled={togglingId === activity.id}
                             aria-checked={activity.active}
                             onClick={() => handleToggleClick(activity)}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full
-                            transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer
-                            ${activity.active ? "bg-blue-600" : "bg-gray-300"}`}>
+                            transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer
+                            ${activity.active ? "bg-green-500" : "bg-gray-400"}`}>
                             <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform
                               ${activity.active ? "translate-x-5" : ""}`} />
                           </button>
