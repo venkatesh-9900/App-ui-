@@ -72,7 +72,7 @@ export default function AddressActivityAirdropPage() {
         setIsLoadingGroups(true)
         await listTopics({
             successTask: (response) => {
-                if (response.data && response.data) {
+                if (response.data && Array.isArray(response.data)) {
                     setGroups(response.data)
                 }
                 setIsLoadingGroups(false)
@@ -163,61 +163,12 @@ export default function AddressActivityAirdropPage() {
         })
     }
 
-    const handleDeleteActivity = async (id: number) => {
-        await deleteAddressActivityAirdrop({
-            id,
-            successTask: () => {
-                toast.success('Watcher deleted successfully!', {
-                    description: 'The address activity airdrop watcher has been removed.',
-                })
-                fetchActivities() // Refresh the list
-            },
-            failureTask: () => {
-                toast.error('Failed to delete watcher', {
-                    description: 'Please try again.',
-                })
-            },
-            errorTask: () => {
-                toast.error('An error occurred', {
-                    description: 'Please check your connection and try again.',
-                })
-            },
-        })
-    }
-
-    const handleToggleActivity = async (id: number, active: boolean) => {
-        await toggleAddressActivityAirdrop({
-            id,
-            active,
-            successTask: () => {
-                toast.success(`Watcher ${active ? 'activated' : 'paused'} successfully!`, {
-                    description: `The watcher is now ${active ? 'active' : 'paused'}.`,
-                })
-                fetchActivities() // Refresh the list
-            },
-            failureTask: () => {
-                toast.error('Failed to toggle watcher', {
-                    description: 'Please try again.',
-                })
-            },
-            errorTask: () => {
-                toast.error('An error occurred', {
-                    description: 'Please check your connection and try again.',
-                })
-            },
-        })
-    }
-
     const handleDialogOpenChange = useCallback((next: boolean) => {
         if (dialogOpen !== next) {
             setDialogOpen(next)
         }
     }, [dialogOpen])
 
-    const activeWatcherCount = useMemo(
-        () => activities.filter(a => a.active).length,
-        [activities]
-    )
 
 
   return (
@@ -252,15 +203,8 @@ export default function AddressActivityAirdropPage() {
                                     subscribers={subscribers}
                                     isLoading={isLoadingActivities}
                                     loadingAddressGroups={isLoadingAddressGroups}
-                                    onDelete={handleDeleteActivity}
-                                    onToggle={handleToggleActivity}
                                 />
 
-                                {!isLoadingActivities && activeWatcherCount > 0 && (
-                                    <div className="mt-4 text-sm text-muted-foreground text-center">
-                                        {activeWatcherCount} {activeWatcherCount === 1 ? 'watcher' : 'watchers'} active
-          </div>
-                                )}
                             </CardContent>
                         </Card>
 
