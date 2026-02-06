@@ -267,9 +267,14 @@ export function AddressActivityFormDialog({
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
               ) : addressGroups.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
-                  No active address groups available
-                </p>
+                <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
+                  <p>No active address groups available</p>
+                  <Badge className='cursor-pointer mx-2' onClick={() => {
+                    handleRuntimeNavigation()
+                  }} title='Create new address group'>
+                    Create new
+                  </Badge>
+                </div>
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
