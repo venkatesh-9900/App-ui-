@@ -17,6 +17,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { getChainlist } from '@/hooks/web3/metadata.service'
 import { Chain, ChainListResponse } from '@/types/matadata'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function AddressGroupPage() {
     const [groups, setGroups] = useState<AddressGroup[]>([])
@@ -25,12 +26,23 @@ export default function AddressGroupPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [web3Networks, setWeb3Networks] = useState<Chain[]>([])
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
     // Fetch activities on mount
     useEffect(() => {
         fetchGroups()
         fetchChainList()
+        handleParams();
     }, [])
+
+    const handleParams = () => {
+        const query = Object.fromEntries(searchParams.entries());
+        let { openGroup } = query;
+        if (openGroup) {
+            setDialogOpen(true)
+        }
+    }
 
     const fetchGroups = async () => {
         setIsLoadingGroups(true)
@@ -102,6 +114,10 @@ export default function AddressGroupPage() {
                 setDialogOpen(false)
                 setIsSubmitting(false)
                 fetchGroups() // Refresh the list
+                const query = Object.fromEntries(searchParams.entries());
+                if (query.returnUrl) {
+                    router.push(query.returnUrl)
+                }
             },
             failureTask: (duplicateName) => {
                 if (duplicateName) {

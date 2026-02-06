@@ -23,6 +23,7 @@ import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
 import { AddressWatcherInfo } from '@/components/web3/address-activity/address-activity-info'
+import { useSearchParams } from 'next/navigation'
 
 export default function AddressActivityPage() {
     const [activities, setActivities] = useState<AddressActivity[]>([])
@@ -35,13 +36,21 @@ export default function AddressActivityPage() {
     const [isLoadingAddressGroups, setIsLoadingAddressGroups] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
-
+    const searchParams = useSearchParams()
+    const [initialData, setInitialData] = useState<{
+        name?: string
+        address_group_ids?: number[]
+        notification_group_ids?: number[]
+        notification_subscriber_ids?: number[]
+        channel_ids?: string[]
+    }>({})
     // Fetch activities on mount
     useEffect(() => {
         fetchActivities()
         fetchAddressGroups();
         fetchGroups()
         fetchSubscribers()
+        handleParams()
     }, [])
 
     const fetchActivities = async () => {
@@ -67,6 +76,23 @@ export default function AddressActivityPage() {
                 setIsLoadingActivities(false)
             },
         })
+    }
+
+    const handleParams = () => {
+        const query = Object.fromEntries(searchParams.entries());
+        let { openActivity } = query;
+        let initialData = {
+            name: query.name || '',
+            address_group_ids: query.addressGroupIds ? query.addressGroupIds.split(',').map((id) => Number(id)) : [],
+            notification_group_ids: query.groupIds ? query.groupIds.split(',').map((id) => Number(id)) : [],
+            notification_subscriber_ids: query.subscriberIds ? query.subscriberIds.split(',').map((id) => Number(id)) : [],
+            channel_ids: query.channelIds ? query.channelIds.split(',') : []
+        };
+        setInitialData(initialData)
+        if (openActivity) {
+            setDialogOpen(true)
+            window.history.replaceState({}, '', '/web3/address-activity');
+        }
     }
 
     const fetchGroups = async () => {
@@ -216,6 +242,7 @@ export default function AddressActivityPage() {
                             onSubmit={handleFormSubmit}
                             isSubmitting={isSubmitting}
                             groups={groups}
+                            initialData={initialData}
                             addressGroups={addressGroups}
                             subscribers={subscribers}
                             loadingGroups={isLoadingGroups}
