@@ -20,6 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { AddressGroup } from '@/types/address-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useRouter } from 'next/navigation'
 
 interface AddressActivityFormDialogProps {
   open: boolean
@@ -81,6 +82,7 @@ export function AddressActivityFormDialog({
     subscribers?: string
     channels?: string
   }>({})
+  const router = useRouter()
 
   useEffect(() => {
     if (open && initialData) {
@@ -197,6 +199,26 @@ export function AddressActivityFormDialog({
     }
   }, [validateForm, selectedAddressGroups, selectedGroups, selectedSubscribers, selectedChannels, onSubmit])
 
+  const handleRuntimeNavigation = () => {
+    let returnUrl = "/web3/address-activity?openActivity=true"
+    if (name.trim() !== '') {
+      returnUrl += `&name=${name.trim()}`
+    }
+    if (selectedAddressGroups.length > 0) {
+      returnUrl += `&addressGroupIds=${selectedAddressGroups.join(',')}`
+    }
+    if (selectedGroups.length > 0) {
+      returnUrl += `&groupIds=${selectedGroups.join(',')}`
+    }
+    if (selectedSubscribers.length > 0) {
+      returnUrl += `&subscriberIds=${selectedSubscribers.join(',')}`
+    }
+    if (selectedChannels.length > 0) {
+      returnUrl += `&channelIds=${selectedChannels.join(',')}`
+    }
+    router.push('/web3/address-group?openGroup=true&returnUrl=' + encodeURIComponent(returnUrl))
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -245,12 +267,22 @@ export function AddressActivityFormDialog({
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
               ) : addressGroups.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
-                  No active address groups available
-                </p>
+                <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
+                  <p>No active address groups available</p>
+                  <Badge className='cursor-pointer mx-2' onClick={() => {
+                    handleRuntimeNavigation()
+                  }} title='Create new address group'>
+                    Create new
+                  </Badge>
+                </div>
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
+                        <Badge className='cursor-pointer mx-2' onClick={() => {
+                          handleRuntimeNavigation()
+                        }} title='Create new address group'>
+                          Create new
+                        </Badge>
                     {addressGroups.map((AddressGroup) => (
                       <div
                         key={AddressGroup.id}
