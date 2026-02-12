@@ -199,7 +199,8 @@ export function AddressActivityFormDialog({
     }
   }, [validateForm, selectedAddressGroups, selectedGroups, selectedSubscribers, selectedChannels, onSubmit])
 
-  const handleRuntimeNavigation = () => {
+  const handleRuntimeNavigation = (type: string) => {
+    const url = type === 'group' ? '/web3/address-group' : '/notifications/groups'
     let returnUrl = "/web3/address-activity?openActivity=true"
     if (name.trim() !== '') {
       returnUrl += `&name=${name.trim()}`
@@ -216,7 +217,7 @@ export function AddressActivityFormDialog({
     if (selectedChannels.length > 0) {
       returnUrl += `&channelIds=${selectedChannels.join(',')}`
     }
-    router.push('/web3/address-group?openGroup=true&returnUrl=' + encodeURIComponent(returnUrl))
+    router.push(url + '?openGroup=true&returnUrl=' + encodeURIComponent(returnUrl))
   }
 
   return (
@@ -269,18 +270,20 @@ export function AddressActivityFormDialog({
               ) : addressGroups.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
                   <p>No active address groups available</p>
-                  <Badge className='cursor-pointer mx-2' onClick={() => {
-                    handleRuntimeNavigation()
+                  <Badge className='cursor-pointer px-2 py-1 mt-2' onClick={() => {
+                    handleRuntimeNavigation('group')
                   }} title='Create new address group'>
+                    <Plus className="w-4 h-4" />
                     Create new
                   </Badge>
                 </div>
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
-                        <Badge className='cursor-pointer mx-2' onClick={() => {
-                          handleRuntimeNavigation()
+                        <Badge className='cursor-pointer px-2 py-1 mx-2' onClick={() => {
+                          handleRuntimeNavigation('group')
                         }} title='Create new address group'>
+                          <Plus className="w-4 h-4" />
                           Create new
                         </Badge>
                     {addressGroups.map((AddressGroup) => (
@@ -331,12 +334,24 @@ export function AddressActivityFormDialog({
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
               ) : groups.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
-                  No groups available. Create a group first.
-                </p>
+                <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
+                  <p>No groups available. Create a group first.</p>
+                  <Badge className='cursor-pointer px-2 py-1 mt-2' onClick={() => {
+                    handleRuntimeNavigation('notification')
+                  }} title='Create new notification group'>
+                    <Plus className="w-4 h-4" />
+                    Create new
+                  </Badge>
+                </div>
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
                   <div className="space-y-2">
+                    <Badge className='cursor-pointer px-2 py-1 mx-2' onClick={() => {
+                      handleRuntimeNavigation('notification')
+                    }} title='Create new notification group'>
+                      <Plus className="w-4 h-4" />
+                      Create new
+                    </Badge>
                     {groups.map((group) => (
                       <div
                         key={group.id}

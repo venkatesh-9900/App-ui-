@@ -26,6 +26,7 @@ import { NotificationChannelInstanceTable } from "@/components/notifications/not
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { Pagination } from "@/components/common/pagniation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function NotificationChannelInstancesPage() {
     const [instances, setInstances] = useState<NotificationChannelInstance[]>([])
@@ -41,7 +42,8 @@ export default function NotificationChannelInstancesPage() {
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(10)
     const [totalCount, setTotalCount] = useState(0)
-
+    const searchParams = useSearchParams()
+    const router = useRouter()
     // ---------------- Fetch ----------------
     const fetchInstances = async () => {
         setIsLoading(true)
@@ -96,8 +98,16 @@ export default function NotificationChannelInstancesPage() {
 
     useEffect(() => {
         fetchChannels()
+        handleParams()
     }, [])
 
+    const handleParams = () => {
+        const query = Object.fromEntries(searchParams.entries())
+        const { openChannel } = query
+        if (openChannel) {
+            setDialogOpen(true)
+        }
+    }
     // ---------------- Create ----------------
     const handleCreateFromForm = async (
         data: NotificationChannelInstanceFormData
@@ -120,6 +130,12 @@ export default function NotificationChannelInstancesPage() {
                 toast.success("Channel created successfully")
                 setDialogOpen(false)
                 setIsSubmitting(false)
+                const query = Object.fromEntries(searchParams.entries())
+                const { returnUrl } = query
+                if (returnUrl) {
+                    router.push(returnUrl);
+                    return;
+                }
                 fetchInstances()
             },
             failureTask: () => {
