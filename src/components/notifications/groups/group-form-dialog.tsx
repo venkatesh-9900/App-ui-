@@ -482,9 +482,19 @@ const loadChannelInstances = useCallback(() => {
             )}
             {/* Channel Instance Selector */}
             <div className="grid gap-2 border-t pt-4">
-              <Label className="font-semibold">
-                Channel Instances
-              </Label>
+              <div className='flex items-center'>
+                <Label className="font-semibold">
+                  Channel Instances
+                </Label>
+                {!returnUrl && (
+                  <Badge className='cursor-pointer px-2 py-1 ml-2'
+                    onClick={handleRuntimeNavigation}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create new
+                  </Badge>
+                )}
+              </div>
 
               <p className="text-xs text-muted-foreground">
                 Select one or more channels for this group
@@ -492,24 +502,11 @@ const loadChannelInstances = useCallback(() => {
 
               <div className="border rounded-lg max-h-72 overflow-y-auto">
                 {channelInstances.length === 0 ? (
-                  <div className="text-sm text-muted-foreground text-center py-6">
-                    <p>No channel instances found</p>
-                    {!returnUrl ? <Badge className='cursor-pointer px-2 py-1 mt-2' onClick={() => {
-                      handleRuntimeNavigation()
-                    }} title='Create new channel instance'>
-                      <Plus className="w-4 h-4" />
-                      Create new
-                    </Badge> : null}
-                  </div>
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No channel instances found
+                  </p>
                 ) : (
-                    <div>
-                      {!returnUrl ? <Badge className='cursor-pointer px-2 py-1 mt-2 ml-2' onClick={() => {
-                        handleRuntimeNavigation()
-                      }} title='Create new channel instance'>
-                        <Plus className="w-4 h-4" />
-                        Create new
-                      </Badge> : null}
-                      {channelInstances.map((ci) => (
+                    channelInstances.map((ci) => (
                     <div
                       key={ci.id}
                       className="flex items-center gap-2 p-2 hover:bg-muted rounded"
@@ -526,8 +523,7 @@ const loadChannelInstances = useCallback(() => {
                         </div>
                       </div>
                     </div>
-                      ))}
-                    </div>
+                    ))
                 )}
               </div>
             </div>
