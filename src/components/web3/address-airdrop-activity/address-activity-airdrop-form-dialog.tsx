@@ -20,6 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { AddressGroup } from '@/types/address-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useRouter } from 'next/navigation'
 
 interface AddressActivityAirdropFormDialogProps {
   open: boolean
@@ -81,6 +82,8 @@ export function AddressActivityAirdropFormDialog({
     subscribers?: string
     channels?: string
   }>({})
+
+  const router = useRouter()
 
   useEffect(() => {
     if (open && initialData) {
@@ -183,6 +186,27 @@ export function AddressActivityAirdropFormDialog({
     return Object.keys(newErrors).length === 0
   }, [addressGroups, selectedGroups, selectedSubscribers, selectedChannels, name])
 
+  const handleRuntimeNavigation = (type: string) => {
+    const url = type === 'group' ? '/web3/address-group' : '/notifications/groups'
+    let returnUrl = "/web3/address-activity-airdrop?openActivity=true"
+    if (name.trim() !== '') {
+      returnUrl += `&name=${name.trim()}`
+    }
+    if (selectedAddressGroups.length > 0) {
+      returnUrl += `&addressGroupIds=${selectedAddressGroups.join(',')}`
+    }
+    if (selectedGroups.length > 0) {
+      returnUrl += `&groupIds=${selectedGroups.join(',')}`
+    }
+    if (selectedSubscribers.length > 0) {
+      returnUrl += `&subscriberIds=${selectedSubscribers.join(',')}`
+    }
+    if (selectedChannels.length > 0) {
+      returnUrl += `&channelIds=${selectedChannels.join(',')}`
+    }
+    router.push(url + '?openGroup=true&returnUrl=' + encodeURIComponent(returnUrl))
+  }
+
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
@@ -235,6 +259,12 @@ export function AddressActivityAirdropFormDialog({
                 <Label className="text-left font-semibold">
                   Address Groups <span className="text-destructive">*</span>
                 </Label>
+                <Badge className='cursor-pointer px-2 py-1' onClick={() => {
+                  handleRuntimeNavigation('group')
+                }} title='Create new address group'>
+                  <Plus className="w-4 h-4" />
+                  Create new
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
                 Select individual address groups to notify
@@ -245,12 +275,12 @@ export function AddressActivityAirdropFormDialog({
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
               ) : addressGroups.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
-                  No active address groups available
-                </p>
+                  <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
+                    No active address groups available
+                  </p>
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
-                  <div className="space-y-2">
+                      <div className="space-y-2">
                     {addressGroups.map((AddressGroup) => (
                       <div
                         key={AddressGroup.id}
@@ -289,6 +319,12 @@ export function AddressActivityAirdropFormDialog({
                 <Label className="text-left font-semibold">
                   Notification Groups <span className="text-destructive">*</span>
                 </Label>
+                <Badge className='cursor-pointer px-2 py-1' onClick={() => {
+                  handleRuntimeNavigation('notification')
+                }} title='Create new notification group'>
+                  <Plus className="w-4 h-4" />
+                  Create new
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
                 Select groups to notify when activity is detected
@@ -299,9 +335,9 @@ export function AddressActivityAirdropFormDialog({
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
               ) : groups.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
-                  No groups available. Create a group first.
-                </p>
+                  <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
+                    No active notification groups available.
+                  </p>
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
                   <div className="space-y-2">

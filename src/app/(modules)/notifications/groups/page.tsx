@@ -13,6 +13,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { listNotificationChannelInstances } from "@/hooks/notification-channel-instance"
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function NotificationGroupsPage() {
     const [groups, setGroups] = useState<NotificationGroup[]>([])
@@ -22,7 +23,9 @@ export default function NotificationGroupsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create')
-    const [selectedGroup, setSelectedGroup] = useState<NotificationGroup | null>(null)
+    const [selectedGroup, setSelectedGroup] = useState<Partial<NotificationGroup> | null>(null)
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
     // Guard onOpenChange to prevent infinite loops
     const handleDialogOpenChange = React.useCallback((next: boolean) => {
@@ -35,6 +38,7 @@ export default function NotificationGroupsPage() {
     useEffect(() => {
         fetchGroups()
         fetchChannelInstance()
+        handleParams();
     }, [])
 
     const fetchGroups = async () => {
@@ -106,6 +110,11 @@ export default function NotificationGroupsPage() {
                     })
                     setDialogOpen(false)
                     setIsSubmitting(false)
+                    const query = Object.fromEntries(searchParams.entries());
+                    if (query.returnUrl) {
+                        router.push(query.returnUrl)
+                        return;
+                    }
                     fetchGroups() // Refresh the list
                 },
                 failureTask: () => {
@@ -121,7 +130,7 @@ export default function NotificationGroupsPage() {
                     setIsSubmitting(false)
                 },
             })
-        } else if (selectedGroup) {
+        } else if (selectedGroup && selectedGroup.id) {
             await updateTopic({
                 id: selectedGroup.id,
                 request: {
@@ -177,6 +186,22 @@ export default function NotificationGroupsPage() {
         })
     }
 
+    const handleParams = () => {
+        const query = Object.fromEntries(searchParams.entries());
+        let { openGroup, name, description, channelInstanceIds, returnUrl } = query;
+        if (openGroup && !returnUrl) {
+            const initialData = {
+                name: name,
+                description: description,
+                channel_instance_ids: channelInstanceIds ? channelInstanceIds.split(',').map((id) => Number(id)) : []
+            }
+            setSelectedGroup(prevData => ({ ...prevData, ...initialData }))
+            window.history.replaceState({}, '', '/notifications/groups');
+        }
+        if (openGroup) {
+            setDialogOpen(true)
+        }
+    }
     const handleCopyKey = (topicKey: string) => {
         navigator.clipboard.writeText(topicKey)
         toast.success('Key copied!', {
@@ -235,7 +260,7 @@ export default function NotificationGroupsPage() {
                             initialData={
                                 selectedGroup
                                     ? {
-                                        name: selectedGroup.name,
+                                        name: selectedGroup.name || '',
                                         description: selectedGroup.description || "",
                                         topicKey: selectedGroup.novu_topic_key,
                                         channel_instance_ids: selectedGroup.channel_instance_ids ?? [],

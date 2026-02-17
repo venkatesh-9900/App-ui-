@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback} from 'react'
+import React, { useState, useEffect, useCallback, Fragment } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Users, Check, X } from 'lucide-react'
+import { Loader2, Users, Check, X, Plus } from 'lucide-react'
 import { CreateTopicRequest } from '@/types/topic'
 import { NotificationSubscriber } from '@/types/subscriber'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -23,6 +23,8 @@ import { addSubscriptionsToTopic, listTopicSubscriptions, removeSubscriptionsFro
 import { toast } from 'sonner'
 import { listNotificationChannelInstances } from '@/hooks/notification-channel-instance'
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
+import { Badge } from '@/components/ui/badge'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface GroupFormDialogProps {
   open: boolean
@@ -59,6 +61,9 @@ export function GroupFormDialog({
   const [removingSubscriberId, setRemovingSubscriberId] = useState<string | null>(null) // Track which subscriber is being removed
 const [channelInstances, setChannelInstances] = useState<NotificationChannelInstance[]>([])
 const [selectedChannelInstanceIds, setSelectedChannelInstanceIds] = useState<number[]>([])
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { returnUrl } = Object.fromEntries(searchParams.entries());
 
 const loadChannelInstances = useCallback(() => {
   listNotificationChannelInstances({
@@ -140,15 +145,11 @@ const loadChannelInstances = useCallback(() => {
     setExistingSubscriberIds([])
 
     //Channel preselection
-    if (mode === 'edit') {
       setSelectedChannelInstanceIds(
         initialData?.channel_instance_ids
           ? [...initialData.channel_instance_ids]
           : []
       )
-    } else {
-      setSelectedChannelInstanceIds([])
-    }
 
     // // Edit-only side effects
     // if (mode === 'edit') {
@@ -306,6 +307,20 @@ const loadChannelInstances = useCallback(() => {
       })
       
     }, [])
+
+  const handleRuntimeNavigation = () => {
+    let returnUrl = "/notifications/groups?openGroup=true"
+    if (formData.name.trim() !== '') {
+      returnUrl += `&name=${formData.name.trim()}`
+    }
+    if (formData.description) {
+      returnUrl += `&description=${formData.description}`
+    }
+    if (selectedChannelInstanceIds.length > 0) {
+      returnUrl += `&channelInstanceIds=${selectedChannelInstanceIds.join(',')}`
+    }
+    router.push('/notifications/channels?openChannel=true&returnUrl='+ encodeURIComponent(returnUrl) )
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -474,9 +489,19 @@ const loadChannelInstances = useCallback(() => {
             
             {/* Channel Instance Selector */}
             <div className="grid gap-2 border-t pt-4">
-              <Label className="font-semibold">
-                Channel Instances
-              </Label>
+              <div className='flex items-center'>
+                <Label className="font-semibold">
+                  Channel Instances
+                </Label>
+                {!returnUrl && (
+                  <Badge className='cursor-pointer px-2 py-1 ml-2'
+                    onClick={handleRuntimeNavigation}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create new
+                  </Badge>
+                )}
+              </div>
 
               <p className="text-xs text-muted-foreground">
                 Select one or more channels for this group
@@ -488,7 +513,7 @@ const loadChannelInstances = useCallback(() => {
                     No channel instances found
                   </p>
                 ) : (
-                  channelInstances.map((ci) => (
+                    channelInstances.map((ci) => (
                     <div
                       key={ci.id}
                       className="flex items-center gap-2 p-2 hover:bg-muted rounded"
@@ -505,7 +530,7 @@ const loadChannelInstances = useCallback(() => {
                         </div>
                       </div>
                     </div>
-                  ))
+                    ))
                 )}
               </div>
             </div>

@@ -199,7 +199,8 @@ export function AddressActivityFormDialog({
     }
   }, [validateForm, selectedAddressGroups, selectedGroups, selectedSubscribers, selectedChannels, onSubmit])
 
-  const handleRuntimeNavigation = () => {
+  const handleRuntimeNavigation = (type: string) => {
+    const url = type === 'group' ? '/web3/address-group' : '/notifications/groups'
     let returnUrl = "/web3/address-activity?openActivity=true"
     if (name.trim() !== '') {
       returnUrl += `&name=${name.trim()}`
@@ -216,7 +217,7 @@ export function AddressActivityFormDialog({
     if (selectedChannels.length > 0) {
       returnUrl += `&channelIds=${selectedChannels.join(',')}`
     }
-    router.push('/web3/address-group?openGroup=true&returnUrl=' + encodeURIComponent(returnUrl))
+    router.push(url + '?openGroup=true&returnUrl=' + encodeURIComponent(returnUrl))
   }
 
   return (
@@ -257,6 +258,12 @@ export function AddressActivityFormDialog({
                 <Label className="text-left font-semibold">
                   Address Groups <span className="text-destructive">*</span>
                 </Label>
+                <Badge className='cursor-pointer px-2 py-1' onClick={() => {
+                  handleRuntimeNavigation('group')
+                }} title='Create new address group'>
+                  <Plus className="w-4 h-4" />
+                  Create new
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
                 Select individual address groups to notify
@@ -267,22 +274,12 @@ export function AddressActivityFormDialog({
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
               ) : addressGroups.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
-                  <p>No active address groups available</p>
-                  <Badge className='cursor-pointer mx-2' onClick={() => {
-                    handleRuntimeNavigation()
-                  }} title='Create new address group'>
-                    Create new
-                  </Badge>
-                </div>
+                  <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
+                    No active address groups available
+                  </p>
               ) : (
                 <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
-                  <div className="space-y-2">
-                        <Badge className='cursor-pointer mx-2' onClick={() => {
-                          handleRuntimeNavigation()
-                        }} title='Create new address group'>
-                          Create new
-                        </Badge>
+                      <div className="space-y-2">
                     {addressGroups.map((AddressGroup) => (
                       <div
                         key={AddressGroup.id}
@@ -321,6 +318,12 @@ export function AddressActivityFormDialog({
                 <Label className="text-left font-semibold">
                   Notification Groups <span className="text-destructive">*</span>
                 </Label>
+                <Badge className='cursor-pointer px-2 py-1' onClick={() => {
+                  handleRuntimeNavigation('notification')
+                }} title='Create new notification group'>
+                  <Plus className="w-4 h-4" />
+                  Create new
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">
                 Select groups to notify when activity is detected
