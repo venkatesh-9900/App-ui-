@@ -11,6 +11,8 @@ import { SubscriptionForm } from '@/components/notifications/subscribe-consent/s
 import { EmptyState } from '@/components/notifications/subscribe-consent/empty-state'
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
+import { CreateNotificationChannelInstanceRequest, NotificationSubscriberInfo } from '@/types/notification-channel-instance'
+import { NotificationChannelInstancesSubscriberInfo, upsertNotificationChannelInstance } from '@/hooks/notification-channel-instance'
 
 export default function SubscribeConsentPage() {
   // Page-level state management
@@ -20,25 +22,23 @@ export default function SubscribeConsentPage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isUnsubscribing, setIsUnsubscribing] = useState(false)
-  const [existingSubscriber, setExistingSubscriber] = useState<NotificationSubscriber | null>(null)
+  const [existingSubscriber, setExistingSubscriber] = useState<NotificationSubscriberInfo | null>(null)
 
   const showForm = emailConsent || smsConsent
 
   // Fetch existing subscriber on mount
   useEffect(() => {
     const fetchExistingSubscriber = async () => {
-      await getCurrentUserSubscriber({
+      await NotificationChannelInstancesSubscriberInfo({
         successTask: (data) => {
-          console.log('Existing subscriber data:', data)
-          if (data.status === 'Success' && data.data && data.data.length > 0) {
+          if (data.data) {
             // Get the first subscriber (most recent or active one)
-            const subscriber = data.data[0]
+            const subscriber = data.data
             setExistingSubscriber(subscriber)
-
+            console.log('Existing subscriber found:', subscriber)
             // Set consent toggles based on saved preferences
-            setEmailConsent(subscriber.email_preference)
-            setSmsConsent(subscriber.sms_preference)
-
+            setEmailConsent(subscriber.email_preference || false)
+            setSmsConsent(subscriber.sms_preference || false)
             toast.info('Existing subscription found', {
               description: 'Your saved preferences have been loaded.',
             })
@@ -61,10 +61,10 @@ export default function SubscribeConsentPage() {
 
   // Refetch subscriber data after successful creation/update
   const refetchSubscriber = async () => {
-    await getCurrentUserSubscriber({
+    await NotificationChannelInstancesSubscriberInfo({
       successTask: (data) => {
-        if (data.status === 'Success' && data.data && data.data.length > 0) {
-          const subscriber = data.data[0]
+        if (data.data) {
+          const subscriber = data.data
           setExistingSubscriber(subscriber)
         }
       },
@@ -78,10 +78,10 @@ export default function SubscribeConsentPage() {
   }
 
   // Handle form submission with API call
-  const handleSubscriberCreation = async (payload: CreateSubscriberRequest) => {
+  const handleSubscriberCreation = async (payload: CreateNotificationChannelInstanceRequest) => {
     setIsSubmitting(true)
 
-    await createSubscriber({
+    await upsertNotificationChannelInstance({
       request: payload,
       successTask: async (data) => {
         // Success
@@ -123,7 +123,7 @@ export default function SubscribeConsentPage() {
     setIsUnsubscribing(true)
 
     await deleteSubscriber({
-      subscriberId: existingSubscriber.novu_subscriber_id,
+      subscriberId: '1', //existingSubscriber.novu_subscriber_id, // now we dont have unsubsribe option 
       successTask: () => {
         toast.success('Unsubscribed successfully', {
           description: 'You have been unsubscribed from all notifications.',

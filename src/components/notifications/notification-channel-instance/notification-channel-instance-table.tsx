@@ -41,6 +41,7 @@ import {
 import { format } from "date-fns"
 
 import { NotificationChannelInstance } from "@/types/notification-channel-instance"
+import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@radix-ui/react-tooltip"
 
 interface NotificationChannelInstanceTableProps {
     instances: NotificationChannelInstance[]
@@ -50,6 +51,8 @@ interface NotificationChannelInstanceTableProps {
 }
 
 const CHANNEL_TYPE_MAP: Record<number, string> = {
+    1: "Email",
+    2: "SMS",
     3: "Custom Webhook",
     4: "Teams Webhook",
 }
@@ -84,6 +87,11 @@ export function NotificationChannelInstanceTable({
         } catch {
             return "N/A"
         }
+    }
+
+    const isChannelEmailOrSms = (instances: NotificationChannelInstance) => {
+        if ([1, 2].includes(instances.channel_id)) return true
+        return false
     }
 
     if (isLoading) {
@@ -209,13 +217,50 @@ export function NotificationChannelInstanceTable({
                                                 </DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
 
-                                                <DropdownMenuItem
-                                                    onClick={() => onEdit(instance)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Edit2 className="mr-2 h-4 w-4" />
-                                                    Edit
-                                                </DropdownMenuItem>
+                                                <TooltipProvider delayDuration={150}>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <DropdownMenuItem
+                                                                onClick={(e) => {
+                                                                    if (isChannelEmailOrSms(instance)) {
+                                                                        e.preventDefault()
+                                                                        return
+                                                                    }
+                                                                    onEdit(instance)
+                                                                }}
+                                                                aria-disabled={isChannelEmailOrSms(instance)}
+                                                                className={`cursor-pointer ${isChannelEmailOrSms(instance)
+                                                                        ? "cursor-not-allowed text-muted-foreground"
+                                                                        : ""
+                                                                    }`}
+                                                            >
+                                                                <Edit2 className="mr-2 h-4 w-4" />
+                                                                Edit
+                                                            </DropdownMenuItem>
+                                                        </TooltipTrigger>
+
+                                                        {isChannelEmailOrSms(instance) && (
+                                                            <TooltipContent
+                                                                side="top"
+                                                                align="center"
+                                                                sideOffset={6}
+                                                                className="
+                                                                    z-[9999]
+                                                                    rounded-md
+                                                                    px-3 py-1.5
+                                                                    text-xs
+                                                                    shadow-md
+                                                                    bg-popover
+                                                                    text-popover-foreground
+                                                                    "
+                                                            >
+                                                                Please go to subscribers to edit
+                                                            </TooltipContent>
+                                                        )}
+                                                    </Tooltip>
+                                                </TooltipProvider>
+
+
 
                                                 <DropdownMenuSeparator />
 

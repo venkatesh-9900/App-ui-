@@ -3,7 +3,8 @@ import {
     UpdateNotificationChannelInstanceRequest,
     NotificationChannelInstanceResponse,
     ListNotificationChannelInstanceResponse,
-    DeleteNotificationChannelInstanceResponse
+    DeleteNotificationChannelInstanceResponse,
+    NotificationSubscriberInfoResponse
 } from '@/types/notification-channel-instance'
 import { refreshAccessToken, reauthenticationStep } from '@/hooks/auth-service'
 import { buildHeaderJSON } from '@/utils/axios/auth-axios'
@@ -36,6 +37,8 @@ interface ListNotificationChannelInstanceParams extends BaseServiceParams {
 const ENDPOINTS = {
     CREATE: '/api/notification-channel-instances',
     LIST: `/api/notification-channel-instances`,
+    SUBSCRIBER_INFO: '/api/notification-channel-instances/subscriber-info',
+    UPSERT: '/api/notification-channel-instances/upsert',
     UPDATE: (id: number) => `/api/notification-channel-instances?id=${id}`,
     DELETE: (id: number) => `/api/notification-channel-instances?id=${id}`,
 }
@@ -62,6 +65,41 @@ export const createNotificationChannelInstance = async ({
             retry
                 ? await reauthenticationStep(errorTask)
                 : await createNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask })
+            return
+        }
+
+        if (res.status === 201 || res.status === 200) {
+            const data: NotificationChannelInstanceResponse = await res.json();
+            successTask(data)
+        } else {
+            failureTask()
+        }
+    } catch {
+        errorTask()
+    }
+}
+
+/** CREATE */
+export const upsertNotificationChannelInstance = async ({
+    request,
+    successTask,
+    failureTask,
+    errorTask,
+    retry = false,
+}: CreateNotificationChannelInstanceParams) => {
+    try {
+        if (retry) await refreshAccessToken({ failureTask, errorTask })
+
+        const res = await fetch(ENDPOINTS.UPSERT, {
+            method: 'POST',
+            headers: buildHeaderJSON(false),
+            body: JSON.stringify(request),
+        })
+
+        if (res.status === 401) {
+            retry
+                ? await reauthenticationStep(errorTask)
+                : await upsertNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask })
             return
         }
 
@@ -110,6 +148,44 @@ export const listNotificationChannelInstances = async ({
 
         if (res.status === 200) {
             const data: ListNotificationChannelInstanceResponse = await res.json();
+            successTask(data)
+        } else {
+            failureTask()
+        }
+    } catch {
+        errorTask()
+    }
+}
+
+export const NotificationChannelInstancesSubscriberInfo = async ({
+    page,
+    limit,
+    successTask,
+    failureTask,
+    errorTask,
+    retry = false,
+}: ListNotificationChannelInstanceParams) => {
+    try {
+        if (retry) await refreshAccessToken({ failureTask, errorTask })
+        const params = new URLSearchParams()
+        const url =
+                params.toString().length > 0
+                    ? `${ENDPOINTS.SUBSCRIBER_INFO}?${params.toString()}`
+                    : ENDPOINTS.SUBSCRIBER_INFO
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: buildHeaderJSON(false),
+        })
+
+        if (res.status === 401) {
+            retry
+                ? await reauthenticationStep(errorTask)
+                : await NotificationChannelInstancesSubscriberInfo({ retry: true, page, limit, successTask, failureTask, errorTask })
+            return
+        }
+
+        if (res.status === 200) {
+            const data: NotificationSubscriberInfoResponse = await res.json();
             successTask(data)
         } else {
             failureTask()

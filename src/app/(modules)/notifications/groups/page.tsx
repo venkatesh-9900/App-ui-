@@ -11,10 +11,14 @@ import { GroupFormDialog } from '@/components/notifications/groups/group-form-di
 import { GroupsTable } from '@/components/notifications/groups/groups-table'
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
+import { listNotificationChannelInstances } from "@/hooks/notification-channel-instance"
+import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 
 export default function NotificationGroupsPage() {
     const [groups, setGroups] = useState<NotificationGroup[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [ isChannelInstanceLoading, setIsChannelInstanceLoading] = useState(true)
+    const [channelInstances, setChannelInstances] = useState<NotificationChannelInstance[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create')
@@ -30,6 +34,7 @@ export default function NotificationGroupsPage() {
     // Fetch groups on mount
     useEffect(() => {
         fetchGroups()
+        fetchChannelInstance()
     }, [])
 
     const fetchGroups = async () => {
@@ -56,6 +61,25 @@ export default function NotificationGroupsPage() {
                 setIsLoading(false)
             },
         })
+    }
+
+    const fetchChannelInstance = async () => {
+        setIsChannelInstanceLoading(true)
+        await listNotificationChannelInstances({
+            successTask: (res) => {
+                  setChannelInstances(res.data ?? [])
+                  setIsChannelInstanceLoading(false)
+                },
+                failureTask: () => {
+                  toast.error("Failed to load channel instances")
+                  setIsChannelInstanceLoading(false)
+                },
+                errorTask: () => {
+                  toast.error("Something went wrong while loading channels")
+                  setIsChannelInstanceLoading(false)
+                },
+        })
+
     }
 
     const handleCreateGroup = () => {
@@ -99,7 +123,7 @@ export default function NotificationGroupsPage() {
             })
         } else if (selectedGroup) {
             await updateTopic({
-                topicKey: selectedGroup.novu_topic_key,
+                id: selectedGroup.id,
                 request: {
                     name: formData.name,
                     description: formData.description,
@@ -129,11 +153,11 @@ export default function NotificationGroupsPage() {
         }
     }
 
-    const handleDeleteGroup = async (topicKey: string) => {
-        const groupToDelete = groups.find(g => g.novu_topic_key === topicKey)
+    const handleDeleteGroup = async (id: number) => {
+        const groupToDelete = groups.find(g => g.id === id)
 
         await deleteTopic({
-            topicKey,
+            id: id,
             successTask: () => {
                 toast.success('Group deleted successfully!', {
                     description: `${groupToDelete?.name || 'The group'} has been deleted.`,
@@ -186,10 +210,11 @@ export default function NotificationGroupsPage() {
                             <CardContent>
                                 <GroupsTable
                                     groups={groups}
-                                    isLoading={isLoading}
+                                    isLoading={isLoading && isChannelInstanceLoading}
                                     onEdit={handleEditGroup}
                                     onDelete={handleDeleteGroup}
                                     onCopyKey={handleCopyKey}
+                                    channelInstances= {channelInstances}
                                 />
 
                                 {!isLoading && groups.length > 0 && (
