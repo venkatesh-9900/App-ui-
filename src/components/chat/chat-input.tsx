@@ -130,12 +130,14 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
             <div
               key={file.file_id}
               className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md text-sm"
+              data-testid="chat-input-attached-file"
             >
               <span className="truncate max-w-xs">{file.original_file_name}</span>
               <button
                 onClick={() => removeAttachedFile(file.file_id)}
                 disabled={isLoading}
                 className="ml-1 hover:text-destructive disabled:opacity-50 cursor-pointer"
+                data-testid={`chat-input-remove-file-button`}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -155,6 +157,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
                 disabled={isLoading || isUploading}
                 className="flex-shrink-0 h-10 w-10 cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
+                data-testid="chat-input-attach-file-button"
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
@@ -167,6 +170,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
 
         {/* Hidden file input */}
         <input
+          data-testid="chat-input-file-input"
           ref={fileInputRef}
           type="file"
           multiple
@@ -176,6 +180,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
         />
 
         <Textarea
+          data-testid="chat-input-textarea"
           ref={textareaRef}
           placeholder="Enter to send, Shift+Enter for new line..."
           value={input}
@@ -186,6 +191,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
         />
 
         <Button
+          data-testid="chat-input-send-button"
           onClick={handleSend}
           disabled={isLoading || isUploading || !input.trim()}
           className="flex-shrink-0 h-10 w-10 px-0 cursor-pointer"

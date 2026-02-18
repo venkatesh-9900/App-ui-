@@ -239,16 +239,16 @@ export function ChatSessionsList() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="All Chats" className="cursor-pointer">
+          <SidebarMenuButton tooltip="All Chats" className="cursor-pointer" data-testid="all-chats-sidebar-button">
             <MessageSquare onClick={subMenuExpansion} className="h-4 w-4" />
             <span>All Chats</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
-        <CollapsibleContent>
+        <CollapsibleContent data-testid="all-chats-collapsible-content">
           <SidebarMenuSub>
             {isLoadingChats ? (
-              <SidebarMenuSubItem>
+              <SidebarMenuSubItem data-testid="chat-sessions-list-loading-state">
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
                   <span>Loading...</span>
                 </div>
@@ -259,6 +259,7 @@ export function ChatSessionsList() {
                   <SidebarMenuSubButton
                     asChild
                     isActive={currentSessionId === session.session_id}
+                    data-testid={`chat-session-list-item-button`}
                   >
                     <Link href={`/chat?sessionId=${session.session_id}`}>
                       {session.session_id.includes("scheduled-chat") && (
@@ -272,6 +273,7 @@ export function ChatSessionsList() {
                       <SidebarMenuAction
                         showOnHover
                         className="cursor-pointer data-[state=open]:bg-accent rounded-sm"
+                        data-testid={`chat-session-list-item-action-button`}
                       >
                         <IconDots />
                         <span className="sr-only">More</span>
@@ -284,6 +286,7 @@ export function ChatSessionsList() {
                     >
                       <DropdownMenuItem className="cursor-pointer"
                         onClick={() => handleOpenChat(session.session_id)}
+                        data-testid={`chat-session-list-item-open-button`}
                       >
                         <IconFolder />
                         <span>Open</span>
@@ -299,6 +302,7 @@ export function ChatSessionsList() {
                             {(showPause || showResume) && <DropdownMenuSeparator />}
                             {showPause && (
                               <DropdownMenuItem
+                                data-testid={`chat-session-list-item-pause-button`}
                                 className="cursor-pointer"
                                 disabled={scheduleActionSessionId === session.session_id}
                                 onClick={() => handlePauseSchedule(session.session_id)}
@@ -309,6 +313,7 @@ export function ChatSessionsList() {
                             )}
                             {showResume && (
                               <DropdownMenuItem
+                                data-testid={`chat-session-list-item-resume-button`}
                                 className="cursor-pointer"
                                 disabled={scheduleActionSessionId === session.session_id}
                                 onClick={() => handleResumeSchedule(session.session_id)}
@@ -322,6 +327,7 @@ export function ChatSessionsList() {
                       })()}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="cursor-pointer"
+                        data-testid={`chat-session-list-item-delete-button`}
                         variant="destructive"
                         disabled={deletingSessionId === session.session_id}
                         onClick={() => handleDeleteChat(session.session_id)}
@@ -336,7 +342,7 @@ export function ChatSessionsList() {
                 </SidebarMenuSubItem>
               ))
             ) : (
-              <SidebarMenuSubItem>
+              <SidebarMenuSubItem data-testid="chat-sessions-list-empty-state">
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
                   <span>No chats yet</span>
                 </div>
