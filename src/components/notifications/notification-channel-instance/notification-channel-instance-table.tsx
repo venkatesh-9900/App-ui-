@@ -230,8 +230,8 @@ export function NotificationChannelInstanceTable({
                                                                 }}
                                                                 aria-disabled={isChannelEmailOrSms(instance)}
                                                                 className={`cursor-pointer ${isChannelEmailOrSms(instance)
-                                                                        ? "cursor-not-allowed text-muted-foreground"
-                                                                        : ""
+                                                                    ? "cursor-not-allowed text-muted-foreground"
+                                                                    : ""
                                                                     }`}
                                                             >
                                                                 <Edit2 className="mr-2 h-4 w-4" />
