@@ -239,10 +239,10 @@ export function ChatGroupsList() {
       g.group_name.toLowerCase() === addGroupName.trim().toLowerCase()
     )
     if (duplicate) { 
-      toast.error("Group name already exists")
+      toast.error("Already exists. Please try with a different name.")
       return
     }
-    
+
     createChatGroup({
       groupName: addGroupName,
       successTask: () => {
