@@ -225,6 +225,24 @@ export function ChatGroupsList() {
   }
 
   const handleAddGroup = () => {
+    if (!addGroupName.trim()) return toast.error("Group name cannot be empty")
+    const validPattern = /^[A-Za-z0-9_]+$/
+
+    if (!validPattern.test(addGroupName.trim())) {
+      toast.error(
+        "Group name can only contain letters (A-Z, a-z), numbers (0-9), and underscore (_). No spaces or special characters allowed."
+      )
+      return
+    }
+    
+    const duplicate = chatGroups.some(g =>
+      g.group_name.toLowerCase() === addGroupName.trim().toLowerCase()
+    )
+    if (duplicate) { 
+      toast.error("Group name already exists")
+      return
+    }
+    
     createChatGroup({
       groupName: addGroupName,
       successTask: () => {
