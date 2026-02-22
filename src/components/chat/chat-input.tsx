@@ -133,12 +133,13 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
     <div className="sticky bottom-2 bg-background pb-3 shrink-0">
       <div className="flex gap-4 flex-wrap mb-2 px-3 items-center">
         {attachedFiles.map((file) => (
-          <div key={file.file_id} className="relative border rounded-lg overflow-visible max-w-xs h-auto">
+          <div key={file.file_id} className="relative border rounded-lg overflow-visible max-w-xs h-auto" data-testid="chat-input-attached-file">
             <button
               onClick={() => removeAttachedFile(file.file_id)}
               disabled={isLoading}
               className="absolute -top-2 -right-2 z-10 bg-black text-white dark:bg-white dark:text-black rounded-full p-1 shadow-md hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer"
               aria-label="Remove image"
+              data-testid={`chat-input-remove-file-button`}
             >
               <svg xmlns="http://www.w3.org" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -175,6 +176,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
                 disabled={isLoading || isUploading}
                 className="flex-shrink-0 h-10 w-10 cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
+                data-testid="chat-input-attach-file-button"
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
@@ -187,6 +189,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
 
         {/* Hidden file input */}
         <input
+          data-testid="chat-input-file-input"
           ref={fileInputRef}
           type="file"
           multiple
@@ -196,6 +199,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
         />
 
         <Textarea
+          data-testid="chat-input-textarea"
           ref={textareaRef}
           placeholder="Enter to send, Shift+Enter for new line..."
           value={input}
@@ -206,6 +210,7 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
         />
 
         <Button
+          data-testid="chat-input-send-button"
           onClick={handleSend}
           disabled={isLoading || isUploading || !input.trim()}
           className="flex-shrink-0 h-10 w-10 px-0 cursor-pointer"

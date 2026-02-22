@@ -68,6 +68,7 @@ export function NavUser() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
+              data-testid="nav-user-trigger"
               size="lg"
               className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
@@ -103,21 +104,21 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer" onClick={handleDeveloperSettings}>
+              <DropdownMenuItem data-testid="nav-user-developer-settings" className="cursor-pointer" onClick={handleDeveloperSettings}>
                 <FolderCode />
                 Developer Settings
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem data-testid="nav-user-billing" className="cursor-pointer">
                 <CreditCard />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem data-testid="nav-user-notifications" className="cursor-pointer">
                 <Bell />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuItem data-testid="nav-user-logout" onClick={handleLogout} className="cursor-pointer">
               <LogOut />
               Log out
             </DropdownMenuItem>

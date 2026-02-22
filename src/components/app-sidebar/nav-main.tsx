@@ -64,7 +64,7 @@ export function NavMain({
         {menuItems.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild isActive={isActive(item.url)}>
-              <Link href={item.url}>
+              <Link href={item.url} data-testid={`nav-${item.name.toLowerCase().replace(" ", "-")}-link`}>
                 <item.icon onClick={itemClickHandler} />
                 <span>{item.name}</span>
               </Link>

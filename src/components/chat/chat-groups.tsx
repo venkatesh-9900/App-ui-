@@ -225,6 +225,24 @@ export function ChatGroupsList() {
   }
 
   const handleAddGroup = () => {
+    if (!addGroupName.trim()) return toast.error("Group name cannot be empty")
+    const validPattern = /^[A-Za-z0-9_]+$/
+
+    if (!validPattern.test(addGroupName.trim())) {
+      toast.error(
+        "Group name can only contain letters (A-Z, a-z), numbers (0-9), and underscore (_). No spaces or special characters allowed."
+      )
+      return
+    }
+    
+    const duplicate = chatGroups.some(g =>
+      g.group_name.toLowerCase() === addGroupName.trim().toLowerCase()
+    )
+    if (duplicate) { 
+      toast.error("Already exists. Please try with a different name.")
+      return
+    }
+
     createChatGroup({
       groupName: addGroupName,
       successTask: () => {
@@ -301,7 +319,7 @@ export function ChatGroupsList() {
                     <span>New Group</span>
                   </SidebarMenuSubButton>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent data-testid="chat-groups-new-group-dialog" className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Add a New Group</DialogTitle>
                     {/* <DialogDescription>
@@ -326,7 +344,7 @@ export function ChatGroupsList() {
                         Close
                       </Button>
                     </DialogClose>
-                    <Button type="submit" onClick={() => { handleAddGroup() }}>Add</Button>
+                    <Button data-testid="chat-groups-new-group-add-button" type="submit" onClick={() => { handleAddGroup() }}>Add</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -335,16 +353,16 @@ export function ChatGroupsList() {
             {isLoadingChats ? (
               <SidebarMenuSubItem>
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
-                  <span>Loading...</span>
+                  <span data-testid="chat-groups-list-loading">Loading...</span>
                 </div>
               </SidebarMenuSubItem>
             ) : chatGroups.map((group, idx) => (
-                <Collapsible open={!group.is_collapsed} onOpenChange={(open) => {setCollapsed(open, idx)}} key={group.group_id}>
+                <Collapsible data-testid="chat-groups-list-items" open={!group.is_collapsed} onOpenChange={(open) => {setCollapsed(open, idx)}} key={group.group_id}>
                   {/* <SidebarMenuSubItem> */}
                     <CollapsibleTrigger asChild>
                       <SidebarMenuSubItem>
                         <div className="flex flex-row gap-2">
-                          <SidebarMenuButton tooltip="Chat Groups" className="cursor-pointer">
+                          <SidebarMenuButton data-testid="chat-groups-list-items-button" tooltip="Chat Groups" className="cursor-pointer">
                             {group.is_collapsed ? <Folder className="h-4 w-4" /> : <FolderOpen className="h-4 w-4" />}
                             <span>{group.group_name}</span>
                             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -354,12 +372,14 @@ export function ChatGroupsList() {
                                 <SidebarMenuAction
                                   showOnHover
                                   className="cursor-pointer data-[state=open]:bg-accent rounded-sm"
+                                  data-testid="chat-groups-list-items-action-button"
                                 >
                                   <IconDots />
                                   <span className="sr-only">More</span>
                                 </SidebarMenuAction>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent
+                                data-testid="chat-groups-list-items-action-dropdown-content"
                                 className="w-24 rounded-lg"
                                 side={isMobile ? "bottom" : "right"}
                                 align={isMobile ? "end" : "start"}
@@ -372,6 +392,7 @@ export function ChatGroupsList() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator /> */}
                                 <DropdownMenuItem className="cursor-pointer"
+                                  data-testid="chat-groups-list-items-action-dropdown-delete-button"
                                   variant="destructive"
                                   disabled={deletingGroupId === group.group_id}
                                   onClick={() => handleDeleteGroup(group.group_id)}
@@ -396,6 +417,7 @@ export function ChatGroupsList() {
                       {group.sessions.map((session) => (
                         <SidebarMenuSubItem key={session.session_id}>
                           <SidebarMenuSubButton
+                            data-testid="chat-groups-list-items-session-button"
                             asChild
                             isActive={currentSessionId === session.session_id}
                           >
@@ -406,6 +428,7 @@ export function ChatGroupsList() {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <SidebarMenuAction
+                                data-testid="chat-groups-list-items-session-action-button"
                                 showOnHover
                                 className="cursor-pointer data-[state=open]:bg-accent rounded-sm"
                               >
@@ -414,11 +437,13 @@ export function ChatGroupsList() {
                               </SidebarMenuAction>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
+                              data-testid="chat-groups-list-items-session-action-dropdown-content"
                               className="w-24 rounded-lg"
                               side={isMobile ? "bottom" : "right"}
                               align={isMobile ? "end" : "start"}
                             >
                               <DropdownMenuItem className="cursor-pointer"
+                                data-testid="chat-groups-list-items-session-action-open-button"
                                 onClick={() => handleOpenChat(session.session_id)}
                               >
                                 <IconFolder />
@@ -426,6 +451,7 @@ export function ChatGroupsList() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="cursor-pointer"
+                                data-testid="chat-groups-list-items-session-action-delete-button"
                                 variant="destructive"
                                 disabled={deletingSessionId === session.session_id}
                                 onClick={() => handleDeleteChat(session.session_id, group.group_id)}

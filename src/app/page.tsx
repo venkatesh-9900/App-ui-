@@ -35,6 +35,7 @@ export default function LandingPage() {
         <h1 className="text-2xl font-bold">Argus Intelligence</h1>
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <Button 
+            data-testid="login-sso-button"
             onClick={handleSSOLogin}
             size="lg"
             className="cursor-pointer w-full sm:w-auto"
