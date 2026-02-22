@@ -77,7 +77,7 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
     return (
       <div className="flex gap-3 mb-3 justify-end px-3 group">
         <div className="flex flex-col items-end gap-1 max-w-3xl">
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-1" style={{ flexDirection: 'column' }}>
             <Card
               className="w-fit px-4 py-3 bg-primary text-primary-foreground rounded-2xl rounded-tr-sm shadow-md"
             >
