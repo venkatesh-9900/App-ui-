@@ -13,6 +13,7 @@ import { FileDetails } from "@/types"
 import { fetchSessionDetails } from "@/hooks/chat-service"
 import { useRouter } from "next/navigation"
 import { triggerChatHistoryUpdate } from "@/utils/eventBus"
+import { ArrowRightIcon, FolderClosedIcon } from "lucide-react"
 
 export default function ChatPage() {
     const searchParams = useSearchParams()
@@ -33,7 +34,11 @@ export default function ChatPage() {
     const userid = searchParams.get("userid");
     const groupIdParam = searchParams.get("groupId");
     const [lastLoadedSession, setLastLoadedSession] = useState<string | null>(null);
-
+    const defaultPromptList = [
+        "List all the watchers",
+        "List all the notifications",
+        "List all Address Activities"
+    ]
 
     useEffect(() => {
         console.log("ChatPage useEffect - session:", session, "prompt:", prompt, "isNew:", isNew, "userid:", userid, "groupId:", groupIdParam);
@@ -254,13 +259,22 @@ export default function ChatPage() {
 
     return (
         <ProtectedRoute>
-            <div className="flex flex-col h-screen">
+            <div className="flex flex-col h-screen justify-center px-20">
                 {isLoadingSession && (
                     <div className="border-b p-4 bg-muted">
                         <p className="text-sm text-muted-foreground">Loading chat session...</p>
                     </div>
                 )}
-                <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} readOnly={readOnly}/>
+                {
+                    // Group name
+                    (groupId && !sessionId) && (
+                        <div className="flex items-center gap-2 px-3 mb-2 font-bold" style={{ fontSize: '2rem' }}>
+                            <FolderClosedIcon className="h-12 w-12" />
+                            {localStorage.getItem("groupName")}
+                        </div>
+                    )
+                }
+                {sessionId && <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} readOnly={readOnly} />}
                 {!readOnly && <ChatInput 
                     key={`${sessionId || 'new'}-${initialMessage}`}
                     onSend={handleSendMessage} 
@@ -268,6 +282,24 @@ export default function ChatPage() {
                     initialValue={initialMessage}
                     currentChatId={sessionId}
                 />}
+                {(!sessionId && groupId) && (
+                    <div className="mt-4 flex flex-col gap-2 px-3">
+                        <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Suggested Prompts
+                        </h3>
+                        {defaultPromptList.map((prompt, index) => (
+                            <div
+                                key={index}
+                                onClick={() => setInitialMessage(prompt)}
+                                className="group flex cursor-pointer items-center justify-between rounded-lg border bg-card p-3 transition-all hover:bg-accent hover:text-accent-foreground active:scale-[0.98]"
+                            >
+                                <span className="text-sm font-medium">{prompt}</span>
+                                <ArrowRightIcon className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                            </div>
+                        ))}
+                    </div>
+                )}
+
             </div>
         </ProtectedRoute>
     )
