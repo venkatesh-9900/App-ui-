@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect, use } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { ChevronRight, MessageSquare, MessageSquarePlus, Folder, FolderOpen, FolderPlus } from "lucide-react"
+import { ChevronRight, MessageSquare, MessageSquarePlus, Folder, FolderOpen, FolderPlus, ComponentIcon } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -245,7 +245,8 @@ export function ChatGroupsList() {
     });
   }
 
-  const handleOpenNewChat = (groupId: string) => {
+  const handleOpenNewChat = (groupId: string, groupName?: string) => {
+    localStorage.setItem("groupName", groupName || "")
     router.push(`/chat?new=true&groupId=${groupId}`)
   }
 
@@ -285,7 +286,7 @@ export function ChatGroupsList() {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip="Chat Groups" className="cursor-pointer">
-            <MessageSquare onClick={subMenuExpansion} className="h-4 w-4" />
+            <ComponentIcon onClick={subMenuExpansion} className="h-4 w-4" />
             <span>Chat Groups</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
@@ -295,7 +296,7 @@ export function ChatGroupsList() {
             <SidebarMenuSubItem key={"new-group"}>
               <Dialog open={openAddGroupDialog} onOpenChange={setOpenAddGroupDialog}>
                 <DialogTrigger asChild>
-                  <SidebarMenuSubButton>
+                  <SidebarMenuSubButton className="cursor-pointer">
                     <FolderPlus className="h-4 w-4" />
                     <span>New Group</span>
                   </SidebarMenuSubButton>
@@ -386,8 +387,8 @@ export function ChatGroupsList() {
                       </SidebarMenuSubItem>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pl-4">
-                      <SidebarMenuSubItem key={`${group.group_id}-new-session`}>
-                          <SidebarMenuSubButton onClick={() => { handleOpenNewChat(group.group_id) }}>
+                  <SidebarMenuSubItem className="cursor-pointer" key={`${group.group_id}-new-session`}>
+                    <SidebarMenuSubButton onClick={() => { handleOpenNewChat(group.group_id, group.group_name) }}>
                             <MessageSquarePlus className="h-4 w-4" />
                             <span>New Chat</span>
                           </SidebarMenuSubButton>
