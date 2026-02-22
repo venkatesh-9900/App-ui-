@@ -28,4 +28,5 @@ export interface FileDetails {
     original_file_name: string;
     file_type: string;
     file_size: number;
+    public_link: string;
 }

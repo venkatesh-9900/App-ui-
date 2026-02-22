@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { ArrowUp, Paperclip, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
 import { 
   Tooltip,
   TooltipContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/tooltip"
 import { FileDetails } from "@/types"
 import { uploadFilesToServer, removeAttachedFile as removeAttachedFileAPI } from "@/hooks/upload-file"
+import Image from "next/image"
 
 interface ChatInputProps {
   onSend: (message: string, attachedFiles?: FileDetails[]) => void
@@ -65,31 +67,37 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
     try {
       // Convert FileList to array
       const filesArray = Array.from(files)
-      
+      let tempFiles: FileDetails[] = filesArray.map((file) => ({
+        file_id: "",
+        original_file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+        public_link: URL.createObjectURL(file),
+      }))
       // Upload all files at once
       const uploadedFiles = await uploadFilesToServer({
         files: filesArray,
         currentChatId: currentChatId || "new",
         fileFailureTask: (error: string) => {
-          console.error(`File upload warning: ${error}`)
+          toast.error(`File upload warning: ${error}`)
         },
         failureTask: () => {
-          console.error("Failed to upload files")
+          toast.error("Failed to upload files")
         },
         errorTask: () => {
-          console.error("Error uploading files")
+          toast.error("Error uploading files")
         },
       })
       
       // Map the response to FileDetails format with constructed public links
-      const formattedFiles: FileDetails[] = uploadedFiles.map((file: any) => ({
+      const formattedFiles: FileDetails[] = uploadedFiles.map((file: any, index: number) => ({
         file_id: file.file_id || file.uploadId,
         original_file_name: file.original_file_name || file.fileName,
         file_size: file.file_size,
         file_type: file.file_type,
-        public_link: file.public_link || `/api/interaction/download-file?uploadId=${file.file_id || file.uploadId}`,
+        public_link: file.public_link || tempFiles[index].public_link,
       }))
-      
+
       setAttachedFiles([...attachedFiles, ...formattedFiles])
     } finally {
       setIsUploading(false)
@@ -123,26 +131,38 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
 
   return (
     <div className="sticky bottom-2 bg-background pb-3 shrink-0">
-      {/* Attached Files Display */}
-      {attachedFiles.length > 0 && (
-        <div className="px-3 mb-3 flex flex-wrap gap-2">
-          {attachedFiles.map((file) => (
-            <div
-              key={file.file_id}
-              className="flex items-center gap-2 bg-muted px-3 py-2 rounded-md text-sm"
+      <div className="flex gap-4 flex-wrap mb-2 px-3 items-center">
+        {attachedFiles.map((file) => (
+          <div key={file.file_id} className="relative border rounded-lg overflow-visible max-w-xs h-auto">
+            <button
+              onClick={() => removeAttachedFile(file.file_id)}
+              disabled={isLoading}
+              className="absolute -top-2 -right-2 z-10 bg-black text-white dark:bg-white dark:text-black rounded-full p-1 shadow-md hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer"
+              aria-label="Remove image"
             >
-              <span className="truncate max-w-xs">{file.original_file_name}</span>
-              <button
-                onClick={() => removeAttachedFile(file.file_id)}
-                disabled={isLoading}
-                className="ml-1 hover:text-destructive disabled:opacity-50 cursor-pointer"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+              <svg xmlns="http://www.w3.org" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {file.file_type.startsWith('image/') ? (
+              <div className="relative rounded-lg overflow-hidden flex">
+                <Image
+                  src={file.public_link}
+                  alt={file.original_file_name}
+                  width={50}
+                  height={50}
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="rounded-lg text-[10px] py-2 px-2 text-center truncate max-w-xs">
+                {file.original_file_name}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
 
       {/* Input Area */}
       <div className="flex gap-3 items-center px-3">
