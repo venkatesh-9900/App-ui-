@@ -259,7 +259,7 @@ export default function ChatPage() {
 
     return (
         <ProtectedRoute>
-            <div className="flex flex-col h-screen justify-center px-20">
+            <div className="flex flex-col h-screen justify-center">
                 {isLoadingSession && (
                     <div className="border-b p-4 bg-muted">
                         <p className="text-sm text-muted-foreground">Loading chat session...</p>
