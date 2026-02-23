@@ -271,7 +271,6 @@ export function ChatSessionsList() {
             ) : chatSessions.length > 0 ? (
                 <Fragment>
                   <SidebarMenuSubItem>
-                    {/* Add a search bar here */}
                     <Input
                       placeholder="Search chats"
                       value={searchTerm}
