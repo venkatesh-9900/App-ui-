@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect, use } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { ChevronRight, MessageSquare, MessageSquarePlus, Folder, FolderOpen, FolderPlus, ComponentIcon } from "lucide-react"
+import { ChevronRight, MessageSquare, MessageSquarePlus, Folder, FolderOpen, FolderPlus, ComponentIcon, X } from "lucide-react"
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -319,9 +319,9 @@ export function ChatGroupsList() {
                     <span>New Group</span>
                   </SidebarMenuSubButton>
                 </DialogTrigger>
-                <DialogContent data-testid="chat-groups-new-group-dialog" className="sm:max-w-md">
+                <DialogContent data-testid="chat-groups-new-group-dialog" className="sm:max-w-md flex flex-col gap-8" showCloseButton={false}>
                   <DialogHeader>
-                    <DialogTitle>Add a New Group</DialogTitle>
+                    <DialogTitle className="flex items-center justify-between"><div>Add a New Group</div><div><X className="h-4 w-4 cursor-pointer" onClick={() => setOpenAddGroupDialog(false)} /></div></DialogTitle>
                     {/* <DialogDescription>
                       Anyone who has this link will be able to view this.
                     </DialogDescription> */}
@@ -338,13 +338,13 @@ export function ChatGroupsList() {
                       />
                     </div>
                   </div>
-                  <DialogFooter className="sm:justify-start">
+                  <DialogFooter className="sm:justify-end">
                     <DialogClose asChild>
-                      <Button type="button" variant="secondary">
+                      <Button className="cursor-pointer" type="button" variant="secondary">
                         Close
                       </Button>
                     </DialogClose>
-                    <Button data-testid="chat-groups-new-group-add-button" type="submit" onClick={() => { handleAddGroup() }}>Add</Button>
+                    <Button disabled={addGroupName.trim() === ""} className="cursor-pointer" data-testid="chat-groups-new-group-add-button" type="submit" onClick={() => { handleAddGroup() }}>Create Group</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
