@@ -80,46 +80,46 @@ const loadChannelInstances = useCallback(() => {
 }, [])
 
   // Load existing subscriptions for the group
-  const loadExistingSubscriptions = useCallback((topicKey: string) => {
-    listTopicSubscriptions({
-      topicKey,
-      successTask: (response) => {
-        // Response format: { status: "Success", data: [...subscribers], count: X }
-        if (response.data && Array.isArray(response.data)) {
-          // Extract novu_subscriber_id from each subscriber object
-          const subscriberIds = response.data.map((sub: any) => sub.novu_subscriber_id).filter(Boolean)
-          setExistingSubscriberIds(subscriberIds)
-        }
-      },
-      failureTask: () => {
-        console.error('Failed to load existing subscriptions')
-      },
-      errorTask: () => {
-        console.error('Error loading existing subscriptions')
-      }
-    })
-  }, [])
+  // const loadExistingSubscriptions = useCallback((topicKey: string) => {
+  //   listTopicSubscriptions({
+  //     topicKey,
+  //     successTask: (response) => {
+  //       // Response format: { status: "Success", data: [...subscribers], count: X }
+  //       if (response.data && Array.isArray(response.data)) {
+  //         // Extract novu_subscriber_id from each subscriber object
+  //         const subscriberIds = response.data.map((sub: any) => sub.novu_subscriber_id).filter(Boolean)
+  //         setExistingSubscriberIds(subscriberIds)
+  //       }
+  //     },
+  //     failureTask: () => {
+  //       console.error('Failed to load existing subscriptions')
+  //     },
+  //     errorTask: () => {
+  //       console.error('Error loading existing subscriptions')
+  //     }
+  //   })
+  // }, [])
 
   // Load subscribers callback - wrapped in useCallback to prevent infinite loops
-  const loadSubscribers = useCallback(() => {
-    setLoadingSubscribers(true)
-    getActiveHumanSubscribers({
-      successTask: (data) => {
-        if (data.data && Array.isArray(data.data)) {
-          setSubscribers(data.data)
-        }
-        setLoadingSubscribers(false)
-      },
-      failureTask: () => {
-        toast.error('Failed to load subscribers')
-        setLoadingSubscribers(false)
-      },
-      errorTask: () => {
-        toast.error('Error loading subscribers')
-        setLoadingSubscribers(false)
-      }
-    })
-  }, [])
+  // const loadSubscribers = useCallback(() => {
+  //   setLoadingSubscribers(true)
+  //   getActiveHumanSubscribers({
+  //     successTask: (data) => {
+  //       if (data.data && Array.isArray(data.data)) {
+  //         setSubscribers(data.data)
+  //       }
+  //       setLoadingSubscribers(false)
+  //     },
+  //     failureTask: () => {
+  //       toast.error('Failed to load subscribers')
+  //       setLoadingSubscribers(false)
+  //     },
+  //     errorTask: () => {
+  //       toast.error('Error loading subscribers')
+  //       setLoadingSubscribers(false)
+  //     }
+  //   })
+  // }, [])
 
   useEffect(() => {
     // Only run when dialog opens, not when closing
@@ -151,21 +151,21 @@ const loadChannelInstances = useCallback(() => {
           : []
       )
 
-    // Edit-only side effects
-    if (mode === 'edit') {
-      loadSubscribers()
+    // // Edit-only side effects
+    // if (mode === 'edit') {
+    //   loadSubscribers()
 
-      if (initialData?.topicKey) {
-        loadExistingSubscriptions(initialData.topicKey)
-      }
-    }
+    //   if (initialData?.topicKey) {
+    //     loadExistingSubscriptions(initialData.topicKey)
+    //   }
+    // }
   }, [
     open,
     mode,
     initialData,
     loadChannelInstances,
-    loadSubscribers,
-    loadExistingSubscriptions,
+    // loadSubscribers,
+    // loadExistingSubscriptions,
   ])
 
 
@@ -209,100 +209,100 @@ const loadChannelInstances = useCallback(() => {
     })
   }, [])
 
-  const handleSubscriberToggle = useCallback((novuSubscriberId: string) => {
-    setSelectedSubscribers((prev) => {
-      let prevSubscribers = [...prev]
-      if (prevSubscribers.includes(novuSubscriberId)) {
-        prevSubscribers = prevSubscribers.filter(id => id !== novuSubscriberId)
-      } else {
-        prevSubscribers.push(novuSubscriberId)
-      }
-      return prevSubscribers
-    })
-  }, [])
+  // const handleSubscriberToggle = useCallback((novuSubscriberId: string) => {
+  //   setSelectedSubscribers((prev) => {
+  //     let prevSubscribers = [...prev]
+  //     if (prevSubscribers.includes(novuSubscriberId)) {
+  //       prevSubscribers = prevSubscribers.filter(id => id !== novuSubscriberId)
+  //     } else {
+  //       prevSubscribers.push(novuSubscriberId)
+  //     }
+  //     return prevSubscribers
+  //   })
+  // }, [])
 
-  const handleAddSubscribers = useCallback(async () => {
-    if (selectedSubscribers.length === 0) {
-      toast.info('No subscribers selected')
-      return
-    }
+  // const handleAddSubscribers = useCallback(async () => {
+  //   if (selectedSubscribers.length === 0) {
+  //     toast.info('No subscribers selected')
+  //     return
+  //   }
 
-    if (!initialData || !('topicKey' in initialData) || !initialData.topicKey) {
-      toast.error('Group topic key not found')
-      return
-    }
+  //   if (!initialData || !('topicKey' in initialData) || !initialData.topicKey) {
+  //     toast.error('Group topic key not found')
+  //     return
+  //   }
 
-    setAddingSubscriptions(true)
-    addSubscriptionsToTopic({
-      topicKey: initialData.topicKey,
-      subscriberIds: selectedSubscribers,
-      successTask: () => {
-        toast.success(`Added ${selectedSubscribers.length} subscriber(s) to the group!`)
+  //   setAddingSubscriptions(true)
+  //   addSubscriptionsToTopic({
+  //     topicKey: initialData.topicKey,
+  //     subscriberIds: selectedSubscribers,
+  //     successTask: () => {
+  //       toast.success(`Added ${selectedSubscribers.length} subscriber(s) to the group!`)
         
-        // Add newly selected subscribers to existingSubscriberIds (keep them checked)
-        setExistingSubscriberIds(prev => [...new Set([...prev, ...selectedSubscribers])])
+  //       // Add newly selected subscribers to existingSubscriberIds (keep them checked)
+  //       setExistingSubscriberIds(prev => [...new Set([...prev, ...selectedSubscribers])])
         
-        // Clear the selectedSubscribers since they're now part of existingSubscriberIds
-        setSelectedSubscribers([])
+  //       // Clear the selectedSubscribers since they're now part of existingSubscriberIds
+  //       setSelectedSubscribers([])
         
-        // Reload existing subscriptions to get the latest state
-        if (initialData?.topicKey) {
-          loadExistingSubscriptions(initialData.topicKey)
-        }
+  //       // Reload existing subscriptions to get the latest state
+  //       if (initialData?.topicKey) {
+  //         loadExistingSubscriptions(initialData.topicKey)
+  //       }
         
-        setAddingSubscriptions(false)
-      },
-      failureTask: () => {
-        toast.error('Failed to add subscribers')
-        setAddingSubscriptions(false)
-      },
-      errorTask: () => {
-        toast.error('Error adding subscribers')
-        setAddingSubscriptions(false)
-      }
-    })
-  }, [selectedSubscribers, initialData, loadExistingSubscriptions])
+  //       setAddingSubscriptions(false)
+  //     },
+  //     failureTask: () => {
+  //       toast.error('Failed to add subscribers')
+  //       setAddingSubscriptions(false)
+  //     },
+  //     errorTask: () => {
+  //       toast.error('Error adding subscribers')
+  //       setAddingSubscriptions(false)
+  //     }
+  //   })
+  // }, [selectedSubscribers, initialData, loadExistingSubscriptions])
 
-  const handleRemoveSubscriber = useCallback(async (subscriberId: string) => {
-    if (!initialData || !('topicKey' in initialData) || !initialData.topicKey) {
-      toast.error('Group topic key not found')
-      return
-    }
+  // const handleRemoveSubscriber = useCallback(async (subscriberId: string) => {
+  //   if (!initialData || !('topicKey' in initialData) || !initialData.topicKey) {
+  //     toast.error('Group topic key not found')
+  //     return
+  //   }
 
-    setRemovingSubscriberId(subscriberId)
-    removeSubscriptionsFromTopic({
-      topicKey: initialData.topicKey,
-      subscriberIds: [subscriberId],
-      successTask: () => {
-        toast.success('Subscriber removed from group')
+  //   setRemovingSubscriberId(subscriberId)
+  //   removeSubscriptionsFromTopic({
+  //     topicKey: initialData.topicKey,
+  //     subscriberIds: [subscriberId],
+  //     successTask: () => {
+  //       toast.success('Subscriber removed from group')
         
-        // Remove from existingSubscriberIds
-        setExistingSubscriberIds(prev => prev.filter(id => id !== subscriberId))
+  //       // Remove from existingSubscriberIds
+  //       setExistingSubscriberIds(prev => prev.filter(id => id !== subscriberId))
         
-        // Reload existing subscriptions to get the latest state
-        if (initialData?.topicKey) {
-          loadExistingSubscriptions(initialData.topicKey)
-        }
+  //       // Reload existing subscriptions to get the latest state
+  //       if (initialData?.topicKey) {
+  //         loadExistingSubscriptions(initialData.topicKey)
+  //       }
         
-        setRemovingSubscriberId(null)
-      },
-      failureTask: () => {
-        toast.error('Failed to remove subscriber')
-        setRemovingSubscriberId(null)
-      },
-      errorTask: () => {
-        toast.error('Error removing subscriber')
-        setRemovingSubscriberId(null)
-      }
-    })
-  }, [initialData, loadExistingSubscriptions])
+  //       setRemovingSubscriberId(null)
+  //     },
+  //     failureTask: () => {
+  //       toast.error('Failed to remove subscriber')
+  //       setRemovingSubscriberId(null)
+  //     },
+  //     errorTask: () => {
+  //       toast.error('Error removing subscriber')
+  //       setRemovingSubscriberId(null)
+  //     }
+  //   })
+  // }, [initialData, loadExistingSubscriptions])
 
-  const handleChannelToggle = useCallback((topicKey: number) => {
+  const handleChannelToggle = useCallback((id: number) => {
       setSelectedChannelInstanceIds(prev => {
-        if (prev.includes(topicKey)) {
-          return prev.filter(key => key !== topicKey)
+        if (prev.includes(id)) {
+          return prev.filter(key => key !== id)
         } else {
-          return [...prev, topicKey]
+          return [...prev, id]
         }
       })
       
@@ -375,7 +375,12 @@ const loadChannelInstances = useCallback(() => {
               )}
             </div>
 
+
             {/* Subscribers Selection - Only in Edit Mode */}
+        
+
+        {/*
+            
             {mode === 'edit' && (
               <div className="grid gap-2 border-t pt-4">
                 <div className="flex items-center gap-2">
@@ -430,7 +435,7 @@ const loadChannelInstances = useCallback(() => {
                               </div>
                             </Label>
                             
-                            {/* Delete button - shows for already mapped subscribers */}
+
                             {isAlreadyMapped && !isRemoving && (
                               <Button
                                 type="button"
@@ -444,7 +449,6 @@ const loadChannelInstances = useCallback(() => {
                               </Button>
                             )}
                             
-                            {/* Loading spinner while removing */}
                             {isRemoving && (
                               <div className="h-7 w-7 flex items-center justify-center">
                                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -480,6 +484,9 @@ const loadChannelInstances = useCallback(() => {
                 )}
               </div>
             )}
+
+            */}
+            
             {/* Channel Instance Selector */}
             <div className="grid gap-2 border-t pt-4">
               <div className='flex items-center'>
@@ -519,7 +526,7 @@ const loadChannelInstances = useCallback(() => {
                       <div className="flex-1 text-sm">
                         <div className="font-medium">{ci.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {ci.channel_id === 3 ? "Custom Webhook" : "Teams Webhook"}
+                          {ci?.description || 'No description provided'}
                         </div>
                       </div>
                     </div>

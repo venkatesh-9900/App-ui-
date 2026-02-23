@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle2, Bell, BellOff } from 'lucide-react'
-import { CreateSubscriberRequest, NotificationSubscriber } from '@/types/subscriber'
+import { CreateNotificationChannelInstanceRequest } from '@/types/notification-channel-instance'
+import { NotificationSubscriberInfo } from '@/types/notification-channel-instance'
 
 interface SubscriberFormData {
   firstName: string
@@ -25,8 +26,8 @@ interface SubscriptionFormProps {
   smsConsent: boolean
   isSubmitting: boolean
   isSuccess: boolean
-  existingSubscriber: NotificationSubscriber | null
-  onSubmit: (payload: CreateSubscriberRequest) => void
+  existingSubscriber: NotificationSubscriberInfo | null
+  onSubmit: (payload: CreateNotificationChannelInstanceRequest) => void
   onUnsubscribe?: () => void
   isUnsubscribing?: boolean
 }
@@ -53,6 +54,7 @@ export function SubscriptionForm({
   // Prefill form data when existing subscriber is loaded or updated
   useEffect(() => {
     if (existingSubscriber) {
+      console.log('Prefilling form with existing subscriber data:', existingSubscriber)
       setFormData({
         firstName: existingSubscriber.first_name || '',
         lastName: existingSubscriber.last_name || '',
@@ -101,51 +103,49 @@ export function SubscriptionForm({
     if (!validateForm()) {
       return
     }
-
-    // Generate a unique subscriber ID using email or phone
-    const subscriberId = formData.email || formData.phone || `subscriber_${Date.now()}`
-    
-    // Prepare the request payload
-    const payload: CreateSubscriberRequest = {
-      subscriberId,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-      locale: navigator.language || 'en-US',
-      data: {
-        emailConsent,
-        smsConsent,
+    if (emailConsent) {
+      const request: CreateNotificationChannelInstanceRequest = {
+        name: formData.email ,
+        channel_id: 1,
+        publish_type: 'batch',
+        payload: {
+          email: formData?.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName
+        },
       }
+      onSubmit(request)
     }
-
-    // Only include email if email consent is given
-    if (emailConsent && formData.email) {
-      payload.email = formData.email
+    if (smsConsent) {
+      const request: CreateNotificationChannelInstanceRequest = {
+        name: formData.phone,
+        channel_id: 2,
+        publish_type: 'batch',
+        payload: {
+          phone: formData?.phone,
+          first_name: formData.firstName,
+          last_name: formData.lastName
+        },
+      }
+      onSubmit(request)
     }
-
-    // Only include phone if SMS consent is given
-    if (smsConsent && formData.phone) {
-      payload.phone = formData.phone
-    }
-
-    onSubmit(payload)
   }
 
   // Reset form when submission is successful
-  React.useEffect(() => {
-    if (isSuccess) {
-      const timer = setTimeout(() => {
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-        })
-        setErrors({})
-      }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [isSuccess])
+  // React.useEffect(() => {
+  //   if (isSuccess) {
+  //     const timer = setTimeout(() => {
+  //       setFormData({
+  //         firstName: '',
+  //         lastName: '',
+  //         email: '',
+  //         phone: '',
+  //       })
+  //       setErrors({})
+  //     }, 2000)
+  //     return () => clearTimeout(timer)
+  //   }
+  // }, [isSuccess])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">

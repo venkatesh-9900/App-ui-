@@ -29,22 +29,25 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Pencil, Trash2, Copy, Calendar, Tag, Key, Clock, UserCircle2Icon } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Copy, Calendar, Tag, Key, Clock, UserCircle2Icon, Webhook } from 'lucide-react'
 import { NotificationGroup } from '@/types/topic'
 import { format } from 'date-fns'
 import { useAuth } from '@/contexts'
+import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 
 interface GroupsTableProps {
   groups: NotificationGroup[]
+  channelInstances: NotificationChannelInstance[]
   isLoading: boolean
   onEdit: (group: NotificationGroup) => void
-  onDelete: (topicKey: string) => void
+  onDelete: (id: number) => void
   onCopyKey: (topicKey: string) => void
 }
 
 export function GroupsTable({
   groups,
   isLoading,
+  channelInstances,
   onEdit,
   onDelete,
   onCopyKey,
@@ -60,7 +63,7 @@ export function GroupsTable({
 
   const handleDeleteConfirm = () => {
     if (selectedGroup) {
-      onDelete(selectedGroup.novu_topic_key)
+      onDelete(selectedGroup.id)
     }
     setDeleteDialogOpen(false)
     setSelectedGroup(null)
@@ -75,6 +78,11 @@ export function GroupsTable({
     }
   }
 
+  const getChannelInstances = (groupIds: number[]) => {
+    if (!groupIds || groupIds.length === 0) return [];
+    return channelInstances.filter(g => groupIds.includes(g.id));
+  };
+
   const formatTime = (dateString?: string) => {
     if (!dateString) return ''
     try {
@@ -83,7 +91,7 @@ export function GroupsTable({
       const date = new Date(isoDate)
       const now = new Date()
       const diffInMs = now.getTime() - date.getTime()
-      
+
       // Handle future dates or invalid dates
       if (diffInMs < 0 || isNaN(diffInMs)) {
         return 'Just now'
@@ -141,8 +149,8 @@ export function GroupsTable({
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-2/5 min-w-max">
                   <div className="flex items-center gap-1">
-                    <Key className="w-4 h-4" />
-                    <span>Key</span>
+                    <Webhook className="w-4 h-4" />
+                    <span>Channel Instances</span>
                   </div>
                 </TableHead>
                 <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
@@ -169,23 +177,36 @@ export function GroupsTable({
                     <div className="font-medium truncate">{group.name}</div>
                   </TableCell>
                   <TableCell className="px-4 py-3 w-2/5 min-w-max">
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant="secondary" 
-                        className="font-mono text-xs truncate"
-                      >
-                        {group.novu_topic_key}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 shrink-0 cursor-pointer"
-                        onClick={() => onCopyKey(group.novu_topic_key)}
-                        title="Copy key"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <div className="flex flex-wrap gap-1">
+                    {(() => {
+                      const groups = getChannelInstances(group.channel_instance_ids);
+
+                      return groups.length > 0 ? (
+                        <>
+                          {groups.slice(0, 3).map((group, idx) => (
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className="text-xs"
+                              title={`${group.name}`}
+                            >
+                              {group.name}
+                            </Badge>
+                          ))}
+
+                          {groups.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{groups.length - 3} more
+                            </Badge>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No groups
+                        </span>
+                      );
+                    })()}
+                  </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm">
                     {formatDate(group.created_at)}
@@ -196,8 +217,8 @@ export function GroupsTable({
                   <TableCell className="px-4 py-3 w-20 min-w-max text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           className="h-8 w-8 p-0 cursor-pointer"
                         >
@@ -207,10 +228,10 @@ export function GroupsTable({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onCopyKey(group.novu_topic_key)} className="cursor-pointer">
+                        {/* <DropdownMenuItem onClick={() => onCopyKey(group.novu_topic_key)} className="cursor-pointer">
                           <Copy className="mr-2 h-4 w-4" />
                           Copy key
-                        </DropdownMenuItem>
+                        </DropdownMenuItem> */}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onEdit(group)} className="cursor-pointer" disabled={group.user_id !== userInfo?.email}>
                           <Pencil className="mr-2 h-4 w-4" />
