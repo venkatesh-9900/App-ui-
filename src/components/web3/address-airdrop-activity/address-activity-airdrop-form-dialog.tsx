@@ -107,12 +107,12 @@ export function AddressActivityAirdropFormDialog({
     }
   }, [open, mode, initialData])
 
-  const handleAddressGroupToggle = useCallback((topicKey: number) => {
+  const handleAddressGroupToggle = useCallback((id: number) => {
     setSelectedAddressGroups(prev => {
-      if (prev.includes(topicKey)) {
-        return prev.filter(key => key !== topicKey)
+      if (prev.includes(id)) {
+        return prev.filter(key => key !== id)
       } else {
-        return [...prev, topicKey]
+        return [...prev, id]
       }
     })
     if (errors.addressGroups || errors.groups || errors.subscribers) {
@@ -120,12 +120,12 @@ export function AddressActivityAirdropFormDialog({
     }
   }, [errors.addressGroups])
 
-  const handleGroupToggle = useCallback((topicKey: number) => {
+  const handleGroupToggle = useCallback((id: number) => {
     setSelectedGroups(prev => {
-      if (prev.includes(topicKey)) {
-        return prev.filter(key => key !== topicKey)
+      if (prev.includes(id)) {
+        return prev.filter(key => key !== id)
       } else {
-        return [...prev, topicKey]
+        return [...prev, id]
       }
     })
     if ( errors.groups || errors.subscribers, errors.addressGroups) {
@@ -373,7 +373,7 @@ export function AddressActivityAirdropFormDialog({
             </div>
 
             {/* Subscribers Section */}
-            <div className="grid gap-3 border-t pt-4">
+            {/* <div className="grid gap-3 border-t pt-4">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 <Label className="text-left font-semibold">
@@ -426,7 +426,7 @@ export function AddressActivityAirdropFormDialog({
               {errors.subscribers && (
                 <p className="text-sm text-destructive">{errors.subscribers}</p>
               )}
-            </div>
+            </div> */}
 
             {/* Channels Section */}
             {/* <div className="grid gap-3 border-t pt-4">

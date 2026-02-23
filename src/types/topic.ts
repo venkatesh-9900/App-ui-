@@ -35,7 +35,7 @@ export interface NotificationGroup {
 
 export interface TopicResponse {
   message: string;
-  data: Topic;
+  data: NotificationGroup;
 }
 
 export interface ListTopicsResponse {

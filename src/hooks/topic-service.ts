@@ -14,12 +14,12 @@ interface CreateTopicParams extends BaseServiceParams {
 }
 
 interface UpdateTopicParams extends BaseServiceParams {
-    topicKey: string;
+    id: number;
     request: UpdateTopicRequest;
 }
 
 interface DeleteTopicParams extends BaseServiceParams {
-    topicKey: string;
+    id: number;
 }
 
 interface GetTopicParams extends BaseServiceParams {
@@ -28,8 +28,7 @@ interface GetTopicParams extends BaseServiceParams {
 
 interface ListTopicsParams extends BaseServiceParams {
     page?: number;
-    pageSize?: number;
-    key?: string;
+    pageSize?: number
 }
 
 interface AddSubscriptionsParams extends BaseServiceParams {
@@ -49,8 +48,8 @@ interface ListSubscriptionsParams extends BaseServiceParams {
 const TOPIC_ENDPOINTS = {
     CREATE: '/api/topics',
     GET: (topicKey: string) => `/api/topics/retrieve?topicKey=${encodeURIComponent(topicKey)}`,
-    UPDATE: (topicKey: string) => `/api/topics/update?topicKey=${encodeURIComponent(topicKey)}`,
-    DELETE: (topicKey: string) => `/api/topics/delete?topicKey=${encodeURIComponent(topicKey)}`,
+    UPDATE: (id: number) => `/api/topics/update?id=${encodeURIComponent(id)}`,
+    DELETE: (id: number) => `/api/topics/delete?id=${encodeURIComponent(id)}`,
     LIST: '/api/topics',
     ADD_SUBSCRIPTIONS: (topicKey: string) => `/api/topics/subscriptions/create?topicKey=${encodeURIComponent(topicKey)}`,
     REMOVE_SUBSCRIPTIONS: (topicKey: string) => `/api/topics/subscriptions/delete?topicKey=${encodeURIComponent(topicKey)}`,
@@ -156,7 +155,7 @@ export const getTopic = async ({
  * Update a topic
  */
 export const updateTopic = async ({
-    topicKey,
+    id,
     request,
     successTask,
     failureTask,
@@ -169,7 +168,7 @@ export const updateTopic = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(TOPIC_ENDPOINTS.UPDATE(topicKey), {
+        const response = await fetch(TOPIC_ENDPOINTS.UPDATE(id), {
             method: 'PATCH',
             headers: buildHeaderJSON(false),
             body: JSON.stringify(request),
@@ -182,7 +181,7 @@ export const updateTopic = async ({
             } else {
                 await updateTopic({
                     retry: true,
-                    topicKey,
+                    id,
                     request,
                     successTask,
                     failureTask,
@@ -206,7 +205,7 @@ export const updateTopic = async ({
  * Delete a topic
  */
 export const deleteTopic = async ({
-    topicKey,
+    id,
     successTask,
     failureTask,
     errorTask,
@@ -218,7 +217,7 @@ export const deleteTopic = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(TOPIC_ENDPOINTS.DELETE(topicKey), {
+        const response = await fetch(TOPIC_ENDPOINTS.DELETE(id), {
             method: 'DELETE',
             headers: buildHeaderJSON(false),
         });
@@ -230,7 +229,7 @@ export const deleteTopic = async ({
             } else {
                 await deleteTopic({
                     retry: true,
-                    topicKey,
+                    id,
                     successTask,
                     failureTask,
                     errorTask
@@ -255,7 +254,6 @@ export const deleteTopic = async ({
 export const listTopics = async ({
     page,
     pageSize,
-    key,
     successTask,
     failureTask,
     errorTask,
@@ -270,7 +268,6 @@ export const listTopics = async ({
         const params = new URLSearchParams();
         if (page) params.append('page', page.toString());
         if (pageSize) params.append('pageSize', pageSize.toString());
-        if (key) params.append('key', key);
 
         const url = `${TOPIC_ENDPOINTS.LIST}${params.toString() ? '?' + params.toString() : ''}`;
 
@@ -288,7 +285,6 @@ export const listTopics = async ({
                     retry: true,
                     page,
                     pageSize,
-                    key,
                     successTask,
                     failureTask,
                     errorTask

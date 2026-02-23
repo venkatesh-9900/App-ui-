@@ -6,7 +6,11 @@ export interface CreateNotificationChannelInstanceRequest {
   description?: string
   publish_type: string        // e.g. "batch" | "real-time"
   payload: {
-    webhook_url: string
+    webhook_url?: string
+    first_name?: string
+    last_name?: string
+    email?: string
+    phone?: string
   }
 }
 
@@ -15,7 +19,11 @@ export interface UpdateNotificationChannelInstanceRequest {
   description?: string
   publish_type?: string
   payload?: {
-    webhook_url: string
+    webhook_url?: string
+    first_name?: string
+    last_name?: string
+    email?: string
+    phone?: string
   }
 }
 
@@ -26,7 +34,11 @@ export interface NotificationChannelInstance {
   description?: string
   publish_type: string
   payload: {
-    webhook_url: string
+    webhook_url?: string
+    first_name?: string
+    last_name?: string
+    email?: string
+    phone?: string
   }
   created_at: string
   updated_at: string
@@ -42,6 +54,19 @@ export interface ListNotificationChannelInstanceResponse {
   status: string
   count: number
   data: NotificationChannelInstance[]
+}
+
+export interface NotificationSubscriberInfo {
+  first_name?: string
+  last_name?: string
+  email?: string
+  phone?: string
+  email_preference?: boolean
+  sms_preference?: boolean
+}
+export interface NotificationSubscriberInfoResponse {
+  message: string
+  data: NotificationSubscriberInfo[]
 }
 
 export interface DeleteNotificationChannelInstanceResponse {
