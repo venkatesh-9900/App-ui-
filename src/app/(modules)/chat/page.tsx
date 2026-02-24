@@ -45,7 +45,7 @@ export default function ChatPage() {
 
         // CASE 1: Existing session selected
         if (session) {
-            if (lastLoadedSession !== session && lastLoadedSession !== "new") {
+            if (lastLoadedSession !== session) {
                 setLastLoadedSession(session);
                 console.log("Setting sessionId to:", session);
                 setSessionId(session);
@@ -53,8 +53,6 @@ export default function ChatPage() {
                 setInitialMessage("");
                 loadExistingSession(session, userid);
             }
-            if (lastLoadedSession === "new")
-                setLastLoadedSession(session);
             setGroupId(null);
             return;
         }
@@ -210,6 +208,7 @@ export default function ChatPage() {
                     console.log("Created new chat with ID:", newId)
                     const firstMessage = !sessionId;
                     setSessionId(newId)
+                    setLastLoadedSession(newId)
                     if (firstMessage) {
                         triggerChatHistoryUpdate({
                             sessionId: newId,
