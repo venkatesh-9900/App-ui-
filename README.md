@@ -98,8 +98,8 @@ Use the script below to start the local gateway and UI together.
 Give gateway repo path in shell script.
 ### Usage
 ```bash
-./run-local.sh [env]
-./run-local.sh        # dev (default)
-./run-local.sh qa     # QA backend
-./run-local.sh prod   # Production backend
+./local-run.sh [env]
+./local-run.sh        # dev (default)
+./local-run.sh qa     # QA backend
+./local-run.sh prod   # Production backend
 ```
