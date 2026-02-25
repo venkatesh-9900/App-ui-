@@ -90,3 +90,16 @@ API_BASE_URL=https://dev.app.argusintelligence.net npm run dev
 ```
 
 Note: `next.config` reads `process.env.API_BASE_URL` at dev/build start; restart the server after changing the variable.
+
+
+## Local Development (Gateway + UI)
+
+Use the script below to start the local gateway and UI together.
+Give gateway repo path in shell script.
+### Usage
+```bash
+./run-local.sh [env]
+./run-local.sh        # dev (default)
+./run-local.sh qa     # QA backend
+./run-local.sh prod   # Production backend
+```
