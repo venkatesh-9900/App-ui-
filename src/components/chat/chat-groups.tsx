@@ -22,8 +22,9 @@ import {
 import { ChatGroup } from "@/types/chat-types"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { IconDots, IconFolder, IconTrash } from "@tabler/icons-react"
-import { createChatGroup, deleteGroup, fetchChatGroupSessions, fetchUserChatGroups, removeChat } from "@/hooks/chat-service"
+import { createChatGroup, deleteGroup, fetchChatGroupSessions, fetchUserChatGroups, removeChat, moveChatToGroup } from "@/hooks/chat-service"
 import { toast } from "sonner"
+import { triggerChatMovedToGroup } from "@/utils/eventBus"
 import {
   Dialog,
   DialogClose,
@@ -57,6 +58,7 @@ export function ChatGroupsList() {
   const [openAddGroupDialog, setOpenAddGroupDialog] = useState(false)
   const { isMobile } = useSidebar()
   const { open, toggleSidebar } = useSidebar();
+  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
@@ -290,6 +292,66 @@ export function ChatGroupsList() {
     )
   }
 
+  const handleDragOver = (e: React.DragEvent, groupId: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    setDragOverGroupId(groupId)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverGroupId(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, groupId: string) => {
+    e.preventDefault()
+    setDragOverGroupId(null)
+    const sessionId = e.dataTransfer.getData("application/chat-session-id")
+    const sessionText = e.dataTransfer.getData("application/chat-session-text")
+    if (!sessionId) return
+
+    // Optimistically add session to this group
+    setChatGroups(prev => prev.map(group => {
+      if (group.group_id === groupId) {
+        // Avoid duplicate
+        if (group.sessions.some(s => s.session_id === sessionId)) return group
+        return {
+          ...group,
+          sessions: [...group.sessions, { session_id: sessionId, initial_text: sessionText, is_sharable: false }]
+        }
+      }
+      return group
+    }))
+
+    moveChatToGroup({
+      sessionId,
+      groupId,
+      successTask: () => {
+        toast.success("Chat moved to group")
+        triggerChatMovedToGroup({ sessionId, sessionText, groupId })
+      },
+      failureTask: () => {
+        toast.error("Failed to move chat to group")
+        // Revert optimistic update
+        setChatGroups(prev => prev.map(group => {
+          if (group.group_id === groupId) {
+            return { ...group, sessions: group.sessions.filter(s => s.session_id !== sessionId) }
+          }
+          return group
+        }))
+      },
+      errorTask: () => {
+        toast.error("Error moving chat to group")
+        // Revert optimistic update
+        setChatGroups(prev => prev.map(group => {
+          if (group.group_id === groupId) {
+            return { ...group, sessions: group.sessions.filter(s => s.session_id !== sessionId) }
+          }
+          return group
+        }))
+      }
+    })
+  }
+
   return (
     <Collapsible
       asChild
@@ -360,7 +422,16 @@ export function ChatGroupsList() {
                 <Collapsible data-testid="chat-groups-list-items" open={!group.is_collapsed} onOpenChange={(open) => {setCollapsed(open, idx)}} key={group.group_id}>
                   {/* <SidebarMenuSubItem> */}
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuSubItem>
+                  <SidebarMenuSubItem
+                    onDragOver={(e) => handleDragOver(e, group.group_id)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, group.group_id)}
+                    style={{
+                      outline: dragOverGroupId === group.group_id ? '2px dashed hsl(var(--primary))' : 'none',
+                      borderRadius: '6px',
+                      transition: 'outline 0.15s ease',
+                    }}
+                  >
                         <div className="flex flex-row gap-2">
                           <SidebarMenuButton data-testid="chat-groups-list-items-button" tooltip="Chat Groups" className="cursor-pointer">
                             {group.is_collapsed ? <Folder className="h-4 w-4" /> : <FolderOpen className="h-4 w-4" />}

@@ -23,7 +23,7 @@ import { ChatSessions } from "@/types/chat-types"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { IconDots, IconFolder, IconShare3, IconTrash, IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react"
 import { toast } from "sonner"
-import { onChatHistoryUpdate } from "@/utils/eventBus"
+import { onChatHistoryUpdate, onChatMovedToGroup } from "@/utils/eventBus"
 import { Input } from "../ui/input"
 
 export function ChatSessionsList() {
@@ -41,6 +41,7 @@ export function ChatSessionsList() {
   const { isMobile } = useSidebar()
   const [searchTerm, setSearchTerm] = useState("")
   const [filteredChatSessions, setFilteredChatSessions] = useState<ChatSessions[]>([])
+  const [draggingSessionId, setDraggingSessionId] = useState<string | null>(null)
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
@@ -58,8 +59,13 @@ export function ChatSessionsList() {
       })
     })
 
+    const unsubscribeMove = onChatMovedToGroup((payload) => {
+      setChatSessions(prev => prev.filter(s => s.session_id !== payload.sessionId))
+    })
+
     return () => {
       unsubscribe();
+      unsubscribeMove();
     };
   }, [])
 
@@ -241,6 +247,17 @@ export function ChatSessionsList() {
     }
   }
 
+  const handleDragStart = (e: React.DragEvent, session: ChatSessions) => {
+    e.dataTransfer.setData("application/chat-session-id", session.session_id)
+    e.dataTransfer.setData("application/chat-session-text", session.initial_text)
+    e.dataTransfer.effectAllowed = "move"
+    setDraggingSessionId(session.session_id)
+  }
+
+  const handleDragEnd = () => {
+    setDraggingSessionId(null)
+  }
+
   return (
     <Collapsible
       asChild
@@ -279,7 +296,13 @@ export function ChatSessionsList() {
 
                   </SidebarMenuSubItem>
                   {filteredChatSessions.length > 0 ? filteredChatSessions.map((session) => (
-                <SidebarMenuSubItem key={session.session_id}>
+                    <SidebarMenuSubItem
+                      key={session.session_id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, session)}
+                      onDragEnd={handleDragEnd}
+                      style={{ opacity: draggingSessionId === session.session_id ? 0.5 : 1, cursor: 'grab' }}
+                    >
                   <SidebarMenuSubButton
                     asChild
                     isActive={currentSessionId === session.session_id}
