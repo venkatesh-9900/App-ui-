@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { onChatHistoryUpdate } from "@/utils/eventBus"
 
@@ -433,10 +434,17 @@ export function ChatGroupsList() {
                     }}
                   >
                         <div className="flex flex-row gap-2">
-                          <SidebarMenuButton data-testid="chat-groups-list-items-button" tooltip="Chat Groups" className="cursor-pointer">
-                            {group.is_collapsed ? <Folder className="h-4 w-4" /> : <FolderOpen className="h-4 w-4" />}
-                            <span>{group.group_name}</span>
-                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      <SidebarMenuButton data-testid="chat-groups-list-items-button" tooltip={group.group_name} className="cursor-pointer">
+                        {group.is_collapsed ? <Folder className="h-4 w-4 shrink-0" /> : <FolderOpen className="h-4 w-4 shrink-0" />}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="truncate">{group.group_name}</span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            {group.group_name}
+                          </TooltipContent>
+                        </Tooltip>
+                        <ChevronRight className="ml-auto shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                           </SidebarMenuButton>
                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -493,7 +501,14 @@ export function ChatGroupsList() {
                             isActive={currentSessionId === session.session_id}
                           >
                             <Link href={`/chat?sessionId=${session.session_id}`} className="w-37">
-                              <span className="truncate">{extractUserMessage(session.initial_text)}</span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="truncate">{extractUserMessage(session.initial_text)}</span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  {extractUserMessage(session.initial_text)}
+                                </TooltipContent>
+                              </Tooltip>
                             </Link>
                           </SidebarMenuSubButton>
                           <DropdownMenu>
