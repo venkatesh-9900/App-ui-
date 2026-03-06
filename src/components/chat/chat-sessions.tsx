@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Fragment } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { ChevronRight, MessageSquare, Clock } from "lucide-react"
 import {
@@ -23,7 +23,8 @@ import { ChatSessions } from "@/types/chat-types"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { IconDots, IconFolder, IconShare3, IconTrash, IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react"
 import { toast } from "sonner"
-import { onChatHistoryUpdate } from "@/utils/eventBus"
+import { onChatHistoryUpdate, onChatMovedToGroup } from "@/utils/eventBus"
+import { Input } from "../ui/input"
 
 export function ChatSessionsList() {
   const searchParams = useSearchParams()
@@ -38,6 +39,9 @@ export function ChatSessionsList() {
   // Map of scheduleId -> status for showing pause/resume conditionally
   const [scheduleStatusMap, setScheduleStatusMap] = useState<Map<string, string>>(new Map())
   const { isMobile } = useSidebar()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filteredChatSessions, setFilteredChatSessions] = useState<ChatSessions[]>([])
+  const [draggingSessionId, setDraggingSessionId] = useState<string | null>(null)
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
@@ -55,10 +59,27 @@ export function ChatSessionsList() {
       })
     })
 
+    const unsubscribeMove = onChatMovedToGroup((payload) => {
+      setChatSessions(prev => prev.filter(s => s.session_id !== payload.sessionId))
+    })
+
     return () => {
       unsubscribe();
+      unsubscribeMove();
     };
   }, [])
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filteredSessions = chatSessions.filter((session) =>
+        session.initial_text.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredChatSessions(filteredSessions)
+    } else {
+      setFilteredChatSessions(chatSessions)
+    }
+  }, [searchTerm, chatSessions])
+
 
   const extractUserMessage = (text: string) => {
     const match = text.match(/User Request:\s*(.+?)(?:\n|$)/)
@@ -226,6 +247,17 @@ export function ChatSessionsList() {
     }
   }
 
+  const handleDragStart = (e: React.DragEvent, session: ChatSessions) => {
+    e.dataTransfer.setData("application/chat-session-id", session.session_id)
+    e.dataTransfer.setData("application/chat-session-text", session.initial_text)
+    e.dataTransfer.effectAllowed = "move"
+    setDraggingSessionId(session.session_id)
+  }
+
+  const handleDragEnd = () => {
+    setDraggingSessionId(null)
+  }
+
   return (
     <Collapsible
       asChild
@@ -254,8 +286,23 @@ export function ChatSessionsList() {
                 </div>
               </SidebarMenuSubItem>
             ) : chatSessions.length > 0 ? (
-              chatSessions.map((session) => (
-                <SidebarMenuSubItem key={session.session_id}>
+                <Fragment>
+                  <SidebarMenuSubItem>
+                    <Input
+                      placeholder="Search chats"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+
+                  </SidebarMenuSubItem>
+                  {filteredChatSessions.length > 0 ? filteredChatSessions.map((session) => (
+                    <SidebarMenuSubItem
+                      key={session.session_id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, session)}
+                      onDragEnd={handleDragEnd}
+                      style={{ opacity: draggingSessionId === session.session_id ? 0.5 : 1, cursor: 'grab' }}
+                    >
                   <SidebarMenuSubButton
                     asChild
                     isActive={currentSessionId === session.session_id}
@@ -340,7 +387,14 @@ export function ChatSessionsList() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </SidebarMenuSubItem>
-              ))
+                  )) : (
+                    <SidebarMenuSubItem>
+                      <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
+                        <span>No chats found</span>
+                      </div>
+                    </SidebarMenuSubItem>
+                  )}
+                </Fragment>
             ) : (
               <SidebarMenuSubItem data-testid="chat-sessions-list-empty-state">
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">

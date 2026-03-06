@@ -78,6 +78,15 @@ interface deleteGroupParams {
     errorTask: () => void;
 }
 
+interface moveChatToGroupParams {
+    retry?: boolean;
+    sessionId: string;
+    groupId: string;
+    successTask: () => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
 interface toggleChatSharabilityParams {
     retry?: boolean;
     sessionId: string;
@@ -758,6 +767,56 @@ export async function deleteGroup({groupId, successTask, failureTask, errorTask,
         }
     } catch (error) {
         console.error(`Failed to load chat group sessions for groupId=${groupId}`, error);
+        errorTask();
+    }
+}
+
+export async function moveChatToGroup({ sessionId, groupId, successTask, failureTask, errorTask, retry = false }: moveChatToGroupParams) {
+    try {
+        if (retry) {
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+        const access_token = localStorage.getItem('access_token');
+        const payload = { session_id: sessionId, group_id: groupId };
+        const response = await fetch(ENDPOINTS.MOVE_SESSION_TO_GROUP, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+            body: JSON.stringify(payload)
+        });
+        if (response.status == 401) {
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await moveChatToGroup({
+                    sessionId,
+                    groupId,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+        } else if (response.status == 200) {
+            const response_data = await response.json();
+            const { status: status, errors: response_errors } = response_data;
+            if (status == "success") {
+                successTask();
+            } else {
+                if (response_errors && response_errors.length > 0) {
+                    throw new Error(`Failed to move chat to group due to these error(s): ${response_errors.join(', ')}`);
+                }
+                failureTask();
+            }
+        } else {
+            console.error("Failed to move chat to group with status code:", response.status);
+            failureTask();
+        }
+    } catch (error) {
+        console.error(`Failed to move chat sessionId=${sessionId} to groupId=${groupId}`, error);
         errorTask();
     }
 }

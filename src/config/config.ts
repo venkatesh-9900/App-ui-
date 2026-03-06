@@ -115,6 +115,7 @@ export const ENDPOINTS = {
     DELETE_GROUP: `/api/interaction/delete-group`,
     FETCH_ALL_GROUPS: `/api/interaction/fetch-all-groups`,
     FETCH_GROUP_SESSIONS: `/api/interaction/fetch-group-sessions`,
+    MOVE_SESSION_TO_GROUP: `/api/interaction/move-session-to-group`,
     GET_CHAT_TITLE: `/api/interaction/get-chat-title`,
     SCHEDULE: {
         LIST: `/api/schedules`,
