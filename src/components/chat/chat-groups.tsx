@@ -230,7 +230,6 @@ export function ChatGroupsList() {
   const handleAddGroup = () => {
     if (!addGroupName.trim()) return toast.error("Group name cannot be empty")
     const validPattern = /^[A-Za-z0-9_ ]+$/
-
     if (!validPattern.test(addGroupName.trim())) {
       toast.error(
         "Group name can only contain letters (A-Z, a-z), numbers (0-9), spaces, and underscore (_). No special characters allowed."
