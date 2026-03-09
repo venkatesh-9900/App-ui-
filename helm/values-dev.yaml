@@ -1,8 +1,8 @@
-timestamp: 1772900584.64
+timestamp: 1773073293.295
 replicaCount: 3
 image:
   repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
-  tag: 0.0.132-pr-301-f934776f
+  tag: 0.0.139-pr-302-29747dce
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ''
