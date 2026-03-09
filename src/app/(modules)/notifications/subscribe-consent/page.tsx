@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/notifications/subscribe-consent/empty-s
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { CreateNotificationChannelInstanceRequest, NotificationSubscriberInfo } from '@/types/notification-channel-instance'
-import { NotificationChannelInstancesSubscriberInfo, upsertNotificationChannelInstance } from '@/hooks/notification-channel-instance'
+import { NotificationChannelInstancesSubscriberInfo, upsertNotificationChannelInstance, deleteNotificationChannelInstance } from '@/hooks/notification-channel-instance'
 
 export default function SubscribeConsentPage() {
   // Page-level state management
@@ -116,6 +116,36 @@ export default function SubscribeConsentPage() {
     })
   }
 
+  const handleEmailConsentChange = async (checked: boolean) => {
+    if (!checked && existingSubscriber) {
+      // user turning OFF
+      setIsUnsubscribing(true)
+      await deleteNotificationChannelInstance({
+        id: existingSubscriber.id,
+        successTask: () => {
+          toast.success('Unsubscribed successfully', {
+            description: 'You have been unsubscribed from all notifications.',
+          })
+          // Reset state
+          setEmailConsent(false)
+          setExistingSubscriber(null)
+          setIsUnsubscribing(false)
+        },
+        failureTask: () => {
+          toast.error("Failed to delete channel")
+          setIsUnsubscribing(false)
+        },
+        errorTask: () => {
+          toast.error("Something went wrong")
+          setIsUnsubscribing(false)
+        },
+      })
+    } else {
+      // user turning ON
+      setEmailConsent(true)
+    }
+  }
+
   // Handle unsubscribe
   const handleUnsubscribe = async () => {
     if (!existingSubscriber) return
@@ -174,9 +204,9 @@ export default function SubscribeConsentPage() {
             <ConsentToggles
               emailConsent={emailConsent}
               smsConsent={smsConsent}
-              onEmailConsentChange={setEmailConsent}
+              onEmailConsentChange={handleEmailConsentChange}
               onSmsConsentChange={setSmsConsent}
-              emailDisabled={existingSubscriber?.email_preference || false}
+              emailDisabled={false}
               smsDisabled={existingSubscriber?.sms_preference || false}
             />
 

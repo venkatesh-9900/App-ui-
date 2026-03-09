@@ -42,6 +42,7 @@ import { format } from "date-fns"
 
 import { NotificationChannelInstance } from "@/types/notification-channel-instance"
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@radix-ui/react-tooltip"
+import { useAuth } from '@/contexts';
 
 interface NotificationChannelInstanceTableProps {
     instances: NotificationChannelInstance[]
@@ -66,6 +67,7 @@ export function NotificationChannelInstanceTable({
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [selectedInstance, setSelectedInstance] =
         useState<NotificationChannelInstance | null>(null)
+      const { userInfo } = useAuth()
 
     const handleDeleteClick = (instance: NotificationChannelInstance) => {
         setSelectedInstance(instance)
@@ -268,6 +270,7 @@ export function NotificationChannelInstanceTable({
                                                 <DropdownMenuItem
                                                     onClick={() => handleDeleteClick(instance)}
                                                     className="cursor-pointer text-destructive focus:text-destructive"
+                                                    disabled={instance.user_id !== userInfo?.email}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     Delete

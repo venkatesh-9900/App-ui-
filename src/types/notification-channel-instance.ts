@@ -39,7 +39,8 @@ export interface NotificationChannelInstance {
     last_name?: string
     email?: string
     phone?: string
-  }
+  },
+  user_id: string
   created_at: string
   updated_at: string
 }
@@ -57,6 +58,7 @@ export interface ListNotificationChannelInstanceResponse {
 }
 
 export interface NotificationSubscriberInfo {
+  id: number
   first_name?: string
   last_name?: string
   email?: string
