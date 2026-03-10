@@ -25,6 +25,7 @@ import { IconDots, IconFolder, IconShare3, IconTrash, IconPlayerPause, IconPlaye
 import { toast } from "sonner"
 import { onChatHistoryUpdate, onChatMovedToGroup } from "@/utils/eventBus"
 import { Input } from "../ui/input"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function ChatSessionsList() {
   const searchParams = useSearchParams()
@@ -312,7 +313,14 @@ export function ChatSessionsList() {
                       {session.session_id.includes("scheduled-chat") && (
                         <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
                       )}
-                      <span className="truncate">{extractUserMessage(session.initial_text)}</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="truncate">{extractUserMessage(session.initial_text)}</span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              {extractUserMessage(session.initial_text)}
+                            </TooltipContent>
+                          </Tooltip>
                     </Link>
                   </SidebarMenuSubButton>
                   <DropdownMenu>
