@@ -48,7 +48,11 @@ export default function AuthCallbackPage() {
                     localStorage.setItem("access_token", accessToken.access_token);
                     localStorage.setItem("is_authenticated", "true");
                     setAuthentication(accessToken.access_token);
-                    router.push("/home");
+                    const returnUrl = sessionStorage.getItem("return_url");
+                    if (returnUrl) {
+                        window.location.href = returnUrl
+                    } else 
+                        router.push("/home");
                 } else {
                     throw new Error("No access token in response");
                 }
