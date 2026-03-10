@@ -41,7 +41,7 @@ export function ConsentToggles({
           checked={emailConsent}
           onCheckedChange={onEmailConsentChange}
           disabled={emailDisabled}
-          className="shrink-0"
+          className="shrink-0 cursor-pointer"
         />
       </div>
 
