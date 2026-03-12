@@ -170,3 +170,8 @@ export interface ChatGroup {
     group_name: string;
     sessions: ChatSessions[];
 }
+
+export interface UpdateSessionTitle {
+  session_id: string,
+  title: string
+}

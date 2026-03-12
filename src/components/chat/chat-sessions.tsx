@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect, Fragment } from "react"
+import { useState, useEffect, Fragment, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { ChevronRight, MessageSquare, Clock } from "lucide-react"
 import {
@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { fetchUserChatSessions, removeChat, pauseSchedule, resumeSchedule, deleteSchedule, extractScheduleId, isScheduledChat, fetchUserSchedules, canPauseSchedule, canResumeSchedule } from "@/hooks/chat-service"
+import { fetchUserChatSessions, removeChat, pauseSchedule, resumeSchedule, deleteSchedule, extractScheduleId, isScheduledChat, fetchUserSchedules, canPauseSchedule, canResumeSchedule, updateChatTitle } from "@/hooks/chat-service"
 import { ChatSessions } from "@/types/chat-types"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { IconDots, IconFolder, IconShare3, IconTrash, IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react"
@@ -32,7 +32,9 @@ export function ChatSessionsList() {
   const router = useRouter()
   const currentSessionId = searchParams.get('sessionId')
   const { open, toggleSidebar } = useSidebar();
-
+  const isEditingRef = useRef(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const editContainerRef = useRef<HTMLDivElement | null>(null)
   const [chatSessions, setChatSessions] = useState<ChatSessions[]>([])
   const [isLoadingChats, setIsLoadingChats] = useState(false)
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
@@ -43,6 +45,8 @@ export function ChatSessionsList() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filteredChatSessions, setFilteredChatSessions] = useState<ChatSessions[]>([])
   const [draggingSessionId, setDraggingSessionId] = useState<string | null>(null)
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState("")
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
@@ -259,6 +263,80 @@ export function ChatSessionsList() {
     setDraggingSessionId(null)
   }
 
+  const startEditing = (session: ChatSessions, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+    isEditingRef.current = true
+    setEditingSessionId(session.session_id)
+    setEditingTitle(extractUserMessage(session.initial_text))
+  }
+
+  const saveTitle = (sessionId: string) => {
+    const newTitle = (inputRef.current?.value || editingTitle).trim()
+
+    if (!newTitle) {
+      setEditingSessionId(null)
+      return
+    }
+    setChatSessions(prev =>
+      prev.map(s =>
+        s.session_id === sessionId
+          ? { ...s, initial_text: newTitle }
+          : s
+      )
+    )
+
+    updateChatTitle({
+      request: {
+        session_id: sessionId,
+        title: newTitle
+      },
+      successTask: () => {
+        // setChatSessions(prev =>
+        //   prev.map(s =>
+        //     s.session_id === sessionId
+        //       ? { ...s, initial_text: newTitle }
+        //       : s
+        //   )
+        // )
+        setEditingSessionId(null)
+      },
+      failureTask: () => {
+        toast.error("Failed to update title")
+        setEditingSessionId(null)
+      },
+      errorTask: () => {
+        toast.error("Error updating title")
+        setEditingSessionId(null)
+      }
+    })
+  }
+
+  const cancelEditing = () => {
+    setEditingSessionId(null)
+  }
+
+  useEffect(() => {
+    if (!editingSessionId) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        editContainerRef.current &&
+        editContainerRef.current.contains(event.target as Node)
+      ) {
+        return
+      }
+
+      saveTitle(editingSessionId)
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [editingSessionId])
+
   return (
     <Collapsible
       asChild
@@ -304,97 +382,152 @@ export function ChatSessionsList() {
                       onDragEnd={handleDragEnd}
                       style={{ opacity: draggingSessionId === session.session_id ? 0.5 : 1, cursor: 'grab' }}
                     >
-                  <SidebarMenuSubButton
-                    asChild
-                    isActive={currentSessionId === session.session_id}
-                    data-testid={`chat-session-list-item-button`}
-                  >
-                    <Link href={`/chat?sessionId=${session.session_id}`}>
-                      {session.session_id.includes("scheduled-chat") && (
-                        <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      {editingSessionId === session.session_id ? (
+
+                        <div className="flex items-center px-2 py-1 w-full" ref={editContainerRef}>
+                          {/* {session.session_id.includes("scheduled-chat") && (
+                            <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                          )} */}
+
+                          <Input
+                            ref={inputRef}
+                            autoFocus
+                            value={editingTitle}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            onFocus={(e) => e.target.select()}
+                            onBlur={() => {
+                              if (isEditingRef.current) return
+                              saveTitle(session.session_id)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveTitle(session.session_id)
+                              if (e.key === "Escape") cancelEditing()
+                            }}
+                            className="h-7 text-sm w-full px-1"
+                          />
+                        </div>
+
+                      ) : (
+
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={currentSessionId === session.session_id}
+                          data-testid={`chat-session-list-item-button`}
+                        >
+                            <Link
+                              href={`/chat?sessionId=${session.session_id}`}
+                              className="flex items-center gap-2 w-full"
+                              onDoubleClick={(e) => {
+                                startEditing(session, e)
+                              }}
+                            >
+                              {session.session_id.includes("scheduled-chat") && (
+                                <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              )}
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="truncate"
+                                >
+                                  {extractUserMessage(session.initial_text)}
+                                </span>
+                              </TooltipTrigger>
+
+                              <TooltipContent side="top">
+                                {extractUserMessage(session.initial_text)}
+                              </TooltipContent>
+                            </Tooltip>
+                          </Link>
+                        </SidebarMenuSubButton>
+
                       )}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="truncate">{extractUserMessage(session.initial_text)}</span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              {extractUserMessage(session.initial_text)}
-                            </TooltipContent>
-                          </Tooltip>
-                    </Link>
-                  </SidebarMenuSubButton>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuAction
-                        showOnHover
-                        className="cursor-pointer data-[state=open]:bg-accent rounded-sm"
-                        data-testid={`chat-session-list-item-action-button`}
-                      >
-                        <IconDots />
-                        <span className="sr-only">More</span>
-                      </SidebarMenuAction>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      className="w-36 rounded-lg"
-                      side={isMobile ? "bottom" : "right"}
-                      align={isMobile ? "end" : "start"}
-                    >
-                      <DropdownMenuItem className="cursor-pointer"
-                        onClick={() => handleOpenChat(session.session_id)}
-                        data-testid={`chat-session-list-item-open-button`}
-                      >
-                        <IconFolder />
-                        <span>Open</span>
-                      </DropdownMenuItem>
-                      {isScheduledChat(session.session_id) && (() => {
-                        const scheduleId = extractScheduleId(session.session_id)
-                        const status = scheduleId ? scheduleStatusMap.get(scheduleId) : undefined
-                        const showPause = status && canPauseSchedule(status)
-                        const showResume = status && canResumeSchedule(status)
-                        
-                        return (
-                          <>
-                            {(showPause || showResume) && <DropdownMenuSeparator />}
-                            {showPause && (
-                              <DropdownMenuItem
-                                data-testid={`chat-session-list-item-pause-button`}
-                                className="cursor-pointer"
-                                disabled={scheduleActionSessionId === session.session_id}
-                                onClick={() => handlePauseSchedule(session.session_id)}
-                              >
-                                <IconPlayerPause />
-                                <span>Pause</span>
-                              </DropdownMenuItem>
-                            )}
-                            {showResume && (
-                              <DropdownMenuItem
-                                data-testid={`chat-session-list-item-resume-button`}
-                                className="cursor-pointer"
-                                disabled={scheduleActionSessionId === session.session_id}
-                                onClick={() => handleResumeSchedule(session.session_id)}
-                              >
-                                <IconPlayerPlay />
-                                <span>Resume</span>
-                              </DropdownMenuItem>
-                            )}
-                          </>
-                        )
-                      })()}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer"
-                        data-testid={`chat-session-list-item-delete-button`}
-                        variant="destructive"
-                        disabled={deletingSessionId === session.session_id}
-                        onClick={() => handleDeleteChat(session.session_id)}
-                      >
-                        <IconTrash />
-                        <span>
-                          {deletingSessionId === session.session_id ? "Deleting..." : "Delete"}
-                        </span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </SidebarMenuSubItem>
+
+                      {editingSessionId !== session.session_id && (
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <SidebarMenuAction
+                              showOnHover
+                              className="cursor-pointer data-[state=open]:bg-accent rounded-sm"
+                              data-testid={`chat-session-list-item-action-button`}
+                            >
+                              <IconDots />
+                              <span className="sr-only">More</span>
+                            </SidebarMenuAction>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            className="w-36 rounded-lg"
+                            side={isMobile ? "bottom" : "right"}
+                            align={isMobile ? "end" : "start"}
+                          >
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => handleOpenChat(session.session_id)}
+                              data-testid={`chat-session-list-item-open-button`}
+                            >
+                              <IconFolder />
+                              <span>Open</span>
+                            </DropdownMenuItem>
+
+                            {isScheduledChat(session.session_id) && (() => {
+                              const scheduleId = extractScheduleId(session.session_id)
+                              const status = scheduleId ? scheduleStatusMap.get(scheduleId) : undefined
+                              const showPause = status && canPauseSchedule(status)
+                              const showResume = status && canResumeSchedule(status)
+
+                              return (
+                                <>
+                                  {(showPause || showResume) && <DropdownMenuSeparator />}
+
+                                  {showPause && (
+                                    <DropdownMenuItem
+                                      data-testid={`chat-session-list-item-pause-button`}
+                                      className="cursor-pointer"
+                                      disabled={scheduleActionSessionId === session.session_id}
+                                      onClick={() => handlePauseSchedule(session.session_id)}
+                                    >
+                                      <IconPlayerPause />
+                                      <span>Pause</span>
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  {showResume && (
+                                    <DropdownMenuItem
+                                      data-testid={`chat-session-list-item-resume-button`}
+                                      className="cursor-pointer"
+                                      disabled={scheduleActionSessionId === session.session_id}
+                                      onClick={() => handleResumeSchedule(session.session_id)}
+                                    >
+                                      <IconPlayerPlay />
+                                      <span>Resume</span>
+                                    </DropdownMenuItem>
+                                  )}
+                                </>
+                              )
+                            })()}
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              data-testid={`chat-session-list-item-delete-button`}
+                              variant="destructive"
+                              disabled={deletingSessionId === session.session_id}
+                              onClick={() => handleDeleteChat(session.session_id)}
+                            >
+                              <IconTrash />
+                              <span>
+                                {deletingSessionId === session.session_id ? "Deleting..." : "Delete"}
+                              </span>
+                            </DropdownMenuItem>
+
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </SidebarMenuSubItem>
                   )) : (
                     <SidebarMenuSubItem>
                       <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
