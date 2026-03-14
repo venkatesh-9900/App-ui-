@@ -98,7 +98,7 @@ export const ENDPOINTS = {
     DELETE_SESSION: `/api/interaction/delete-session`,
     IS_NEW_SESSION: `${API_BASE_URL}/api/ai/session/{sessionId}/isNew`,
     ARCHIVE_SESSION: `${API_BASE_URL}/api/ai/sessions/{sessionId}/archive`,
-    UPDATE_SESSION_TITLE: `${API_BASE_URL}/api/ai/sessions/{sessionId}/title`,
+    UPDATE_SESSION_TITLE: `/api/interaction/update-session-title`,
     UPLOAD_FILE: `/api/interaction/upload-files`,
     REMOVE_FILE: `/api/interaction/remove-file-attachment`,
     TOGGLE_CHAT_SHARABILITY: `/api/interaction/toggle-session-sharability`,
