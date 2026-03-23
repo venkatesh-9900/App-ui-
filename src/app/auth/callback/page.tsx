@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import config from "@/config/config";
 import { useAuth } from '@/contexts';
@@ -11,13 +11,12 @@ import { toast } from "sonner";
 // Module-level lock to prevent double-firing even if component remounts
 let lastFetchedCode: string | null = null;
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setAuthentication } = useAuth();
     
     const [error, setError] = useState<string | null>(null);
-
 
     useEffect(() => {
         const code = searchParams.get("code");
@@ -108,5 +107,28 @@ export default function AuthCallbackPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function AuthCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen w-full p-4">
+                <Card className="w-full max-w-md mx-auto">
+                    <CardHeader>
+                        <CardTitle>Authenticating</CardTitle>
+                        <CardDescription>Please wait while we verify your credentials.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center justify-center py-10">
+                        <div className="relative w-12 h-12">
+                            <div className="absolute inset-0 rounded-full border-4 border-muted"></div>
+                            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        }>
+            <AuthCallbackContent />
+        </Suspense>
     );
 }
