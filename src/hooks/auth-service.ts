@@ -15,6 +15,19 @@ interface fetchLoginURLParams {
     errorTask: () => void;
 }
 
+interface requestOTPParams {
+    email: string;
+    successTask: () => void;
+    errorTask: (error: string) => void;
+}
+
+interface loginWithOTPParams {
+    email: string;
+    otp: string;
+    successTask: (accessToken: string) => void;
+    errorTask: (error: string) => void;
+}
+
 interface fetchLogoutURLParams {
     retry?: boolean;
     errorTask: () => void;
@@ -24,8 +37,6 @@ export const logoutUser = async ({successTask, failureTask, errorTask}: logoutRe
     try {
         const accessToken = localStorage.getItem('access_token');
         if (accessToken) {
-            console.log("Logging out user", config.ENDPOINTS.AUTH.FETCH_LOGOUT_URL);
-            console.log("Access token", accessToken);
             const response = await fetch(config.ENDPOINTS.AUTH.FETCH_LOGOUT_URL, {
                 method: 'GET',
                 headers: {
@@ -38,7 +49,6 @@ export const logoutUser = async ({successTask, failureTask, errorTask}: logoutRe
             }
             const responseText = await response.text();
             const responseData = JSON.parse(responseText);
-            console.log(responseData);
             if (responseData.url) {
                 successTask(responseData.url);
                 window.location.href = responseData.url;
@@ -49,7 +59,6 @@ export const logoutUser = async ({successTask, failureTask, errorTask}: logoutRe
         }
     } catch (err) {
         errorTask();
-        console.error('Logout failed:', err);
     }
 };
 
@@ -69,7 +78,6 @@ export const refreshAccessToken = async ({failureTask, errorTask}: refreshAccess
             }
             const responseText = await response.text();
             const newAccessToken = JSON.parse(responseText);
-            console.log(newAccessToken);
             if (newAccessToken.access_token) {
                 localStorage.setItem("access_token", newAccessToken.access_token || "");
                 localStorage.setItem("is_authenticated", "true");
@@ -85,7 +93,6 @@ export const refreshAccessToken = async ({failureTask, errorTask}: refreshAccess
 
 export const fetchLoginURL = async ({errorTask}: fetchLoginURLParams) : Promise<string> => {
     try {
-        console.log("Fetching login URL", config.ENDPOINTS.AUTH.FETCH_LOGIN_URL);
         const response = await fetch(config.ENDPOINTS.AUTH.FETCH_LOGIN_URL, {
             method: 'GET',
             headers: {
@@ -110,6 +117,61 @@ export const fetchLoginURL = async ({errorTask}: fetchLoginURLParams) : Promise<
         return "";
     }
 }
+
+export const requestOTP = async ({ email, successTask, errorTask }: requestOTPParams) => {
+    try {
+        const response = await fetch(config.ENDPOINTS.AUTH.REQUEST_OTP, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        const responseText = await response.text();
+        const responseData = JSON.parse(responseText);
+
+        if (response.ok) {
+            successTask();
+        } else {
+            errorTask(responseData.message || 'Failed to request OTP');
+        }
+    } catch (error) {
+        errorTask('An error occurred while requesting OTP');
+    }
+};
+
+export const loginWithOTP = async ({ email, otp, successTask, errorTask }: loginWithOTPParams) => {
+    try {
+        const response = await fetch(config.ENDPOINTS.AUTH.ACCESS_TOKEN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                email, 
+                otp,
+                grant_type: 'otp'
+            }),
+        });
+
+        const responseText = await response.text();
+        const responseData = JSON.parse(responseText);
+
+        if (response.ok) {
+            if (responseData.access_token) {
+                successTask(responseData.access_token);
+            } else {
+                errorTask('No access token received');
+            }
+        } else {
+            errorTask(responseData.message || 'Login failed');
+        }
+    } catch (error) {
+        errorTask('An error occurred during login');
+        console.error('Error during OTP login:', error);
+    }
+};
 
 export const fetchLogoutURL = async ({retry = false, errorTask}: fetchLogoutURLParams) : Promise<string> => {
     try {
@@ -157,20 +219,14 @@ export const fetchLogoutURL = async ({retry = false, errorTask}: fetchLogoutURLP
         }
     } catch (error) {
         errorTask();
-        console.error(`Failed to get file details`, error);
         return "";
     }
 }
 
 export const reauthenticationStep = async (errorTask: () => void) => {
-    console.log("Redirecting to login page");
-    const login_url = await fetchLoginURL({
-        errorTask: errorTask
-    });
-    if (login_url) {
-        window.location.replace(login_url);
-    } else {
-        errorTask();
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/auth/callback')) {
+        return;
     }
+    window.location.href = '/';
 }
 

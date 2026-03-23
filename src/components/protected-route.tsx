@@ -11,25 +11,27 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-    const { isAuthenticated, isLoading, login } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        console.log('isAuthenticated inside protected route...', isAuthenticated, 'isLoading:', isLoading);
-        // Only trigger login if:
-        // 1. Not currently loading (validation finished)
-        // 2. Not authenticated
-        // 3. User hasn't been here before (avoid redirect loop on logout)
+        const path = window.location.pathname;
+
+        // Skip protection logic if on auth callback page to avoid race conditions
+        if (path.includes('/auth/callback')) return;
+
+        // Redirection logic: Only trigger if not loading and definitely not authenticated
         if (!isLoading && !isAuthenticated) {
-            const accessToken = localStorage.getItem('access_token');
-            console.log('accessToken', accessToken);
-            // Only login if there's no token (genuine unauthenticated state)
-            // If token exists but isAuthenticated is false, validation is still in progress
-            if (accessToken != null) {
-                login();
+            // Check localStorage as a ultimate fallback to prevent race-condition bounces
+            if (localStorage.getItem('is_authenticated') !== 'true') {
+                const returnUrl = window.location.pathname + window.location.search;
+                if (returnUrl !== '/' && returnUrl !== '') {
+                    sessionStorage.setItem('return_url', returnUrl);
+                }
+                router.push('/');
             }
         }
-    }, [isAuthenticated, isLoading, login]);
+    }, [isAuthenticated, isLoading, router]);
 
     // Show loading while checking authentication
     if (isLoading) {
@@ -83,4 +85,3 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     return <>{children}</>;
 }
-

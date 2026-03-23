@@ -31,6 +31,7 @@ export const ENDPOINTS = {
         FETCH_LOGOUT_URL: `/api/auth/url/logout`,
         LOGOUT: `/api/auth/logout`,
         ACCESS_TOKEN: `/api/auth/token`,
+        REQUEST_OTP: `/api/auth/otp`,
         REFRESH_TOKEN: `/api/auth/refresh`,
         VALIDATE: `/api/auth/validate`,
         SESSION: `${API_BASE_URL}/auth/me`,
