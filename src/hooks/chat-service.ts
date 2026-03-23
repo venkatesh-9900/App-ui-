@@ -6,6 +6,7 @@ import {extractAttachedFilesPublicLinks, extractRenderVizUrls} from "@/utils/uti
 import {reauthenticationStep, refreshAccessToken} from "@/hooks/auth-service";
 import { app_name } from "@/constants/constants";
 import { success } from "zod";
+import { UpdateSessionTitle } from "@/types/chat-types";
 
 interface ApiParams {
     retry?: boolean;
@@ -92,6 +93,14 @@ interface toggleChatSharabilityParams {
     sessionId: string;
     isSharable: boolean;
     successTask: (chat_link?: string) => void;
+    failureTask: () => void;
+    errorTask: () => void;
+}
+
+interface updateSessionTitleParams {
+    retry?: boolean;
+    request: UpdateSessionTitle
+    successTask: () => void;
     failureTask: () => void;
     errorTask: () => void;
 }
@@ -540,16 +549,59 @@ export async function archiveChat(chatId: string): Promise<void> {
 /**
  * Update title of a chat session
  */
-export async function updateChatTitle(chatId: string, title: string): Promise<void> {
+export async function updateChatTitle({
+    request,
+    successTask,
+    failureTask,
+    errorTask,
+    retry = false
+}: updateSessionTitleParams) {
+
     try {
-        await axiosAuthServices.post(
-            ENDPOINTS.UPDATE_SESSION_TITLE.replace("{sessionId}", chatId),
-            { title },
-            { headers: buildHeader(false) }
-        );
+        if (retry) {
+            console.log("Refreshing access token");
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const access_token = localStorage.getItem('access_token');
+
+        const response = await fetch(ENDPOINTS.UPDATE_SESSION_TITLE, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+                'x-app-name': app_name
+            },
+            body: JSON.stringify(request) 
+        });
+
+        if (response.status === 401) {
+
+            if (retry) {
+                reauthenticationStep(errorTask);
+            } else {
+                return await updateChatTitle({
+                    request,
+                    successTask,
+                    failureTask,
+                    errorTask,
+                    retry: true
+                });
+            }
+
+        } else if (response.status === 200) {
+            const response_data = await response.json();
+            successTask();
+        } else {
+            console.error("Failed to update chat title:", response.status);
+            failureTask();
+        }
+
     } catch (error) {
-        console.error(`Failed to update title for chat: ${chatId}`, error);
-        throw error;
+
+        console.error(error);
+        errorTask();
+
     }
 }
 
