@@ -1,4 +1,4 @@
-import { format } from "date-fns"
+import { format, formatDistanceToNowStrict } from "date-fns"
 
 export function truncateText (address: string) {
   if (address.length <= 12) return address
@@ -40,4 +40,13 @@ export function formatPrettyDate(dateString: string) {
     second: "2-digit",
     hour12: false, // keep 05:29:59 instead of 5:29:59 AM
   })
+}
+
+export function formatRelativeDate(dateString?: string) {
+  if (!dateString) return "N/A"
+  try {
+    return formatDistanceToNowStrict(new Date(dateString), { addSuffix: true })
+  } catch {
+    return "N/A"
+  }
 }

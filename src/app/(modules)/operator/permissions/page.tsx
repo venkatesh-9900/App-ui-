@@ -1,0 +1,116 @@
+"use client"
+
+import React, { useState, useEffect, useCallback } from "react"
+import { PermissionsView } from "@/components/operator/permissions-view"
+import { ProtectedRoute } from "@/components/protected-route"
+import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
+import { fetchPermissions, createPermission, updatePermission, deletePermission } from "@/hooks/operator/permissions-service"
+import { Permission } from "@/types/operator"
+import { toast } from "sonner"
+
+export default function PermissionsPage() {
+  const [permissions, setPermissions] = useState<Permission[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+
+  const loadPermissions = useCallback(() => {
+    setIsLoading(true)
+    fetchPermissions({
+      page,
+      limit: pageSize,
+      successTask: (data) => {
+        setPermissions(data.data || [])
+        setTotalCount(data.count || 0)
+        setIsLoading(false)
+      },
+      failureTask: () => {
+        setIsLoading(false)
+        toast.error("Failed to load permissions")
+      },
+      errorTask: () => {
+        setIsLoading(false)
+        toast.error("Error connecting to server")
+      }
+    })
+  }, [page, pageSize])
+
+  useEffect(() => {
+    loadPermissions()
+  }, [loadPermissions])
+
+  const handleCreate = async (data: { name: string; description: string }) => {
+    return new Promise<void>((resolve, reject) => {
+      createPermission({
+        request: data,
+        successTask: () => {
+          toast.success("Permission created successfully")
+          loadPermissions()
+          resolve()
+        },
+        failureTask: () => {
+          toast.error("Failed to create permission")
+          reject()
+        },
+        errorTask: () => {
+          toast.error("Error creating permission")
+          reject()
+        }
+      })
+    })
+  }
+
+  const handleUpdate = async (id: number, data: { name: string; description: string }) => {
+    return new Promise<void>((resolve, reject) => {
+      updatePermission({
+        id,
+        request: data,
+        successTask: () => {
+          toast.success("Permission updated successfully")
+          loadPermissions()
+          resolve()
+        },
+        failureTask: () => {
+          toast.error("Failed to update permission")
+          reject()
+        },
+        errorTask: () => {
+          toast.error("Error updating permission")
+          reject()
+        }
+      })
+    })
+  }
+
+  const handleDelete = (id: number) => {
+    toast.info("Deleting permission...")
+    deletePermission({
+      id,
+      successTask: () => {
+        toast.success("Permission deleted successfully")
+        loadPermissions()
+      },
+      failureTask: () => toast.error("Failed to delete permission"),
+      errorTask: () => toast.error("Error deleting permission")
+    })
+  }
+
+  return (
+    <ProtectedRoute>
+      <DashboardNavbar />
+      <PermissionsView 
+        permissions={permissions}
+        isLoading={isLoading}
+        totalCount={totalCount}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+        onDelete={handleDelete}
+      />
+    </ProtectedRoute>
+  )
+}

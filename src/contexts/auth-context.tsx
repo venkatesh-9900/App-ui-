@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { logoutUser, fetchLoginURL, fetchLogoutURL, refreshAccessToken } from '@/hooks/auth-service';
+import { logoutUser, fetchLoginURL, fetchLogoutURL, refreshAccessToken, requestOTP, loginWithOTP } from '@/hooks/auth-service';
 import config from '@/config/config';
 
 interface UserInfo {
@@ -12,103 +12,70 @@ interface UserInfo {
     [key: string]: any;
 }
 
-interface AuthContextType {
+interface AuthState {
     isAuthenticated: boolean;
     accessToken: string | null;
     userInfo: UserInfo | null;
     isLoading: boolean;
+    isRootUser: boolean;
+}
+
+interface AuthContextType extends AuthState {
     login: () => Promise<void>;
+    requestOTP: (params: { email: string, successTask: () => void, errorTask: (error: string) => void }) => Promise<void>;
+    loginWithOTP: (params: { email: string, otp: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => Promise<void>;
     logout: () => Promise<void>;
-    setAuthentication: (token: string) => void;
+    setAuthentication: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const INITIAL_STATE: AuthState = {
+    isAuthenticated: false,
+    accessToken: null,
+    userInfo: null,
+    isLoading: true,
+    isRootUser: false,
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [accessToken, setAccessToken] = useState<string | null>(null);
-    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [state, setState] = useState<AuthState>(INITIAL_STATE);
     const router = useRouter();
 
-    useEffect(() => {
-        validateAndFetchUser();
+    // Helper to update state atomically
+    const setAuthState = React.useCallback((updates: Partial<AuthState>) => {
+        setState(prev => ({ ...prev, ...updates }));
     }, []);
 
-    const validateAndFetchUser = async () => {
-        setIsLoading(true);
-        const token = localStorage.getItem('access_token');
-        console.log('token', token);
-        if (!token) {
-            console.log('No access token found, user needs to login');
-            setIsLoading(false);
-            return;
-        }
+    const clearAuth = React.useCallback(() => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('is_authenticated');
+        setAuthState({
+            isAuthenticated: false,
+            accessToken: null,
+            userInfo: null,
+            isLoading: false,
+            isRootUser: false,
+        });
+    }, [setAuthState]);
 
-        console.log('Access token found, validating...');
-        
-        try {
-            // Try to fetch user info with existing token
-            const response = await fetch(config.ENDPOINTS.USERS.GET, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+    const attemptTokenRefreshAndFetchUser = React.useCallback(async () => {
+        const isCallbackPage = typeof window !== 'undefined' && window.location.pathname.includes('/auth/callback');
 
-            if (response.ok) {
-                // Token is valid, get user info
-                const userData = await response.json();
-                console.log('User info fetched successfully:', userData);
-                
-                setUserInfo(userData);
-                setAccessToken(token);
-                setIsAuthenticated(true);
-                localStorage.setItem('is_authenticated', 'true');
-                
-                // Redirect to home if not already there
-                if (window.location.pathname === '/') {
-                    router.push('/home');
-                }
-            } else if (response.status === 401) {
-                // Token expired, try to refresh
-                console.log('Token expired, attempting refresh...');
-                await attemptTokenRefreshAndFetchUser();
-            } else {
-                // Other error, clear auth
-                console.error('Failed to fetch user info:', response.status);
-                clearAuth();
-            }
-        } catch (error) {
-            console.error('Error validating token:', error);
-            clearAuth();
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const attemptTokenRefreshAndFetchUser = async () => {
         try {
             await refreshAccessToken({
                 failureTask: () => {
-                    console.log('Failed to refresh token');
-                    window.location.href = '/';
+                    if (!isCallbackPage) window.location.href = '/';
                     clearAuth();
                 },
                 errorTask: () => {
-                    console.log('Error refreshing token');
-                    window.location.href = '/';
+                    if (!isCallbackPage) window.location.href = '/';
                     clearAuth();
                 }
             });
 
-            // Check if token was refreshed
             const newToken = localStorage.getItem('access_token');
             if (newToken) {
-                console.log('Token refreshed, fetching user info...');
-                
-                // Fetch user info with new token
                 const response = await fetch(config.ENDPOINTS.USERS.GET, {
                     method: 'GET',
                     headers: {
@@ -119,93 +86,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (response.ok) {
                     const userData = await response.json();
-                    console.log('User info fetched after refresh:', userData);
-                    
-                    setUserInfo(userData);
-                    setAccessToken(newToken);
-                    setIsAuthenticated(true);
+                    setAuthState({
+                        userInfo: userData,
+                        accessToken: newToken,
+                        isAuthenticated: true,
+                        isRootUser: userData.is_root_user || false,
+                        isLoading: false
+                    });
                     localStorage.setItem('is_authenticated', 'true');
                     
-                    // Redirect to home
-                    if (window.location.pathname === '/') {
-                        router.push('/home');
+                    if (window.location.pathname === '/' || window.location.pathname === '') {
+                        const returnUrl = sessionStorage.getItem('return_url');
+                        if (returnUrl && returnUrl !== '/') {
+                            sessionStorage.removeItem('return_url');
+                            router.push(returnUrl);
+                        } else {
+                            router.push('/home');
+                        }
                     }
                 } else {
-                    console.error('Failed to fetch user info after refresh');
                     clearAuth();
                 }
             } else {
                 clearAuth();
             }
         } catch (error) {
-            console.error('Error during token refresh:', error);
             clearAuth();
         }
-    };
+    }, [router, clearAuth, setAuthState]);
 
-    const clearAuth = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('is_authenticated');
-        setAccessToken(null);
-        setIsAuthenticated(false);
-        setUserInfo(null);
-        setIsLoading(false);
-    };
+    const validateAndFetchUser = React.useCallback(async () => {
+        if (typeof window === 'undefined') return;
 
-    const login = async () => {
-        try {
-            const loginURL = await fetchLoginURL({
-                errorTask: () => {
-                    console.error('Failed to fetch login URL');
-                }
-            });
-            
-            if (loginURL) {
-                window.location.href = loginURL;
-            }
-        } catch (error) {
-            console.error('Login failed:', error);
-        }
-    };
+        const pathname = window.location.pathname;
 
-    const logout = async () => {
-        try {
-            // Then call the logout endpoint to invalidate backend session (fire and forget)
-            logoutUser({
-                successTask: (idToken) => {
-                    console.log('Logout successful with id_token:', idToken);
-                    clearAuth();
-                },
-                failureTask: () => {
-                    console.error('Logout failed - no id_token received');
-                    clearAuth();
-                },
-                errorTask: () => {
-                    console.error('Logout error occurred');
-                    clearAuth();
-                }
-            }).catch(err => {
-                console.error('Logout API call failed:', err);
-                clearAuth();
-            });
-            
-            // Navigate to landing page using Next.js router (no full page reload)
-            router.push('/');
-        } catch (error) {
-            console.error('Logout failed:', error);
-            clearAuth();
-            router.push('/');
-        }
-    };
-
-    const setAuthentication = async (token: string) => {
-        localStorage.setItem('access_token', token);
-        localStorage.setItem('is_authenticated', 'true');
-        setAccessToken(token);
-        setIsAuthenticated(true);
-        console.log('Setting authentication token');
+        // Skip validation/redirect logic if on auth callback page to avoid race conditions
+        const isCallbackPage = pathname.includes('/auth/callback');
         
-        // Fetch user info after setting token
+        if (isCallbackPage) {
+            setAuthState({ isLoading: false });
+            return;
+        }
+
+        setAuthState({ isLoading: true });
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+            setAuthState({ isLoading: false });
+            return;
+        }
+
         try {
             const response = await fetch(config.ENDPOINTS.USERS.GET, {
                 method: 'GET',
@@ -217,24 +147,141 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (response.ok) {
                 const userData = await response.json();
-                console.log('User info fetched:', userData);
-                setUserInfo(userData);
+                
+                setAuthState({
+                    userInfo: userData,
+                    accessToken: token,
+                    isAuthenticated: true,
+                    isRootUser: userData.is_root_user || false,
+                    isLoading: false
+                });
+                localStorage.setItem('is_authenticated', 'true');
+                
+                if (window.location.pathname === '/' || window.location.pathname === '') {
+                    const returnUrl = sessionStorage.getItem('return_url');
+                    if (returnUrl && returnUrl !== '/') {
+                        sessionStorage.removeItem('return_url');
+                        router.push(returnUrl);
+                    } else {
+                        router.push('/home');
+                    }
+                }
+            } else if (response.status === 401) {
+                await attemptTokenRefreshAndFetchUser();
+            } else {
+                clearAuth();
             }
         } catch (error) {
-            console.error('Failed to fetch user info after authentication:', error);
+            clearAuth();
+        } finally {
+            setAuthState({ isLoading: false });
         }
-    };
+    }, [router, clearAuth, setAuthState, attemptTokenRefreshAndFetchUser]);
+
+    useEffect(() => {
+        validateAndFetchUser();
+    }, [validateAndFetchUser]);
+
+    const setAuthentication = React.useCallback(async (token: string) => {
+        // Atomic start: set loading and authenticated together
+        setAuthState({ 
+            isLoading: true, 
+            isAuthenticated: true, 
+            accessToken: token 
+        });
+        
+        localStorage.setItem('access_token', token);
+        localStorage.setItem('is_authenticated', 'true');
+        
+        try {
+            const response = await fetch(config.ENDPOINTS.USERS.GET, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                setAuthState({
+                    userInfo: userData,
+                    isRootUser: userData.is_root_user || false,
+                    isLoading: false
+                });
+            }
+        } catch (error) {
+            // silent fail for profile fetch
+        } finally {
+            setAuthState({ isLoading: false });
+        }
+    }, [setAuthState]);
+
+    const login = React.useCallback(async () => {
+        try {
+            const loginURL = await fetchLoginURL({
+                errorTask: () => console.error('Failed to fetch login URL')
+            });
+            if (loginURL) window.location.href = loginURL;
+        } catch (error) {
+            console.error('Login failed:', error);
+        }
+    }, []);
+
+    const requestOTPMethod = React.useCallback(async (params: { email: string, successTask: () => void, errorTask: (error: string) => void }) => {
+        try {
+            await requestOTP({
+                email: params.email,
+                successTask: params.successTask,
+                errorTask: params.errorTask
+            });
+        } catch (error) {
+            console.error('OTP Request failed:', error);
+            params.errorTask('An error occurred while requesting OTP');
+        }
+    }, []);
+
+    const loginWithOTPMethod = React.useCallback(async (params: { email: string, otp: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => {
+        try {
+            await loginWithOTP({
+                email: params.email,
+                otp: params.otp,
+                successTask: (token) => {
+                    setAuthentication(token);
+                    setAuthState({ isRootUser: true });
+                    params.successTask(token);
+                },
+                errorTask: params.errorTask
+            });
+        } catch (error) {
+            console.error('OTP Login failed:', error);
+            params.errorTask('An error occurred during login');
+        }
+    }, [loginWithOTP, setAuthentication, setAuthState]);
+
+    const logout = React.useCallback(async () => {
+        try {
+            logoutUser({
+                successTask: () => clearAuth(),
+                failureTask: () => clearAuth(),
+                errorTask: () => clearAuth()
+            }).catch(() => clearAuth());
+            router.push('/');
+        } catch (error) {
+            clearAuth();
+            router.push('/');
+        }
+    }, [router, clearAuth]);
 
     return (
         <AuthContext.Provider 
             value={{ 
-                isAuthenticated, 
-                accessToken,
-                userInfo,
-                isLoading,
+                ...state,
                 login, 
-                logout, 
-                setAuthentication 
+                requestOTP: requestOTPMethod,
+                loginWithOTP: loginWithOTPMethod,
+                logout,
+                setAuthentication
             }}
         >
             {children}
@@ -249,4 +296,3 @@ export const useAuth = () => {
     }
     return context;
 };
-

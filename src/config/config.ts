@@ -31,6 +31,7 @@ export const ENDPOINTS = {
         FETCH_LOGOUT_URL: `/api/auth/url/logout`,
         LOGOUT: `/api/auth/logout`,
         ACCESS_TOKEN: `/api/auth/token`,
+        REQUEST_OTP: `/api/auth/otp`,
         REFRESH_TOKEN: `/api/auth/refresh`,
         VALIDATE: `/api/auth/validate`,
         SESSION: `${API_BASE_URL}/auth/me`,
@@ -109,6 +110,12 @@ export const ENDPOINTS = {
         CHAINLIST: `/api/monitoring/chainlist`,
         GET_NEIGHBOURS: `/api/monitoring/get-neighbours`,
         ACCOUNTS: `/api/monitoring/accounts`
+    },
+    OPERATOR: {
+        APIS: `/api/operator/apis`,
+        SERVICES: `/api/operator/api-services`,
+        PERMISSIONS: `/api/operator/permissions`,
+        MAPPINGS: `/api/operator/api-permissions`
     },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`,
     CREATE_GROUP: `/api/interaction/create-group`,

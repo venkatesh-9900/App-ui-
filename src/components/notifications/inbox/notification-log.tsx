@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { NotificationLog as NotificationLogType } from "@/types/notifcation-log"
 import { Mail, MailOpen, Trash2, Users } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -53,8 +54,15 @@ export function NotificationLog({
   /* -------- Loader -------- */
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin h-8 w-8 rounded-full border-b-2 border-primary" />
+      <div className="flex flex-col divide-y">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-4 py-4">
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="h-5 w-24 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        ))}
       </div>
     )
   }
