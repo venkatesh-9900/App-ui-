@@ -111,6 +111,12 @@ export const ENDPOINTS = {
         GET_NEIGHBOURS: `/api/monitoring/get-neighbours`,
         ACCOUNTS: `/api/monitoring/accounts`
     },
+    OPERATOR: {
+        APIS: `/api/operator/apis`,
+        SERVICES: `/api/operator/api-services`,
+        PERMISSIONS: `/api/operator/permissions`,
+        MAPPINGS: `/api/operator/api-permissions`
+    },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`,
     CREATE_GROUP: `/api/interaction/create-group`,
     DELETE_GROUP: `/api/interaction/delete-group`,

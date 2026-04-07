@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Inbox, Filter } from "lucide-react"
 
 import { NotificationLog } from "@/components/notifications/inbox/notification-log"
-import { Pagination } from "@/components/common/pagniation"
+import { Pagination } from "@/components/common/pagination"
 
 import {
   listNotificationLog,

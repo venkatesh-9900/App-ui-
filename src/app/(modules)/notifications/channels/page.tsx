@@ -25,7 +25,7 @@ import { listNotificationChannel } from "@/hooks/notification-channel-service"
 import { NotificationChannelInstanceTable } from "@/components/notifications/notification-channel-instance/notification-channel-instance-table"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
-import { Pagination } from "@/components/common/pagniation"
+import { Pagination } from "@/components/common/pagination"
 import { useRouter, useSearchParams } from "next/navigation"
 
 export default function NotificationChannelInstancesPage() {

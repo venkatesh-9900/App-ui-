@@ -12,7 +12,8 @@ import TxnTable from '@/components/notifications/aaw-details/txn-table';
 import TxnDetailsSideBar from '@/components/notifications/aaw-details/txn-details-side-bar';
 import TxnFilterBar from '@/components/notifications/aaw-details/txn-filter-bar'; // NEW IMPORT
 import { Button } from '@/components/ui/button';
-import { Pagination } from '@/components/common/pagniation';
+import { Pagination } from '@/components/common/pagination';
+import { Skeleton } from '@/components/ui/skeleton';
 // Define the grouping type options
 type GroupingType = 'asset' | 'category';
 
@@ -243,8 +244,10 @@ export default function AAAWDetailsPage() {
                                     {/* Cards */}
                                     <div className='min-h-42'>
                                         {isGroupLoading ? (
-                                            <div className="flex justify-center items-center py-12">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                                            <div className="grid grid-cols-3 gap-1">
+                                                {Array.from({ length: 3 }).map((_, i) => (
+                                                    <Skeleton key={i} className="h-40 rounded-lg" />
+                                                ))}
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-3 gap-1">
@@ -324,16 +327,19 @@ export default function AAAWDetailsPage() {
                                                 onRowClick={(txn) => setSelectedTxn(txn)}
                                                 selectedTxnIds={new Set(selectedTxns.keys())}
                                                 onToggleTxn={toggleTxnSelection}
+                                                isLoading={isTransactionLoading}
                                             />
-
-                                            <Pagination
-                                                page={page}
-                                                pageSize={limit}
-                                                totalCount={groupInfo.data[selectedKey]?.count ?? 0}
-                                                loading={isTransactionLoading}
-                                                onPageChange={setPage}
-                                                onPageSizeChange={setPageSize} // fixed page size here
-                                            />
+ 
+                                            {!isTransactionLoading && (groupInfo.data[selectedKey]?.count ?? 0) > 10 && (
+                                                <Pagination
+                                                    page={page}
+                                                    pageSize={limit}
+                                                    totalCount={groupInfo.data[selectedKey]?.count ?? 0}
+                                                    loading={isTransactionLoading}
+                                                    onPageChange={setPage}
+                                                    onPageSizeChange={setPageSize} // fixed page size here
+                                                />
+                                            )}
                                         </>
                                     )}
                                 </div>

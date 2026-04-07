@@ -9,6 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -99,8 +100,29 @@ export function NotificationChannelInstanceTable({
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <div className="overflow-hidden rounded-lg border">
+                <Table>
+                    <TableHeader className="bg-muted">
+                        <TableRow>
+                            <TableHead className="px-4 py-2">Name</TableHead>
+                            <TableHead className="px-4 py-2">Channel Type</TableHead>
+                            <TableHead className="px-4 py-2">Publish Type</TableHead>
+                            <TableHead className="px-4 py-2">Created</TableHead>
+                            <TableHead className="px-4 py-2 text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-[80px] rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-[100px] rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-full" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </div>
         )
     }
