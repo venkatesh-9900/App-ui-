@@ -12,6 +12,7 @@ interface BaseServiceParams {
     successTask: (data: any) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
     retry?: boolean;
 }
 
@@ -49,6 +50,7 @@ export const createAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: CreateAddressActivityParams) => {
     try {
@@ -73,9 +75,12 @@ export const createAddressActivity = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.status === 200) {
             const data: AddressActivityResponse = await response.json();
             successTask(data);
@@ -96,6 +101,7 @@ export const listAddressActivities = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: BaseServiceParams) => {
     try {
@@ -118,9 +124,12 @@ export const listAddressActivities = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: ListAddressActivitiesResponse = await response.json();
             successTask(data);
@@ -143,6 +152,7 @@ export const updateAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: UpdateAddressActivityParams) => {
     try {
@@ -168,9 +178,12 @@ export const updateAddressActivity = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: AddressActivityResponse = await response.json();
             successTask(data);
@@ -192,6 +205,7 @@ export const deleteAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: DeleteAddressActivityParams) => {
     try {
@@ -215,9 +229,12 @@ export const deleteAddressActivity = async ({
                     id,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: DeleteAddressActivityResponse = await response.json();
             successTask(data);
@@ -240,6 +257,7 @@ export const toggleAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: ToggleAddressActivityParams) => {
     try {
@@ -265,9 +283,12 @@ export const toggleAddressActivity = async ({
                     active,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: AddressActivityResponse = await response.json();
             successTask(data);

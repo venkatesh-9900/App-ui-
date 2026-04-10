@@ -12,6 +12,7 @@ interface BaseServiceParams {
     successTask: (data: any) => void;
     failureTask: (duplicate?: boolean) => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
     retry?: boolean;
 }
 
@@ -43,6 +44,7 @@ export const createAddressGroup = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: CreateAddressGroupParams) => {
     try {
@@ -67,9 +69,12 @@ export const createAddressGroup = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.status === 200) {
             const data: AddressGroupResponse = await response.json();
             successTask(data);
@@ -93,6 +98,7 @@ export const listAddressGroups = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: BaseServiceParams) => {
     try {
@@ -115,9 +121,12 @@ export const listAddressGroups = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: ListAddressGroupsResponse = await response.json();
             successTask(data);
@@ -140,6 +149,7 @@ export const updateAddressGroup = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: UpdateAddressGroupParams) => {
     try {
@@ -165,9 +175,12 @@ export const updateAddressGroup = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: AddressGroupResponse = await response.json();
             successTask(data);
@@ -192,6 +205,7 @@ export const deleteAddressGroup = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: DeleteAddressGroupParams) => {
     try {
@@ -215,9 +229,12 @@ export const deleteAddressGroup = async ({
                     id,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: DeleteAddressGroupResponse = await response.json();
             successTask(data);

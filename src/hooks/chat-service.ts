@@ -13,6 +13,7 @@ interface ApiParams {
     successTask: (chat_sessions: ChatSessions[]) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface GroupApiParams {
@@ -20,6 +21,7 @@ interface GroupApiParams {
     successTask: (groups: ChatGroup[]) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface ChatGroupSessionsParams {
@@ -28,6 +30,7 @@ interface ChatGroupSessionsParams {
     successTask: (sessions: ChatSessions[]) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface CreateChatGroupParams{
@@ -36,6 +39,7 @@ interface CreateChatGroupParams{
     successTask: (groupId: string) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface SessionDetailsParams {
@@ -44,6 +48,7 @@ interface SessionDetailsParams {
     successTask: (is_sharable: boolean, sharable_link: string) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 
@@ -52,6 +57,7 @@ interface fetchUserInteractionParams {
     sessionId: string;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface fetchCommonUserInteractionParams extends fetchUserInteractionParams {
@@ -68,6 +74,7 @@ interface removeChatParams {
     successTask: () => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
     group_id?: string | null;
 }
 
@@ -77,6 +84,7 @@ interface deleteGroupParams {
     successTask: () => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface moveChatToGroupParams {
@@ -86,6 +94,7 @@ interface moveChatToGroupParams {
     successTask: () => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface toggleChatSharabilityParams {
@@ -95,6 +104,7 @@ interface toggleChatSharabilityParams {
     successTask: (chat_link?: string) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface updateSessionTitleParams {
@@ -103,9 +113,10 @@ interface updateSessionTitleParams {
     successTask: () => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
-export const fetchUserChatSessions = async ({successTask, failureTask, errorTask, retry = false}: ApiParams) => {
+export const fetchUserChatSessions = async ({successTask, failureTask, errorTask, forbiddenTask, retry = false}: ApiParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -129,9 +140,12 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
                     retry: true, 
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             const chat_sessions = response_data.data.sessions;
@@ -147,7 +161,7 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
     }
 }
 
-export const fetchSessionDetails = async ({sessionId, successTask, failureTask, errorTask, retry = false}: SessionDetailsParams) => {
+export const fetchSessionDetails = async ({sessionId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: SessionDetailsParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -173,9 +187,12 @@ export const fetchSessionDetails = async ({sessionId, successTask, failureTask, 
                     sessionId,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             const { data: session_details, errors: response_errors } = response_data;
@@ -201,10 +218,10 @@ export const fetchSessionDetails = async ({sessionId, successTask, failureTask, 
     }
 }
 
-export async function loadChatMessages({sessionId, userid, failureTask, errorTask, retry = false}: fetchCommonUserInteractionParams): Promise<{ readonly: boolean, conversations: ChatMessage[] }> {
+export async function loadChatMessages({sessionId, userid, failureTask, errorTask, forbiddenTask, retry = false}: fetchCommonUserInteractionParams): Promise<{ readonly: boolean, conversations: ChatMessage[] }> {
     try {
         
-        const apiData = (userid == null || userid == undefined) ? await fetchChatMessages({sessionId, failureTask, errorTask}) : await fetchSharedUserInteraction({sessionId, userid, failureTask, errorTask});
+        const apiData = (userid == null || userid == undefined) ? await fetchChatMessages({sessionId, failureTask, errorTask, forbiddenTask}) : await fetchSharedUserInteraction({sessionId, userid, failureTask, errorTask, forbiddenTask});
         const { readonly, conversations: rawConversations } = apiData;
 
         // const mappedMessages: ChatMessage[] = await Promise.all(rawConversations.map(async (msg: ChatMessage) => {
@@ -244,7 +261,7 @@ export async function loadChatMessages({sessionId, userid, failureTask, errorTas
     }
 }
 
-export async function fetchChatMessages({sessionId, failureTask, errorTask, retry = false}: fetchUserInteractionParams) : Promise<{ readonly: boolean, conversations: ChatMessage[] }> {
+export async function fetchChatMessages({sessionId, failureTask, errorTask, forbiddenTask, retry = false}: fetchUserInteractionParams) : Promise<{ readonly: boolean, conversations: ChatMessage[] }> {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -270,9 +287,13 @@ export async function fetchChatMessages({sessionId, failureTask, errorTask, retr
                     sessionId,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
+            return { readonly: true, conversations: [] };
         } else if (response.status == 200) {
             const response_data = await response.json();
             const { data: chat_data, errors: response_errors } = response_data;
@@ -295,7 +316,7 @@ export async function fetchChatMessages({sessionId, failureTask, errorTask, retr
     }
 }
 
-export async function fetchSharedUserInteraction({sessionId, failureTask, errorTask, retry = false, userid}: fetchSharedUserInteractionParams) : Promise<{ readonly: boolean, conversations: ChatMessage[] }> {
+export async function fetchSharedUserInteraction({sessionId, failureTask, errorTask, forbiddenTask, retry = false, userid}: fetchSharedUserInteractionParams) : Promise<{ readonly: boolean, conversations: ChatMessage[] }> {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -324,10 +345,14 @@ export async function fetchSharedUserInteraction({sessionId, failureTask, errorT
                     sessionId,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true,
                     userid
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
+            return { readonly: true, conversations: [] };
         } else if (response.status == 200) {
             const response_data = await response.json();
             const { data: chat_data, errors: response_errors } = response_data;
@@ -350,7 +375,7 @@ export async function fetchSharedUserInteraction({sessionId, failureTask, errorT
     }
 }
 
-export async function toggleChatSharability({sessionId, isSharable, successTask, failureTask, errorTask, retry = false}: toggleChatSharabilityParams) {
+export async function toggleChatSharability({sessionId, isSharable, successTask, failureTask, errorTask, forbiddenTask, retry = false}: toggleChatSharabilityParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -378,9 +403,12 @@ export async function toggleChatSharability({sessionId, isSharable, successTask,
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             const { status, sharable_link: sharable_link, errors: response_errors } = response_data;
@@ -480,7 +508,7 @@ export async function checkIsSessionNew(sessionId: string): Promise<boolean> {
 /**
  * Delete a chat session by ID
  */
-export async function removeChat({sessionId, successTask, failureTask, errorTask, retry = false, group_id = null} : removeChatParams) {
+export async function removeChat({sessionId, successTask, failureTask, errorTask, forbiddenTask, retry = false, group_id = null} : removeChatParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -507,10 +535,13 @@ export async function removeChat({sessionId, successTask, failureTask, errorTask
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true,
                     group_id
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             const { status: status, errors: response_errors } = response_data;
@@ -554,6 +585,7 @@ export async function updateChatTitle({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: updateSessionTitleParams) {
 
@@ -585,10 +617,13 @@ export async function updateChatTitle({
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
 
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const response_data = await response.json();
             successTask();
@@ -629,7 +664,7 @@ export const hasAnyVisualizationInText = (message: ChatMessage): boolean => {
     return urls.length > 0;
 };
 
-export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, retry = false}: GroupApiParams) => {
+export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, forbiddenTask, retry = false}: GroupApiParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -653,9 +688,12 @@ export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, 
                     retry: true, 
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             if (response_data.errors && response_data.errors.length > 0) {
@@ -674,7 +712,7 @@ export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, 
     }
 }
 
-export const fetchChatGroupSessions = async ({ groupId, successTask, failureTask, errorTask, retry = false }: ChatGroupSessionsParams) => {
+export const fetchChatGroupSessions = async ({ groupId, successTask, failureTask, errorTask, forbiddenTask, retry = false }: ChatGroupSessionsParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -701,9 +739,12 @@ export const fetchChatGroupSessions = async ({ groupId, successTask, failureTask
                     groupId,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             if (response_data.errors && response_data.errors.length > 0) {
@@ -722,7 +763,7 @@ export const fetchChatGroupSessions = async ({ groupId, successTask, failureTask
     }
 }
 
-export const createChatGroup = async ({ groupName, successTask, failureTask, errorTask, retry = false }: CreateChatGroupParams) => {
+export const createChatGroup = async ({ groupName, successTask, failureTask, errorTask, forbiddenTask, retry = false }: CreateChatGroupParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -749,9 +790,12 @@ export const createChatGroup = async ({ groupName, successTask, failureTask, err
                     groupName,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             if (response_data.errors && response_data.errors.length > 0) {
@@ -772,7 +816,7 @@ export const createChatGroup = async ({ groupName, successTask, failureTask, err
     }
 }
 
-export async function deleteGroup({groupId, successTask, failureTask, errorTask, retry = false} : deleteGroupParams) {
+export async function deleteGroup({groupId, successTask, failureTask, errorTask, forbiddenTask, retry = false} : deleteGroupParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -799,9 +843,12 @@ export async function deleteGroup({groupId, successTask, failureTask, errorTask,
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             const { status: status, errors: response_errors } = response_data;
@@ -823,7 +870,7 @@ export async function deleteGroup({groupId, successTask, failureTask, errorTask,
     }
 }
 
-export async function moveChatToGroup({ sessionId, groupId, successTask, failureTask, errorTask, retry = false }: moveChatToGroupParams) {
+export async function moveChatToGroup({ sessionId, groupId, successTask, failureTask, errorTask, forbiddenTask, retry = false }: moveChatToGroupParams) {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -849,9 +896,12 @@ export async function moveChatToGroup({ sessionId, groupId, successTask, failure
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data = await response.json();
             const { status: status, errors: response_errors } = response_data;
@@ -897,6 +947,7 @@ interface FetchSchedulesParams {
     successTask: (schedules: ScheduleItem[]) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface ScheduleActionParams {
@@ -905,6 +956,7 @@ interface ScheduleActionParams {
     successTask: () => void;
     failureTask: (message?: string) => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 /**
@@ -953,7 +1005,7 @@ export function canResumeSchedule(status: string): boolean {
 /**
  * Fetch all schedules for the current user
  */
-export async function fetchUserSchedules({successTask, failureTask, errorTask, retry = false}: FetchSchedulesParams) {
+export async function fetchUserSchedules({successTask, failureTask, errorTask, forbiddenTask, retry = false}: FetchSchedulesParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -977,9 +1029,12 @@ export async function fetchUserSchedules({successTask, failureTask, errorTask, r
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             const response_data: ScheduleListResponse = await response.json();
             successTask(response_data.schedules || []);
@@ -996,7 +1051,7 @@ export async function fetchUserSchedules({successTask, failureTask, errorTask, r
 /**
  * Pause a scheduled chat
  */
-export async function pauseSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+export async function pauseSchedule({scheduleId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -1021,9 +1076,12 @@ export async function pauseSchedule({scheduleId, successTask, failureTask, error
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             successTask();
         } else {
@@ -1040,7 +1098,7 @@ export async function pauseSchedule({scheduleId, successTask, failureTask, error
 /**
  * Resume a paused scheduled chat
  */
-export async function resumeSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+export async function resumeSchedule({scheduleId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -1065,9 +1123,12 @@ export async function resumeSchedule({scheduleId, successTask, failureTask, erro
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             successTask();
         } else {
@@ -1084,7 +1145,7 @@ export async function resumeSchedule({scheduleId, successTask, failureTask, erro
 /**
  * Delete a scheduled chat permanently
  */
-export async function deleteSchedule({scheduleId, successTask, failureTask, errorTask, retry = false}: ScheduleActionParams) {
+export async function deleteSchedule({scheduleId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -1109,9 +1170,12 @@ export async function deleteSchedule({scheduleId, successTask, failureTask, erro
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status == 200) {
             successTask();
         } else {

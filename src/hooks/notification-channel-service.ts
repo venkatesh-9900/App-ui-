@@ -9,6 +9,7 @@ interface BaseServiceParams {
     failureTask: () => void;
     errorTask: () => void;
     retry?: boolean;
+    forbiddenTask?: () => void;
 }
 interface ListNotificationChannelParams extends BaseServiceParams {
     novu_supported: boolean
@@ -23,6 +24,7 @@ export const listNotificationChannel = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: ListNotificationChannelParams) => {
     try {
@@ -36,7 +38,12 @@ export const listNotificationChannel = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await listNotificationChannel({ retry: true, novu_supported, successTask, failureTask, errorTask })
+                : await listNotificationChannel({ retry: true, novu_supported, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 

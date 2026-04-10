@@ -178,6 +178,10 @@ export function ChatGroupsList() {
         toast.error("Error deleting chat")
         setDeletingGroupId(null)
       },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setDeletingGroupId(null)
+      },
     })
   }
 
@@ -223,6 +227,10 @@ export function ChatGroupsList() {
         toast.error("Error deleting chat")
         setDeletingSessionId(null)
       },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setDeletingSessionId(null)
+      },
       group_id: group_id
     })
   }
@@ -261,6 +269,9 @@ export function ChatGroupsList() {
       errorTask: () => {
         console.error("Error creating chat group")
         toast.error("Error creating chat group")
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
       },
     });
   }
@@ -342,6 +353,15 @@ export function ChatGroupsList() {
       errorTask: () => {
         toast.error("Error moving chat to group")
         // Revert optimistic update
+        setChatGroups(prev => prev.map(group => {
+          if (group.group_id === groupId) {
+            return { ...group, sessions: group.sessions.filter(s => s.session_id !== sessionId) }
+          }
+          return group
+        }))
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
         setChatGroups(prev => prev.map(group => {
           if (group.group_id === groupId) {
             return { ...group, sessions: group.sessions.filter(s => s.session_id !== sessionId) }

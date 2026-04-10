@@ -16,7 +16,7 @@ export interface DeleteMappingParams extends BaseServiceParams {
     permissionId: number;
 }
 
-export const fetchMappings = async ({ successTask, failureTask, errorTask, page, limit, retry = false }: BaseServiceParams) => {
+export const fetchMappings = async ({ successTask, failureTask, errorTask, forbiddenTask, page, limit, retry = false }: BaseServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -37,8 +37,10 @@ export const fetchMappings = async ({ successTask, failureTask, errorTask, page,
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await fetchMappings({ retry: true, successTask, failureTask, errorTask, page, limit });
+                await fetchMappings({ retry: true, successTask, failureTask, errorTask, forbiddenTask, page, limit });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             const data = await response.json();
             successTask(data);
@@ -50,7 +52,7 @@ export const fetchMappings = async ({ successTask, failureTask, errorTask, page,
     }
 };
 
-export const createMapping = async ({ request, successTask, failureTask, errorTask, retry = false }: CreateMappingParams) => {
+export const createMapping = async ({ request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: CreateMappingParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -67,8 +69,10 @@ export const createMapping = async ({ request, successTask, failureTask, errorTa
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await createMapping({ retry: true, request, successTask, failureTask, errorTask });
+                await createMapping({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             const data = await response.json();
             successTask(data.data || data);
@@ -80,7 +84,7 @@ export const createMapping = async ({ request, successTask, failureTask, errorTa
     }
 };
 
-export const updateMapping = async ({ id, request, successTask, failureTask, errorTask, retry = false }: UpdateMappingParams) => {
+export const updateMapping = async ({ id, request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: UpdateMappingParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -97,8 +101,10 @@ export const updateMapping = async ({ id, request, successTask, failureTask, err
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await updateMapping({ retry: true, id, request, successTask, failureTask, errorTask });
+                await updateMapping({ retry: true, id, request, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             const data = await response.json();
             successTask(data.data || data);
@@ -110,7 +116,7 @@ export const updateMapping = async ({ id, request, successTask, failureTask, err
     }
 };
 
-export const deleteMapping = async ({ apiId, permissionId, successTask, failureTask, errorTask, retry = false }: DeleteMappingParams) => {
+export const deleteMapping = async ({ apiId, permissionId, successTask, failureTask, errorTask, forbiddenTask, retry = false }: DeleteMappingParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -123,8 +129,10 @@ export const deleteMapping = async ({ apiId, permissionId, successTask, failureT
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await deleteMapping({ retry: true, apiId, permissionId, successTask, failureTask, errorTask });
+                await deleteMapping({ retry: true, apiId, permissionId, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             successTask(null);
         } else {

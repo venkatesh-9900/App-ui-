@@ -16,7 +16,7 @@ export interface DeletePermissionParams extends BaseServiceParams {
     id: number;
 }
 
-export const fetchPermissions = async ({ successTask, failureTask, errorTask, page, limit, retry = false }: BaseServiceParams) => {
+export const fetchPermissions = async ({ successTask, failureTask, errorTask, forbiddenTask, page, limit, retry = false }: BaseServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -37,8 +37,10 @@ export const fetchPermissions = async ({ successTask, failureTask, errorTask, pa
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await fetchPermissions({ retry: true, successTask, failureTask, errorTask, page, limit });
+                await fetchPermissions({ retry: true, successTask, failureTask, errorTask, forbiddenTask, page, limit });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             const data = await response.json();
             successTask(data);
@@ -50,7 +52,7 @@ export const fetchPermissions = async ({ successTask, failureTask, errorTask, pa
     }
 };
 
-export const createPermission = async ({ request, successTask, failureTask, errorTask, retry = false }: CreatePermissionParams) => {
+export const createPermission = async ({ request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: CreatePermissionParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -67,8 +69,10 @@ export const createPermission = async ({ request, successTask, failureTask, erro
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await createPermission({ retry: true, request, successTask, failureTask, errorTask });
+                await createPermission({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             const data = await response.json();
             successTask(data.data || data);
@@ -80,7 +84,7 @@ export const createPermission = async ({ request, successTask, failureTask, erro
     }
 };
 
-export const updatePermission = async ({ id, request, successTask, failureTask, errorTask, retry = false }: UpdatePermissionParams) => {
+export const updatePermission = async ({ id, request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: UpdatePermissionParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -97,8 +101,10 @@ export const updatePermission = async ({ id, request, successTask, failureTask, 
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await updatePermission({ retry: true, id, request, successTask, failureTask, errorTask });
+                await updatePermission({ retry: true, id, request, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             const data = await response.json();
             successTask(data.data || data);
@@ -110,7 +116,7 @@ export const updatePermission = async ({ id, request, successTask, failureTask, 
     }
 };
 
-export const deletePermission = async ({ id, successTask, failureTask, errorTask, retry = false }: DeletePermissionParams) => {
+export const deletePermission = async ({ id, successTask, failureTask, errorTask, forbiddenTask, retry = false }: DeletePermissionParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -123,8 +129,10 @@ export const deletePermission = async ({ id, successTask, failureTask, errorTask
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await deletePermission({ retry: true, id, successTask, failureTask, errorTask });
+                await deletePermission({ retry: true, id, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             successTask(null);
         } else {

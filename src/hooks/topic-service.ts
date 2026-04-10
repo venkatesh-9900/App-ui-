@@ -7,6 +7,7 @@ interface BaseServiceParams {
     failureTask: () => void;
     errorTask: () => void;
     retry?: boolean;
+    forbiddenTask?: () => void;
 }
 
 interface CreateTopicParams extends BaseServiceParams {
@@ -64,6 +65,7 @@ export const createTopic = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: CreateTopicParams) => {
     try {
@@ -88,9 +90,12 @@ export const createTopic = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.status === 200) {
             const data: TopicResponse = await response.json();
             successTask(data);
@@ -112,6 +117,7 @@ export const getTopic = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: GetTopicParams) => {
     try {
@@ -135,9 +141,12 @@ export const getTopic = async ({
                     topicKey,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: TopicResponse = await response.json();
             successTask(data);
@@ -160,6 +169,7 @@ export const updateTopic = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: UpdateTopicParams) => {
     try {
@@ -185,9 +195,12 @@ export const updateTopic = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: TopicResponse = await response.json();
             successTask(data);
@@ -209,6 +222,7 @@ export const deleteTopic = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: DeleteTopicParams) => {
     try {
@@ -232,9 +246,12 @@ export const deleteTopic = async ({
                     id,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: DeleteTopicResponse = await response.json();
             successTask(data);
@@ -257,6 +274,7 @@ export const listTopics = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: ListTopicsParams) => {
     try {
@@ -287,9 +305,12 @@ export const listTopics = async ({
                     pageSize,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: ListTopicsResponse = await response.json();
             successTask(data);
@@ -312,6 +333,7 @@ export const addSubscriptionsToTopic = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: AddSubscriptionsParams) => {
     try {
@@ -337,9 +359,12 @@ export const addSubscriptionsToTopic = async ({
                     subscriberIds,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -361,6 +386,7 @@ export const listTopicSubscriptions = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: ListSubscriptionsParams) => {
     try {
@@ -384,9 +410,12 @@ export const listTopicSubscriptions = async ({
                     topicKey,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -409,6 +438,7 @@ export const removeSubscriptionsFromTopic = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: RemoveSubscriptionsParams) => {
     try {
@@ -434,9 +464,12 @@ export const removeSubscriptionsFromTopic = async ({
                     subscriberIds,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200 || response.status === 204) {
             const data = response.status === 200 ? await response.json() : { message: 'Success' };
             successTask(data);

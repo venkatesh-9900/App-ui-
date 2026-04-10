@@ -13,6 +13,7 @@ interface AccountsApiParams {
     successTask: (data: AccountsResponse) => void
     failureTask: () => void
     errorTask: () => void
+    forbiddenTask?: () => void
 }
 
 export async function getAccounts({
@@ -22,6 +23,7 @@ export async function getAccounts({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: AccountsApiParams) {
     try {
@@ -58,12 +60,19 @@ export async function getAccounts({
                 await getAccounts({
                     pageIndex,
                     pageSize,
+                    address,
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true,
                 })
             }
+            return
+        }
+
+        if (response.status === 403) {
+            forbiddenTask?.()
             return
         }
 

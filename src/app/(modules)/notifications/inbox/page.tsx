@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,6 +34,7 @@ export default function NotificationsPage() {
 
   const [data, setData] = useState<NotificationLogType[]>([])
   const [loading, setLoading] = useState(false)
+  const [accessDenied, setAccessDenied] = useState(false)
   const [readFilter, setReadFilter] = useState<ReadFilter>("all")
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -60,6 +62,10 @@ export default function NotificationsPage() {
       },
       errorTask: () => {
         toast.error("Something went wrong")
+        setLoading(false)
+      },
+      forbiddenTask: () => {
+        setAccessDenied(true)
         setLoading(false)
       },
     })
@@ -94,6 +100,9 @@ export default function NotificationsPage() {
           description: 'Please check your connection and try again.',
         })
       },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+      },
     })
   }
 
@@ -115,7 +124,19 @@ export default function NotificationsPage() {
           description: 'Please check your connection and try again.',
         })
       },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+      },
     })
+  }
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <DashboardNavbar />
+        <AccessDenied />
+      </ProtectedRoute>
+    )
   }
 
   return (

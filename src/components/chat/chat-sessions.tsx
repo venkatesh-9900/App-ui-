@@ -47,6 +47,7 @@ export function ChatSessionsList() {
   const [draggingSessionId, setDraggingSessionId] = useState<string | null>(null)
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState("")
+  const [accessDenied, setAccessDenied] = useState(false)
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
@@ -109,6 +110,10 @@ export function ChatSessionsList() {
         toast.error("Error loading chat sessions")
         setIsLoadingChats(false)
       },
+      forbiddenTask: () => {
+        setAccessDenied(true)
+        setIsLoadingChats(false)
+      },
     })
   }
 
@@ -152,6 +157,9 @@ export function ChatSessionsList() {
           errorTask: () => {
             console.warn("Error stopping schedule")
             // Continue with chat deletion even if schedule stop fails
+          },
+          forbiddenTask: () => {
+            toast.error("Access denied")
           }
         })
       }
@@ -176,6 +184,10 @@ export function ChatSessionsList() {
       errorTask: () => {
         console.error("Error deleting chat")
         toast.error("Error deleting chat")
+        setDeletingSessionId(null)
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
         setDeletingSessionId(null)
       },
       group_id: null
@@ -212,6 +224,10 @@ export function ChatSessionsList() {
       errorTask: () => {
         toast.error("Error pausing schedule")
         setScheduleActionSessionId(null)
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setScheduleActionSessionId(null)
       }
     })
   }
@@ -241,6 +257,10 @@ export function ChatSessionsList() {
       },
       errorTask: () => {
         toast.error("Error resuming schedule")
+        setScheduleActionSessionId(null)
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
         setScheduleActionSessionId(null)
       }
     })
@@ -308,6 +328,10 @@ export function ChatSessionsList() {
       errorTask: () => {
         toast.error("Error updating title")
         setEditingSessionId(null)
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setEditingSessionId(null)
       }
     })
   }
@@ -343,7 +367,7 @@ export function ChatSessionsList() {
       defaultOpen={false}
       className="group/collapsible"
       onOpenChange={(open) => {
-        if (open && chatSessions.length === 0) {
+        if (open && chatSessions.length === 0 && !accessDenied) {
           loadChatSessions()
         }
       }}
@@ -358,7 +382,11 @@ export function ChatSessionsList() {
         </CollapsibleTrigger>
         <CollapsibleContent data-testid="all-chats-collapsible-content">
           <SidebarMenuSub>
-            {isLoadingChats ? (
+            {accessDenied ? (
+              <SidebarMenuSubItem data-testid="chat-sessions-access-denied">
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">Access denied</div>
+              </SidebarMenuSubItem>
+            ) : isLoadingChats ? (
               <SidebarMenuSubItem data-testid="chat-sessions-list-loading-state">
                 <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
                   <span>Loading...</span>

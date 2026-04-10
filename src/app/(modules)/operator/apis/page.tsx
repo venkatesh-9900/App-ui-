@@ -8,6 +8,7 @@ import { fetchApis, createApi, updateApi, deleteApi } from "@/hooks/operator/api
 import { fetchApiServices } from "@/hooks/operator/api-services-service"
 import { Api, ApiService } from "@/types/operator"
 import { toast } from "sonner"
+import { AccessDenied } from "@/components/access-denied"
 
 export default function APIsPage() {
   const [apis, setApis] = useState<Api[]>([])
@@ -16,12 +17,15 @@ export default function APIsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
+  const [search, setSearch] = useState("")
+  const [accessDenied, setAccessDenied] = useState(false)
 
   const loadApis = useCallback(() => {
     setIsLoading(true)
     fetchApis({
       page,
       limit: pageSize,
+      search: search || undefined,
       successTask: (data) => {
         setApis(data.data || [])
         setTotalCount(data.count || 0)
@@ -34,9 +38,13 @@ export default function APIsPage() {
       errorTask: () => {
         setIsLoading(false)
         toast.error("Error connecting to server")
-      }
+      },
+      forbiddenTask: () => {
+        setAccessDenied(true)
+        setIsLoading(false)
+      },
     })
-  }, [page, pageSize])
+  }, [page, pageSize, search])
 
   const loadServices = useCallback(() => {
     fetchApiServices({
@@ -70,7 +78,11 @@ export default function APIsPage() {
         errorTask: () => {
           toast.error("Error creating API")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -92,7 +104,11 @@ export default function APIsPage() {
         errorTask: () => {
           toast.error("Error updating API")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -106,8 +122,20 @@ export default function APIsPage() {
         loadApis()
       },
       failureTask: () => toast.error("Failed to delete API"),
-      errorTask: () => toast.error("Error deleting API")
+      errorTask: () => toast.error("Error deleting API"),
+      forbiddenTask: () => {
+        toast.error("Access denied")
+      },
     })
+  }
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <DashboardNavbar />
+        <AccessDenied />
+      </ProtectedRoute>
+    )
   }
 
   return (
@@ -120,8 +148,10 @@ export default function APIsPage() {
         totalCount={totalCount}
         page={page}
         pageSize={pageSize}
+        search={search}
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
+        onSearchChange={(val) => { setSearch(val); setPage(1) }}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
         onDelete={handleDelete}

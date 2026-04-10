@@ -9,6 +9,7 @@ import { createTopic, listTopics, updateTopic, deleteTopic } from '@/hooks/topic
 import { NotificationGroup, CreateTopicRequest } from '@/types/topic'
 import { GroupFormDialog } from '@/components/notifications/groups/group-form-dialog'
 import { GroupsTable } from '@/components/notifications/groups/groups-table'
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { listNotificationChannelInstances } from "@/hooks/notification-channel-instance"
@@ -18,6 +19,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 export default function NotificationGroupsPage() {
     const [groups, setGroups] = useState<NotificationGroup[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [accessDenied, setAccessDenied] = useState(false)
     const [ isChannelInstanceLoading, setIsChannelInstanceLoading] = useState(true)
     const [channelInstances, setChannelInstances] = useState<NotificationChannelInstance[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -62,6 +64,10 @@ export default function NotificationGroupsPage() {
                 toast.error('An error occurred', {
                     description: 'Please check your connection and try again.',
                 })
+                setIsLoading(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoading(false)
             },
         })
@@ -129,6 +135,10 @@ export default function NotificationGroupsPage() {
                     })
                     setIsSubmitting(false)
                 },
+                forbiddenTask: () => {
+                    toast.error("Access denied")
+                    setIsSubmitting(false)
+                },
             })
         } else if (selectedGroup && selectedGroup.id) {
             await updateTopic({
@@ -158,6 +168,10 @@ export default function NotificationGroupsPage() {
                     })
                     setIsSubmitting(false)
                 },
+                forbiddenTask: () => {
+                    toast.error("Access denied")
+                    setIsSubmitting(false)
+                },
             })
         }
     }
@@ -183,6 +197,9 @@ export default function NotificationGroupsPage() {
                     description: 'Please check your connection and try again.',
                 })
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+            },
         })
     }
 
@@ -207,6 +224,15 @@ export default function NotificationGroupsPage() {
         toast.success('Key copied!', {
             description: 'Topic key has been copied to clipboard.',
         })
+    }
+
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
     }
 
     return (

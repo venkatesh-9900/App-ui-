@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator'; // Use Separator for hori
 import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { listAAWDetails, listTransactionDetailsAAW } from '@/hooks/aaw-details-service'
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import TxnSummaryCard from '@/components/notifications/aaw-details/txn-summary-card';
 import TxnTable from '@/components/notifications/aaw-details/txn-table';
@@ -40,6 +41,7 @@ export default function AAWDetailsPage() {
     const [selectedTxns, setSelectedTxns] = useState<Map<string, TransactionDetails>>(
         () => new Map()
     );
+    const [accessDenied, setAccessDenied] = useState(false);
 
     const fetchGroupInfo = useCallback(() => {
         if (!watcher_id) return;
@@ -67,6 +69,11 @@ export default function AAWDetailsPage() {
             },
             errorTask: () => {
                 toast.error("Error loading group info")
+                setIsGroupLoading(false);
+                setIsLoading(false);
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true);
                 setIsGroupLoading(false);
                 setIsLoading(false);
             },
@@ -173,6 +180,13 @@ export default function AAWDetailsPage() {
         );
     };
 
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
     if (isLocading) {
         return (

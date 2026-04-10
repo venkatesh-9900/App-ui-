@@ -11,6 +11,7 @@ interface chainListApiParams {
     successTask: (data: ChainListResponse) => void
     failureTask: () => void
     errorTask: () => void
+    forbiddenTask?: () => void
 }
 
 /**
@@ -22,6 +23,7 @@ export async function getChainlist({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: chainListApiParams) {
     try {
@@ -54,9 +56,15 @@ export async function getChainlist({
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                     retry: true,
                 });
             }
+            return;
+        }
+
+        if (response.status === 403) {
+            forbiddenTask?.();
             return;
         }
 

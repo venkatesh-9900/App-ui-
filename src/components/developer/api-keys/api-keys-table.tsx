@@ -160,7 +160,11 @@ function getApiTokenColumns(removeKeyFromList: (key: string) => void): ColumnDef
   ]
 }
 
-export default function ApiKeysTable() {
+type ApiKeysTableProps = {
+  onForbidden?: () => void
+}
+
+export default function ApiKeysTable({ onForbidden }: ApiKeysTableProps) {
   const [data, setData] = useState<ApiKey[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const { takeApiKeyContext } = useApiKeyContext()
@@ -203,10 +207,17 @@ export default function ApiKeysTable() {
       setLoading(false)
     }
 
+    const forbiddenTask = () => {
+      if (!mounted) return
+      onForbidden?.()
+      setLoading(false)
+    }
+
     getApiKeysList({
       successTask,
       failureTask,
       errorTask,
+      forbiddenTask,
       retry: false,
     }).catch((err) => {
       if (!mounted) return
@@ -217,7 +228,7 @@ export default function ApiKeysTable() {
     return () => {
       mounted = false
     }
-  }, [takeApiKeyContext])
+  }, [takeApiKeyContext, onForbidden])
 
   // pageCount computed from data only (no merging)
   const pageCount = useMemo(() => {

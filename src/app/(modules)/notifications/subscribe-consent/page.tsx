@@ -9,6 +9,7 @@ import { CreateSubscriberRequest, NotificationSubscriber } from '@/types/subscri
 import { ConsentToggles } from '@/components/notifications/subscribe-consent/consent-toggles'
 import { SubscriptionForm } from '@/components/notifications/subscribe-consent/subscription-form'
 import { EmptyState } from '@/components/notifications/subscribe-consent/empty-state'
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { CreateNotificationChannelInstanceRequest, NotificationSubscriberInfo } from '@/types/notification-channel-instance'
@@ -23,6 +24,7 @@ export default function SubscribeConsentPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUnsubscribing, setIsUnsubscribing] = useState(false)
   const [existingSubscriber, setExistingSubscriber] = useState<NotificationSubscriberInfo | null>(null)
+  const [accessDenied, setAccessDenied] = useState(false)
 
   const showForm = emailConsent || smsConsent
 
@@ -51,6 +53,10 @@ export default function SubscribeConsentPage() {
         },
         errorTask: () => {
           console.error('Error fetching subscriber')
+          setIsLoading(false)
+        },
+        forbiddenTask: () => {
+          setAccessDenied(true)
           setIsLoading(false)
         }
       })
@@ -112,6 +118,10 @@ export default function SubscribeConsentPage() {
           description: 'An unexpected error occurred. Please try again.',
         })
         setIsSubmitting(false)
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setIsSubmitting(false)
       }
     })
   }
@@ -137,6 +147,10 @@ export default function SubscribeConsentPage() {
         },
         errorTask: () => {
           toast.error("Something went wrong")
+          setIsUnsubscribing(false)
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
           setIsUnsubscribing(false)
         },
       })
@@ -176,8 +190,21 @@ export default function SubscribeConsentPage() {
           description: 'An unexpected error occurred. Please try again.',
         })
         setIsUnsubscribing(false)
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setIsUnsubscribing(false)
       }
     })
+  }
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <DashboardNavbar />
+        <AccessDenied />
+      </ProtectedRoute>
+    )
   }
 
   return (

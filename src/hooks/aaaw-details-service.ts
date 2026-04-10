@@ -7,6 +7,7 @@ interface BaseServiceParams {
     failureTask: (duplicate?: boolean) => void;
     errorTask: () => void;
     retry?: boolean;
+    forbiddenTask?: () => void;
 }
 
 interface listFilterbyAAWDetails extends BaseServiceParams {
@@ -44,6 +45,7 @@ export const listAAWDetails = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: listFilterbyAAWDetails) => {
     try {
@@ -70,9 +72,12 @@ export const listAAWDetails = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: getAawGroupedTransactionInfo = await response.json();
             successTask(data); // Replace with 'data' when backend is ready
@@ -97,6 +102,7 @@ export const listTransactionDetailsAAW = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: listTransactionDetailsAAW) => {
     try {
@@ -126,9 +132,12 @@ export const listTransactionDetailsAAW = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: getAawTransactionDetails = await response.json();
             successTask(data); // Replace with 'data' when backend is ready

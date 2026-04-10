@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react"
 import { ApiServicesView } from "@/components/operator/api-services-view"
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { fetchApiServices, createApiService, updateApiService, deleteApiService } from "@/hooks/operator/api-services-service"
@@ -10,6 +11,7 @@ import { toast } from "sonner"
 
 export default function ServicesPage() {
   const [services, setServices] = useState<ApiService[]>([])
+  const [accessDenied, setAccessDenied] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -32,7 +34,11 @@ export default function ServicesPage() {
       errorTask: () => {
         setIsLoading(false)
         toast.error("Error connecting to server")
-      }
+      },
+      forbiddenTask: () => {
+        setAccessDenied(true)
+        setIsLoading(false)
+      },
     })
   }, [page, pageSize])
 
@@ -56,7 +62,11 @@ export default function ServicesPage() {
         errorTask: () => {
           toast.error("Error creating service")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -78,7 +88,11 @@ export default function ServicesPage() {
         errorTask: () => {
           toast.error("Error updating service")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -92,8 +106,20 @@ export default function ServicesPage() {
         loadServices()
       },
       failureTask: () => toast.error("Failed to delete service"),
-      errorTask: () => toast.error("Error deleting service")
+      errorTask: () => toast.error("Error deleting service"),
+      forbiddenTask: () => {
+        toast.error("Access denied")
+      },
     })
+  }
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <DashboardNavbar />
+        <AccessDenied />
+      </ProtectedRoute>
+    )
   }
 
   return (

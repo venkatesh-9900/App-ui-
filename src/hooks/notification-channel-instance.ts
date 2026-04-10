@@ -14,6 +14,7 @@ interface BaseServiceParams {
     failureTask: () => void;
     errorTask: () => void;
     retry?: boolean;
+    forbiddenTask?: () => void;
 }
 
 interface CreateNotificationChannelInstanceParams extends BaseServiceParams {
@@ -50,6 +51,7 @@ export const createNotificationChannelInstance = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: CreateNotificationChannelInstanceParams) => {
     try {
@@ -64,7 +66,12 @@ export const createNotificationChannelInstance = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await createNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask })
+                : await createNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 
@@ -85,6 +92,7 @@ export const upsertNotificationChannelInstance = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: CreateNotificationChannelInstanceParams) => {
     try {
@@ -99,7 +107,12 @@ export const upsertNotificationChannelInstance = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await upsertNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask })
+                : await upsertNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 
@@ -121,6 +134,7 @@ export const listNotificationChannelInstances = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: ListNotificationChannelInstanceParams) => {
     try {
@@ -142,7 +156,12 @@ export const listNotificationChannelInstances = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await listNotificationChannelInstances({ retry: true, page, limit, successTask, failureTask, errorTask })
+                : await listNotificationChannelInstances({ retry: true, page, limit, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 
@@ -163,6 +182,7 @@ export const NotificationChannelInstancesSubscriberInfo = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: ListNotificationChannelInstanceParams) => {
     try {
@@ -180,7 +200,12 @@ export const NotificationChannelInstancesSubscriberInfo = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await NotificationChannelInstancesSubscriberInfo({ retry: true, page, limit, successTask, failureTask, errorTask })
+                : await NotificationChannelInstancesSubscriberInfo({ retry: true, page, limit, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 
@@ -202,6 +227,7 @@ export const updateNotificationChannelInstance = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: UpdateNotificationChannelInstanceParams) => {
     try {
@@ -216,7 +242,12 @@ export const updateNotificationChannelInstance = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await updateNotificationChannelInstance({ retry: true, id, request, successTask, failureTask, errorTask })
+                : await updateNotificationChannelInstance({ retry: true, id, request, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 
@@ -237,6 +268,7 @@ export const deleteNotificationChannelInstance = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: DeleteNotificationChannelInstanceParams) => {
     try {
@@ -250,7 +282,12 @@ export const deleteNotificationChannelInstance = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await deleteNotificationChannelInstance({ retry: true, id, successTask, failureTask, errorTask })
+                : await deleteNotificationChannelInstance({ retry: true, id, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 

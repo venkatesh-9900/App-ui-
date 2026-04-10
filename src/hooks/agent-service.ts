@@ -7,9 +7,10 @@ interface getAgentsListParams {
     successTask: (agentDetails: string[]) => void
     failureTask: () => void
     errorTask: () => void
+    forbiddenTask?: () => void
 }
 
-export const getAgentsList = async ({successTask, failureTask, errorTask, retry = false}: getAgentsListParams) => {
+export const getAgentsList = async ({successTask, failureTask, errorTask, forbiddenTask, retry = false}: getAgentsListParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token")
@@ -35,9 +36,12 @@ export const getAgentsList = async ({successTask, failureTask, errorTask, retry 
                     retry: true, 
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 })
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.()
         } else if (response.status == 200) {
             const agentsList = await response.json()
             if (agentsList.errors && agentsList.errors.length > 0) {

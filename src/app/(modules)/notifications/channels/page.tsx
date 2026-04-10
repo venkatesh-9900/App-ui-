@@ -23,6 +23,7 @@ import {
 import { NotificationChannel } from "@/types/notification-channel"
 import { listNotificationChannel } from "@/hooks/notification-channel-service"
 import { NotificationChannelInstanceTable } from "@/components/notifications/notification-channel-instance/notification-channel-instance-table"
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { Pagination } from "@/components/common/pagination"
@@ -32,6 +33,7 @@ export default function NotificationChannelInstancesPage() {
     const [instances, setInstances] = useState<NotificationChannelInstance[]>([])
     const [channels, setChannels] = useState<NotificationChannel[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [accessDenied, setAccessDenied] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const [dialogOpen, setDialogOpen] = useState(false)
@@ -64,6 +66,10 @@ export default function NotificationChannelInstancesPage() {
             },
             errorTask: () => {
                 toast.error("Something went wrong")
+                setIsLoading(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoading(false)
             },
         })
@@ -146,6 +152,10 @@ export default function NotificationChannelInstancesPage() {
                 toast.error("Something went wrong")
                 setIsSubmitting(false)
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+                setIsSubmitting(false)
+            },
         })
     }
 
@@ -183,6 +193,10 @@ export default function NotificationChannelInstancesPage() {
                 toast.error("Something went wrong")
                 setIsSubmitting(false)
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+                setIsSubmitting(false)
+            },
         })
     }
 
@@ -200,6 +214,9 @@ export default function NotificationChannelInstancesPage() {
             errorTask: () => {
                 toast.error("Something went wrong")
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+            },
         })
     }
 
@@ -207,6 +224,15 @@ export default function NotificationChannelInstancesPage() {
         if (!open) setSelectedInstance(null)
         setDialogOpen(open)
     }, [])
+
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
     return (
         <ProtectedRoute>

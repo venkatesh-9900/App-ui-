@@ -19,6 +19,7 @@ import { NotificationSubscriber } from '@/types/subscriber'
 import { AddressActivityAirdropFormDialog } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-form-dialog'
 import { AddressActivityAirdropTable } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-table'
 import { ProtectedRoute } from "@/components/protected-route"
+import { AccessDenied } from "@/components/access-denied"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
@@ -36,6 +37,7 @@ export default function AddressActivityAirdropPage() {
     const [isLoadingAddressGroups, setIsLoadingAddressGroups] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [accessDenied, setAccessDenied] = useState(false)
     const searchParams = useSearchParams();
     const [initialData, setInitialData] = useState<{
         name?: string
@@ -73,6 +75,10 @@ export default function AddressActivityAirdropPage() {
                 toast.error('An error occurred', {
                     description: 'Please check your connection and try again.',
                 })
+                setIsLoadingActivities(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoadingActivities(false)
             },
         })
@@ -170,6 +176,10 @@ export default function AddressActivityAirdropPage() {
                 })
                 setIsSubmitting(false)
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+                setIsSubmitting(false)
+            },
         })
     }
 
@@ -196,6 +206,14 @@ export default function AddressActivityAirdropPage() {
         }
     }
 
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
   return (
         <ProtectedRoute>

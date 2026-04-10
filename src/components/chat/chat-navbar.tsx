@@ -70,6 +70,9 @@ export function ChatNavbar({
         errorTask: () => {
           console.error("Error toggling share")
         },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+        },
       })
     } finally {
       setIsToggling(false)

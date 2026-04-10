@@ -19,6 +19,7 @@ import { NotificationSubscriber } from '@/types/subscriber'
 import { AddressActivityFormDialog } from '@/components/web3/address-activity/address-activity-form-dialog'
 import { AddressActivityTable } from '@/components/web3/address-activity/address-activity-table'
 import { ProtectedRoute } from "@/components/protected-route"
+import { AccessDenied } from "@/components/access-denied"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
@@ -36,6 +37,7 @@ export default function AddressActivityPage() {
     const [isLoadingAddressGroups, setIsLoadingAddressGroups] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [accessDenied, setAccessDenied] = useState(false)
     const searchParams = useSearchParams()
     const [initialData, setInitialData] = useState<{
         name?: string
@@ -73,6 +75,10 @@ export default function AddressActivityPage() {
                 toast.error('An error occurred', {
                     description: 'Please check your connection and try again.',
                 })
+                setIsLoadingActivities(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoadingActivities(false)
             },
         })
@@ -187,6 +193,10 @@ export default function AddressActivityPage() {
                 })
                 setIsSubmitting(false)
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+                setIsSubmitting(false)
+            },
         })
     }
 
@@ -196,7 +206,14 @@ export default function AddressActivityPage() {
         }
     }, [dialogOpen])
 
-
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
   return (
         <ProtectedRoute>

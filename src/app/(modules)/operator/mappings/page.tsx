@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react"
 import { ApiMappingsView } from "@/components/operator/api-mappings-view"
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { fetchMappings, createMapping, deleteMapping, updateMapping } from "@/hooks/operator/mappings-service"
@@ -16,6 +17,7 @@ export default function MappingsPage() {
   const [apis, setApis] = useState<Api[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [services, setServices] = useState<ApiService[]>([])
+  const [accessDenied, setAccessDenied] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   
   // Pagination state
@@ -40,7 +42,11 @@ export default function MappingsPage() {
       errorTask: () => {
         setIsLoading(false)
         toast.error("Error connecting to server")
-      }
+      },
+      forbiddenTask: () => {
+        setAccessDenied(true)
+        setIsLoading(false)
+      },
     })
   }, [page, pageSize])
 
@@ -92,7 +98,11 @@ export default function MappingsPage() {
         errorTask: () => {
           toast.error("Error creating mapping")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -114,7 +124,11 @@ export default function MappingsPage() {
         errorTask: () => {
           toast.error("Error updating mapping")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -129,8 +143,20 @@ export default function MappingsPage() {
         loadMappings()
       },
       failureTask: () => toast.error("Failed to delete mapping"),
-      errorTask: () => toast.error("Error deleting mapping")
+      errorTask: () => toast.error("Error deleting mapping"),
+      forbiddenTask: () => {
+        toast.error("Access denied")
+      },
     })
+  }
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <DashboardNavbar />
+        <AccessDenied />
+      </ProtectedRoute>
+    )
   }
 
   return (

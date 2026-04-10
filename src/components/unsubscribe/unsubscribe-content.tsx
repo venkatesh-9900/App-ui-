@@ -94,6 +94,11 @@ export default function UnsubscribeContent() {
         errorTask: () => {
           toast.error("Unexpected error occurred");
           setIsLoading(false);
+        },
+
+        forbiddenTask: () => {
+          toast.error("Access denied");
+          setIsLoading(false);
         }
 
       });

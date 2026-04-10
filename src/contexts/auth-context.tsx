@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { logoutUser, fetchLoginURL, fetchLogoutURL, refreshAccessToken, requestOTP, loginWithOTP } from '@/hooks/auth-service';
+import { logoutUser, fetchLoginURL, fetchLogoutURL, refreshAccessToken, requestOTP, loginWithOTP, loginUserWithOTP, signupRoot, retrieveOrg } from '@/hooks/auth-service';
 import config from '@/config/config';
 
 interface UserInfo {
@@ -23,7 +23,10 @@ interface AuthState {
 interface AuthContextType extends AuthState {
     login: () => Promise<void>;
     requestOTP: (params: { email: string, successTask: () => void, errorTask: (error: string) => void }) => Promise<void>;
-    loginWithOTP: (params: { email: string, otp: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => Promise<void>;
+    loginWithOTP: (params: { email: string, otp: string, organizationId: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => Promise<void>;
+    loginUserWithOTP: (params: { email: string, otp: string, organizationId: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => Promise<void>;
+    signupRoot: (params: { email: string, otp: string, successTask: (data: { message: string, organization_id?: string }) => void, conflictTask: (data: { message: string, organization_id?: string }) => void, errorTask: (error: string) => void }) => Promise<void>;
+    retrieveOrg: (params: { email: string, otp: string, successTask: (message: string) => void, errorTask: (error: string) => void }) => Promise<void>;
     logout: () => Promise<void>;
     setAuthentication: (token: string) => Promise<void>;
 }
@@ -241,11 +244,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, []);
 
-    const loginWithOTPMethod = React.useCallback(async (params: { email: string, otp: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => {
+    const loginWithOTPMethod = React.useCallback(async (params: { email: string, otp: string, organizationId: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => {
         try {
             await loginWithOTP({
                 email: params.email,
                 otp: params.otp,
+                organizationId: params.organizationId,
                 successTask: (token) => {
                     setAuthentication(token);
                     setAuthState({ isRootUser: true });
@@ -257,7 +261,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('OTP Login failed:', error);
             params.errorTask('An error occurred during login');
         }
-    }, [loginWithOTP, setAuthentication, setAuthState]);
+    }, [setAuthentication, setAuthState]);
+
+    const loginUserWithOTPMethod = React.useCallback(async (params: { email: string, otp: string, organizationId: string, successTask: (token: string) => void, errorTask: (error: string) => void }) => {
+        try {
+            await loginUserWithOTP({
+                email: params.email,
+                otp: params.otp,
+                organizationId: params.organizationId,
+                successTask: (token) => {
+                    setAuthentication(token);
+                    setAuthState({ isRootUser: false });
+                    params.successTask(token);
+                },
+                errorTask: params.errorTask
+            });
+        } catch (error) {
+            console.error('User OTP Login failed:', error);
+            params.errorTask('An error occurred during login');
+        }
+    }, [setAuthentication, setAuthState]);
+
+    const signupRootMethod = React.useCallback(async (params: { email: string, otp: string, successTask: (data: { message: string, organization_id?: string }) => void, conflictTask: (data: { message: string, organization_id?: string }) => void, errorTask: (error: string) => void }) => {
+        try {
+            await signupRoot({
+                email: params.email,
+                otp: params.otp,
+                successTask: params.successTask,
+                conflictTask: params.conflictTask,
+                errorTask: params.errorTask
+            });
+        } catch (error) {
+            console.error('Root signup failed:', error);
+            params.errorTask('An error occurred during signup');
+        }
+    }, []);
+
+    const retrieveOrgMethod = React.useCallback(async (params: { email: string, otp: string, successTask: (message: string) => void, errorTask: (error: string) => void }) => {
+        try {
+            await retrieveOrg({
+                email: params.email,
+                otp: params.otp,
+                successTask: params.successTask,
+                errorTask: params.errorTask
+            });
+        } catch (error) {
+            console.error('Org retrieval failed:', error);
+            params.errorTask('An error occurred while retrieving organization');
+        }
+    }, []);
 
     const logout = React.useCallback(async () => {
         try {
@@ -280,6 +332,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 login, 
                 requestOTP: requestOTPMethod,
                 loginWithOTP: loginWithOTPMethod,
+                loginUserWithOTP: loginUserWithOTPMethod,
+                signupRoot: signupRootMethod,
+                retrieveOrg: retrieveOrgMethod,
                 logout,
                 setAuthentication
             }}

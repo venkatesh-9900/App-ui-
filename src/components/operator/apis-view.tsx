@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import {
   Card,
@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Info } from "lucide-react"
+import { Plus, Info, Search } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -52,8 +52,10 @@ export interface ApisViewProps {
   totalCount: number
   page: number
   pageSize: number
+  search: string
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
+  onSearchChange: (search: string) => void
   onCreate: (data: Partial<Api>) => Promise<void>
   onUpdate: (id: number, data: Partial<Api>) => Promise<void>
   onDelete: (id: number) => void
@@ -66,8 +68,10 @@ export function ApisView({
   totalCount,
   page,
   pageSize,
+  search,
   onPageChange,
   onPageSizeChange,
+  onSearchChange,
   onCreate,
   onUpdate,
   onDelete,
@@ -85,6 +89,21 @@ export function ApisView({
     api_service_id: undefined,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [localSearch, setLocalSearch] = useState(search)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    setLocalSearch(search)
+  }, [search])
+
+  const handleSearchInput = (value: string) => {
+    setLocalSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      onSearchChange(value)
+    }, 400)
+  }
 
   const openCreateDialog = () => {
     setCurrentApi(null)
@@ -279,6 +298,16 @@ export function ApisView({
             Create API
           </Button>
         </div>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name or path..."
+          value={localSearch}
+          onChange={(e) => handleSearchInput(e.target.value)}
+          className="pl-9 bg-background"
+        />
       </div>
       
       <Card className="border-border/50 shadow-sm py-0 overflow-hidden">

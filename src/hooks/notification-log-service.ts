@@ -7,6 +7,7 @@ interface BaseServiceParams {
     failureTask: () => void;
     errorTask: () => void;
     retry?: boolean;
+    forbiddenTask?: () => void;
 }
 
 interface listNotificationLog extends BaseServiceParams {
@@ -40,6 +41,7 @@ export const listNotificationLog = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: listNotificationLog) => {
     try {
@@ -64,9 +66,13 @@ export const listNotificationLog = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask,
+                    filter_by,
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: ListNotificationLogResponse = await response.json();
             successTask(data); // Replace with 'data' when backend is ready
@@ -86,6 +92,7 @@ export const updateNotificationLog = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: updateNotificationLog) => {
     try {
@@ -111,9 +118,12 @@ export const updateNotificationLog = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: NotificationLog = await response.json();
             successTask(data);
@@ -132,6 +142,7 @@ export const deleteNotificationLog = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: DeleteNotificationLogParams) => {
     try {
@@ -155,9 +166,12 @@ export const deleteNotificationLog = async ({
                     id,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: DeleteNotificationLogResponse = await response.json();
             successTask(data);

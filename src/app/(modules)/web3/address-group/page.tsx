@@ -14,6 +14,7 @@ import { AddressGroup, CreateAddressGroupRequest } from '@/types/address-group'
 import { AddressGroupFormDialog } from '@/components/web3/address-group/address-group-form-dialog'
 import { AddressGroupTable } from '@/components/web3/address-group/address-group-table'
 import { ProtectedRoute } from "@/components/protected-route"
+import { AccessDenied } from "@/components/access-denied"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { getChainlist } from '@/hooks/web3/metadata.service'
 import { Chain, ChainListResponse } from '@/types/matadata'
@@ -25,6 +26,7 @@ export default function AddressGroupPage() {
     const [isLoadingWeb3Networks, setIsLoadingWewb3Network] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [accessDenied, setAccessDenied] = useState(false)
     const [web3Networks, setWeb3Networks] = useState<Chain[]>([])
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -64,6 +66,10 @@ export default function AddressGroupPage() {
                 toast.error('An error occurred', {
                     description: 'Please check your connection and try again.',
                 })
+                setIsLoadingGroups(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoadingGroups(false)
             },
         })
@@ -137,6 +143,10 @@ export default function AddressGroupPage() {
                 })
                 setIsSubmitting(false)
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+                setIsSubmitting(false)
+            },
         })
     }
 
@@ -159,6 +169,9 @@ export default function AddressGroupPage() {
                     description: 'Please check your connection and try again.',
                 })
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+            },
         })
     }
 
@@ -167,6 +180,15 @@ export default function AddressGroupPage() {
             setDialogOpen(next)
         }
     }, [dialogOpen])
+
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
     return (
         <ProtectedRoute>

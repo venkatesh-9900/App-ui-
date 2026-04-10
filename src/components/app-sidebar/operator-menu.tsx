@@ -46,11 +46,20 @@ export function OperatorMenu() {
   const { userInfo, isAuthenticated } = useAuth()
   const pathname = usePathname()
 
-  // Placeholder for "spearl" permission check
-  // For now, it returns true as requested by the user
+  const isActive = (url: string) => {
+    return url === pathname || pathname.startsWith(url + "/");
+  }
+
+  const isAnySubmenuActive = menuItems.some(item => isActive(item.url));
+  const [open, setOpen] = useState(isAnySubmenuActive);
+  const { open: sidebarOpen, toggleSidebar } = useSidebar();
+
+  useEffect(() => {
+    if (isAnySubmenuActive) setOpen(true);
+  }, [isAnySubmenuActive]);
+
   const hasOperatorPermission = (user: any) => {
     if (!user) return false;
-    // TODO: Implement actual permission check here when "spearl" criteria is defined
     return true;
   };
 
@@ -58,26 +67,10 @@ export function OperatorMenu() {
     return null;
   }
 
-  const isActive = (url: string) => {
-    return url === pathname || pathname.startsWith(url + "/");
-  }
-  
-  const isAnySubmenuActive = menuItems.some(item => isActive(item.url));
-  const [open, setOpen] = useState(isAnySubmenuActive);
-  const { open: sidebarOpen, toggleSidebar } = useSidebar();
-
   function subMenuExpansion() {
     if (!sidebarOpen) {
       toggleSidebar();
     }
-  }
-
-  useEffect(() => {
-    if (isAnySubmenuActive) setOpen(true);
-  }, [isAnySubmenuActive]);
-
-  if (!isAuthenticated || !hasOperatorPermission(userInfo)) {
-    return null;
   }
   
   return (

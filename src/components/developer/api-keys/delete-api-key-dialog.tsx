@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { deleteApiKey } from "@/hooks/api-keys-service"
 import { DeleteApiKeyResponse } from "@/types/api-keys"
+import { toast } from "sonner"
 
 type Props = {
   tokenKey: string
@@ -49,6 +50,10 @@ export default function DeleteApiKeyDialog({ tokenKey, tokenName, onDeleted }: P
         errorTask: () => {
           setLoading(false)
           setError("Unexpected error while deleting API key.")
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          setLoading(false)
         },
       })
     } catch (err: any) {
