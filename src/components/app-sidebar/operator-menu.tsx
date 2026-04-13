@@ -43,7 +43,7 @@ const menuItems = [
 ]
 
 export function OperatorMenu() {
-  const { userInfo, isAuthenticated } = useAuth()
+  const { isAuthenticated, isSuperAdmin } = useAuth()
   const pathname = usePathname()
 
   const isActive = (url: string) => {
@@ -58,12 +58,7 @@ export function OperatorMenu() {
     if (isAnySubmenuActive) setOpen(true);
   }, [isAnySubmenuActive]);
 
-  const hasOperatorPermission = (user: any) => {
-    if (!user) return false;
-    return true;
-  };
-
-  if (!isAuthenticated || !hasOperatorPermission(userInfo)) {
+  if (!isAuthenticated || !isSuperAdmin) {
     return null;
   }
 

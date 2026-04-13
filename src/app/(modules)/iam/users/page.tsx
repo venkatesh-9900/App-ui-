@@ -9,11 +9,12 @@ function UsersPageContent() {
   return (
     <ProtectedRoute>
       <DashboardNavbar />
-      <div className="flex-1 p-4 pt-4 space-y-4">
-        <div className="flex items-center justify-between border-b border-border/40 pb-4">
-          <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="flex flex-col gap-4 px-2 py-2 md:gap-6 md:py-4 md:px-4">
+            <UsersManagement />
+          </div>
         </div>
-        <UsersManagement />
       </div>
     </ProtectedRoute>
   )

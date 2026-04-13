@@ -118,6 +118,10 @@ export default function AddressActivityPage() {
                 toast.error('Error loading groups')
                 setIsLoadingGroups(false)
             },
+            forbiddenTask: () => {
+                setAccessDenied(true)
+                setIsLoadingGroups(false)
+            },
         })
     }
 
@@ -138,6 +142,10 @@ export default function AddressActivityPage() {
                 toast.error('Error loading subscribers')
                 setIsLoadingSubscribers(false)
             },
+            forbiddenTask: () => {
+                setAccessDenied(true)
+                setIsLoadingSubscribers(false)
+            },
         })
     }
 
@@ -156,6 +164,10 @@ export default function AddressActivityPage() {
             },
             errorTask: () => {
                 toast.error('Error loading address groups')
+                setIsLoadingAddressGroups(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoadingAddressGroups(false)
             },
         })

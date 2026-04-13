@@ -16,7 +16,7 @@ export interface DeletePermissionParams extends BaseServiceParams {
     id: number;
 }
 
-export const fetchPermissions = async ({ successTask, failureTask, errorTask, forbiddenTask, page, limit, retry = false }: BaseServiceParams) => {
+export const fetchPermissions = async ({ successTask, failureTask, errorTask, forbiddenTask, page, limit, search, retry = false }: BaseServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -25,6 +25,7 @@ export const fetchPermissions = async ({ successTask, failureTask, errorTask, fo
         const queryParams = new URLSearchParams();
         if (page !== undefined) queryParams.append("page", (page - 1).toString());
         if (limit !== undefined) queryParams.append("limit", limit.toString());
+        if (search) queryParams.append("search", search);
 
         const url = queryParams.toString() 
             ? `${ENDPOINTS.OPERATOR.PERMISSIONS}?${queryParams.toString()}`
@@ -37,7 +38,7 @@ export const fetchPermissions = async ({ successTask, failureTask, errorTask, fo
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await fetchPermissions({ retry: true, successTask, failureTask, errorTask, forbiddenTask, page, limit });
+                await fetchPermissions({ retry: true, successTask, failureTask, errorTask, forbiddenTask, page, limit, search });
             }
         } else if (response.status === 403) {
             forbiddenTask?.();

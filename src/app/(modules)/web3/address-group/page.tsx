@@ -80,7 +80,6 @@ export default function AddressGroupPage() {
               try {
                 await getChainlist({
                   successTask: (response: ChainListResponse) => {
-                    // response is of type ChainListResponse
                     const apiResponse = response;
                     setIsLoadingWewb3Network(false);
                     if (apiResponse?.errors && apiResponse.errors.length > 0) {
@@ -98,6 +97,10 @@ export default function AddressGroupPage() {
                   errorTask: () => {
                     setIsLoadingWewb3Network(false);
                     toast.error("An error occurred while fetching chain list");
+                  },
+                  forbiddenTask: () => {
+                    setAccessDenied(true);
+                    setIsLoadingWewb3Network(false);
                   },
                 });
               } catch (err) {

@@ -15,7 +15,7 @@ export function AccessDenied() {
           </div>
           <CardTitle className="text-2xl">Access Denied</CardTitle>
           <CardDescription className="text-base">
-            You don&apos;t have permission to access this resource. Contact your administrator to request access.
+            You don&apos;t have all the permissions to access this resource. Contact your administrator to request access.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-6">

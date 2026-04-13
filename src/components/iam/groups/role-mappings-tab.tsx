@@ -256,9 +256,9 @@ export function GroupRoleMappingsTab() {
       ) : (
         <div className="space-y-2">
           {groups.map((group) => (
-            <Card key={group.id} className="border-border/50 shadow-sm overflow-hidden">
+            <Card key={group.id} className="border-border/50 shadow-lg overflow-hidden">
               <CardContent className="p-0">
-                <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-3 sm:px-4">
                   <div className="flex items-center gap-3">
                     <Button
                       variant="ghost"
@@ -291,7 +291,7 @@ export function GroupRoleMappingsTab() {
                 </div>
 
                 {expandedGroupId === group.id && (
-                  <div className="px-6 py-4 bg-muted/30 border-t border-border/50">
+                  <div className="px-3 py-3 sm:px-6 sm:py-4 bg-muted/30 border-t border-border/50">
                     <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
                       <LinkIcon className="h-4 w-4" />
                       SubGroups

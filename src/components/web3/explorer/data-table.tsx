@@ -90,6 +90,7 @@ import { searchBlockchainTransaction } from "@/hooks/web3/explorer-service"
 import { toast } from "sonner"
 import { truncateText } from "@/utils/formatting"
 import { TransactionDetailsDialog } from "./transaction-details-dialog"
+import { AccessDenied } from "@/components/access-denied"
 
 interface SearchParams {
   chainId: number
@@ -344,6 +345,7 @@ export function DataTable({
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [error, setError] = React.useState<string | null>(null)
+  const [accessDenied, setAccessDenied] = React.useState(false)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -449,10 +451,16 @@ export function DataTable({
                handleSearchResults(mappedData);
             },
             failureTask: () => {
+              setLoading(false)
               toast.error("Search failed")
             },
             errorTask: () => {
+              setLoading(false)
               toast.error("An error occurred during search")
+            },
+            forbiddenTask: () => {
+              setLoading(false)
+              setAccessDenied(true)
             },
           })
     }
@@ -501,6 +509,10 @@ export function DataTable({
     }
   }
 
+  if (accessDenied) {
+    return <AccessDenied />
+  }
+
   return (
     <Tabs
       defaultValue="outline"
@@ -510,7 +522,7 @@ export function DataTable({
         value="outline"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
-        <BlockchainSearch onSearchResults={handleSearchResultsWithParams} setLoading={setLoading}/>
+        <BlockchainSearch onSearchResults={handleSearchResultsWithParams} setLoading={setLoading} onForbidden={() => setAccessDenied(true)} />
         <div className="overflow-hidden rounded-lg border relative">
           <DndContext
             collisionDetection={closestCenter}

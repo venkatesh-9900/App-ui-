@@ -16,7 +16,7 @@ export interface DeleteMappingParams extends BaseServiceParams {
     permissionId: number;
 }
 
-export const fetchMappings = async ({ successTask, failureTask, errorTask, forbiddenTask, page, limit, retry = false }: BaseServiceParams) => {
+export const fetchMappings = async ({ successTask, failureTask, errorTask, forbiddenTask, page, limit, search, retry = false }: BaseServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -25,6 +25,7 @@ export const fetchMappings = async ({ successTask, failureTask, errorTask, forbi
         const queryParams = new URLSearchParams();
         if (page !== undefined) queryParams.append("page", (page - 1).toString());
         if (limit !== undefined) queryParams.append("limit", limit.toString());
+        if (search) queryParams.append("search", search);
 
         const url = queryParams.toString() 
             ? `${ENDPOINTS.OPERATOR.MAPPINGS}?${queryParams.toString()}`
@@ -37,7 +38,7 @@ export const fetchMappings = async ({ successTask, failureTask, errorTask, forbi
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await fetchMappings({ retry: true, successTask, failureTask, errorTask, forbiddenTask, page, limit });
+                await fetchMappings({ retry: true, successTask, failureTask, errorTask, forbiddenTask, page, limit, search });
             }
         } else if (response.status === 403) {
             forbiddenTask?.();

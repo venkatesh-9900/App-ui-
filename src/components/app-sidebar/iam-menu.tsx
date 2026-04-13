@@ -26,7 +26,7 @@ const menuItems = [
 ]
 
 export function IamMenu() {
-  const { userInfo, isAuthenticated } = useAuth()
+  const { isAuthenticated, isRootUser, isSuperAdmin } = useAuth()
   const pathname = usePathname()
   const isAnySubmenuActive = pathname.startsWith("/iam");
   const [open, setOpen] = useState(isAnySubmenuActive);
@@ -36,12 +36,7 @@ export function IamMenu() {
     if (isAnySubmenuActive) setOpen(true);
   }, [isAnySubmenuActive]);
 
-  const hasIamPermission = (user: any) => {
-    if (!user) return false;
-    return true;
-  };
-
-  if (!isAuthenticated || !hasIamPermission(userInfo)) {
+  if (!isAuthenticated || (!isRootUser && !isSuperAdmin)) {
     return null;
   }
 

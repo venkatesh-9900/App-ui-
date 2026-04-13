@@ -6,4 +6,5 @@ export interface BaseServiceParams {
     retry?: boolean;
     page?: number;
     limit?: number;
+    search?: string;
 }

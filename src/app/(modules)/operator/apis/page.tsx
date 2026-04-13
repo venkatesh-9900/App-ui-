@@ -141,21 +141,25 @@ export default function APIsPage() {
   return (
     <ProtectedRoute>
       <DashboardNavbar />
-      <ApisView 
-        apis={apis}
-        services={services}
-        isLoading={isLoading}
-        totalCount={totalCount}
-        page={page}
-        pageSize={pageSize}
-        search={search}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
-        onSearchChange={(val) => { setSearch(val); setPage(1) }}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-      />
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <ApisView 
+            apis={apis}
+            services={services}
+            isLoading={isLoading}
+            totalCount={totalCount}
+            page={page}
+            pageSize={pageSize}
+            search={search}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            onSearchChange={(val) => { setSearch(val); setPage(1) }}
+            onCreate={handleCreate}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
+        </div>
+      </div>
     </ProtectedRoute>
   )
 }

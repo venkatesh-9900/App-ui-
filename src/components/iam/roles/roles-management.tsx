@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback, useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -358,25 +358,36 @@ export function RolesManagement() {
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Manage roles and their permission assignments.
-        </p>
-        <Button onClick={openCreateDialog} size="sm" className="cursor-pointer">
-          <Plus className="mr-2 h-4 w-4" /> Create Role
-        </Button>
-      </div>
-
-      <Card className="border-border/50 shadow-sm py-0 overflow-hidden">
-        <CardContent className="p-0 flex flex-col">
-          <DataTable
-            columns={columns}
-            data={roles}
-            isLoading={isLoading}
-            className="border-0 rounded-none bg-transparent"
-          />
+      <Card className="shadow-lg">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Shield className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-sm sm:text-2xl">Roles</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">Manage roles and their permission assignments.</p>
+              </div>
+            </div>
+            <Button onClick={openCreateDialog} size="lg" className="w-fit">
+              <Plus className="w-4 h-4 mr-2" /> Create Role
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-hidden rounded-lg border relative flex flex-col">
+            <div className="overflow-x-auto flex-1">
+              <DataTable
+                columns={columns}
+                data={roles}
+                isLoading={isLoading}
+                className="border-0 rounded-none bg-transparent"
+              />
+            </div>
+          </div>
           {!isLoading && totalCount > pageSize && (
-            <div className="px-4 py-2 border-t border-border/50 bg-muted/5">
+            <div className="px-4 py-2 border-t border-border/50 bg-muted/5 mt-2">
               <Pagination
                 page={page}
                 pageSize={pageSize}

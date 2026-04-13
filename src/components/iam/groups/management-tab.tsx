@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -346,29 +346,38 @@ export function GroupManagementTab() {
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Manage groups, subgroups, and their structure.
-        </p>
-        <Button onClick={openCreateGroupDialog} size="sm" className="cursor-pointer">
-          <Plus className="mr-2 h-4 w-4" /> Create Group
-        </Button>
-      </div>
-
-      <Card className="border-border/50 shadow-sm py-0 overflow-hidden">
-        <CardContent className="p-0 flex flex-col">
-          <div className="w-full">
-            <DataTable
-              columns={columns}
-              data={groups}
-              isLoading={isLoading}
-              className="border-0 rounded-none bg-transparent"
-            />
+      <Card className="shadow-lg">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-sm sm:text-2xl">Groups</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">Manage groups, subgroups, and their structure.</p>
+              </div>
+            </div>
+            <Button onClick={openCreateGroupDialog} size="lg" className="w-fit">
+              <Plus className="w-4 h-4 mr-2" /> Create Group
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-hidden rounded-lg border relative flex flex-col">
+            <div className="overflow-x-auto flex-1">
+              <DataTable
+                columns={columns}
+                data={groups}
+                isLoading={isLoading}
+                className="border-0 rounded-none bg-transparent"
+              />
+            </div>
           </div>
 
           {expandedGroupId && (
-            <div className="px-6 py-4 bg-muted/30 border-t border-border/50">
-              <div className="flex items-center justify-between mb-3">
+            <div className="px-3 py-3 sm:px-6 sm:py-4 bg-muted/30 border rounded-lg mt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <h4 className="text-sm font-medium flex items-center gap-2">
                   <LinkIcon className="h-4 w-4" />
                   SubGroups
@@ -376,7 +385,6 @@ export function GroupManagementTab() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="cursor-pointer"
                   onClick={() => {
                     setSubGroupForm({ name: "" })
                     setIsSubGroupDialogOpen(true)
@@ -398,7 +406,6 @@ export function GroupManagementTab() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="cursor-pointer"
                         onClick={() => handleDeleteSubGroup(sg.id)}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -414,7 +421,7 @@ export function GroupManagementTab() {
           )}
 
           {!isLoading && totalCount > pageSize && (
-            <div className="px-4 py-2 border-t border-border/50 bg-muted/5">
+            <div className="px-4 py-2 border-t border-border/50 bg-muted/5 mt-2">
               <Pagination
                 page={page}
                 pageSize={pageSize}

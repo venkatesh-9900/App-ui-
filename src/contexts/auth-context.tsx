@@ -18,6 +18,7 @@ interface AuthState {
     userInfo: UserInfo | null;
     isLoading: boolean;
     isRootUser: boolean;
+    isSuperAdmin: boolean;
 }
 
 interface AuthContextType extends AuthState {
@@ -39,6 +40,7 @@ const INITIAL_STATE: AuthState = {
     userInfo: null,
     isLoading: true,
     isRootUser: false,
+    isSuperAdmin: false,
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -59,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             userInfo: null,
             isLoading: false,
             isRootUser: false,
+            isSuperAdmin: false,
         });
     }, [setAuthState]);
 
@@ -94,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         accessToken: newToken,
                         isAuthenticated: true,
                         isRootUser: userData.is_root_user || false,
+                        isSuperAdmin: userData.is_super_admin || false,
                         isLoading: false
                     });
                     localStorage.setItem('is_authenticated', 'true');
@@ -156,6 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     accessToken: token,
                     isAuthenticated: true,
                     isRootUser: userData.is_root_user || false,
+                    isSuperAdmin: userData.is_super_admin || false,
                     isLoading: false
                 });
                 localStorage.setItem('is_authenticated', 'true');
@@ -210,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setAuthState({
                     userInfo: userData,
                     isRootUser: userData.is_root_user || false,
+                    isSuperAdmin: userData.is_super_admin || false,
                     isLoading: false
                 });
             }

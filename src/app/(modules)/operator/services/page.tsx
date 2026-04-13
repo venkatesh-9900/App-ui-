@@ -16,12 +16,14 @@ export default function ServicesPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
+  const [search, setSearch] = useState("")
 
   const loadServices = useCallback(() => {
     setIsLoading(true)
     fetchApiServices({
       page,
       limit: pageSize,
+      search: search || undefined,
       successTask: (data) => {
         setServices(data.data || [])
         setTotalCount(data.count || 0)
@@ -40,7 +42,7 @@ export default function ServicesPage() {
         setIsLoading(false)
       },
     })
-  }, [page, pageSize])
+  }, [page, pageSize, search])
 
   useEffect(() => {
     loadServices()
@@ -125,18 +127,24 @@ export default function ServicesPage() {
   return (
     <ProtectedRoute>
       <DashboardNavbar />
-      <ApiServicesView 
-        services={services}
-        isLoading={isLoading}
-        totalCount={totalCount}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-      />
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <ApiServicesView 
+            services={services}
+            isLoading={isLoading}
+            totalCount={totalCount}
+            page={page}
+            pageSize={pageSize}
+            search={search}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            onSearchChange={(val) => { setSearch(val); setPage(1) }}
+            onCreate={handleCreate}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
+        </div>
+      </div>
     </ProtectedRoute>
   )
 }
