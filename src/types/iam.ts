@@ -9,15 +9,6 @@ export interface Group {
   updated_at: string
 }
 
-export interface SubGroup {
-  id: number
-  group_id: number
-  name: string
-  created_by_user_id: number
-  created_at: string
-  updated_at: string
-}
-
 export interface Role {
   id: number
   name: string
@@ -43,24 +34,8 @@ export interface UserGroup {
   updated_at: string
 }
 
-export interface UserSubGroup {
-  user_id: number
-  sub_group_id: number
-  created_by_user_id: number
-  created_at: string
-  updated_at: string
-}
-
 export interface GroupRole {
   group_id: number
-  role_id: number
-  created_by_user_id: number
-  created_at: string
-  updated_at: string
-}
-
-export interface SubGroupRole {
-  sub_group_id: number
   role_id: number
   created_by_user_id: number
   created_at: string

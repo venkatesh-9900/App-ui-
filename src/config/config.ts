@@ -123,12 +123,9 @@ export const ENDPOINTS = {
     },
     IAM: {
         GROUPS: `/api/groups`,
-        SUBGROUPS: `/api/subgroups`,
         ROLES: `/api/roles`,
         USER_GROUP_MAPPINGS: `/api/groups/user-mappings`,
         GROUP_ROLE_MAPPINGS: `/api/groups/role-mappings`,
-        USER_SUBGROUP_MAPPINGS: `/api/subgroups/user-mappings`,
-        SUBGROUP_ROLE_MAPPINGS: `/api/subgroups/role-mappings`,
         USER_ROLE_MAPPINGS: `/api/roles/user-mappings`,
         ROLE_PERMISSION_MAPPINGS: `/api/roles/permission-mappings`,
         ROLE_PERMISSION_MAPPINGS_BULK: `/api/roles/permission-mappings/bulk`,

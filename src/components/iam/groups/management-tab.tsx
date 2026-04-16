@@ -31,9 +31,6 @@ import {
   Pencil,
   Trash2,
   Users,
-  ChevronDown,
-  ChevronRight,
-  Link as LinkIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { formatDate } from "@/utils/formatting"
@@ -42,11 +39,8 @@ import {
   createGroup,
   updateGroup,
   deleteGroup,
-  fetchSubGroups,
-  createSubGroup,
-  deleteSubGroup,
 } from "@/hooks/iam/iam-service"
-import { Group, SubGroup } from "@/types/iam"
+import { Group } from "@/types/iam"
 import { AccessDenied } from "@/components/access-denied"
 
 export function GroupManagementTab() {
@@ -57,17 +51,10 @@ export function GroupManagementTab() {
   const [pageSize, setPageSize] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
 
-  const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null)
-  const [subGroups, setSubGroups] = useState<SubGroup[]>([])
-  const [subGroupsLoading, setSubGroupsLoading] = useState(false)
-
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
   const [currentGroup, setCurrentGroup] = useState<Group | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [groupForm, setGroupForm] = useState({ name: "", adminEmail: "" })
-
-  const [isSubGroupDialogOpen, setIsSubGroupDialogOpen] = useState(false)
-  const [subGroupForm, setSubGroupForm] = useState({ name: "" })
 
   const loadGroups = useCallback(() => {
     setIsLoading(true)
@@ -97,25 +84,6 @@ export function GroupManagementTab() {
   useEffect(() => {
     loadGroups()
   }, [loadGroups])
-
-  const loadSubGroups = useCallback((groupId: number) => {
-    setSubGroupsLoading(true)
-    fetchSubGroups({
-      groupId,
-      successTask: (data: { data: SubGroup[] }) => {
-        setSubGroups(data.data ?? [])
-        setSubGroupsLoading(false)
-      },
-      failureTask: () => {
-        toast.error("Failed to load subgroups")
-        setSubGroupsLoading(false)
-      },
-      errorTask: () => {
-        toast.error("An error occurred while loading subgroups")
-        setSubGroupsLoading(false)
-      },
-    })
-  }, [])
 
   const openCreateGroupDialog = () => {
     setCurrentGroup(null)
@@ -188,10 +156,6 @@ export function GroupManagementTab() {
       id,
       successTask: () => {
         toast.success("Group deleted successfully")
-        if (expandedGroupId === id) {
-          setExpandedGroupId(null)
-          setSubGroups([])
-        }
         loadGroups()
       },
       failureTask: () => toast.error("Failed to delete group"),
@@ -200,65 +164,7 @@ export function GroupManagementTab() {
     })
   }
 
-  const toggleExpand = (groupId: number) => {
-    if (expandedGroupId === groupId) {
-      setExpandedGroupId(null)
-      setSubGroups([])
-    } else {
-      setExpandedGroupId(groupId)
-      loadSubGroups(groupId)
-    }
-  }
-
-  const handleCreateSubGroup = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!expandedGroupId) return
-    createSubGroup({
-      request: { group_id: expandedGroupId, name: subGroupForm.name },
-      successTask: () => {
-        toast.success("SubGroup created successfully")
-        setIsSubGroupDialogOpen(false)
-        setSubGroupForm({ name: "" })
-        loadSubGroups(expandedGroupId!)
-      },
-      failureTask: () => toast.error("Failed to create subgroup"),
-      errorTask: () => toast.error("An error occurred while creating subgroup"),
-      forbiddenTask: () => toast.error("Access denied"),
-    })
-  }
-
-  const handleDeleteSubGroup = (subGroupId: number) => {
-    deleteSubGroup({
-      id: subGroupId,
-      successTask: () => {
-        toast.success("SubGroup deleted successfully")
-        if (expandedGroupId) loadSubGroups(expandedGroupId)
-      },
-      failureTask: () => toast.error("Failed to delete subgroup"),
-      errorTask: () => toast.error("An error occurred while deleting subgroup"),
-      forbiddenTask: () => toast.error("Access denied"),
-    })
-  }
-
   const columns: ColumnDef<Group>[] = [
-    {
-      id: "expand",
-      header: () => <div className="w-8"></div>,
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 cursor-pointer"
-          onClick={() => toggleExpand(row.original.id)}
-        >
-          {expandedGroupId === row.original.id ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </Button>
-      ),
-    },
     {
       accessorKey: "name",
       header: () => (
@@ -355,7 +261,7 @@ export function GroupManagementTab() {
               </div>
               <div>
                 <CardTitle className="text-sm sm:text-2xl">Groups</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">Manage groups, subgroups, and their structure.</p>
+                <p className="text-sm text-muted-foreground mt-1">Manage groups and their structure.</p>
               </div>
             </div>
             <Button onClick={openCreateGroupDialog} size="lg" className="w-fit">
@@ -374,51 +280,6 @@ export function GroupManagementTab() {
               />
             </div>
           </div>
-
-          {expandedGroupId && (
-            <div className="px-3 py-3 sm:px-6 sm:py-4 bg-muted/30 border rounded-lg mt-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <h4 className="text-sm font-medium flex items-center gap-2">
-                  <LinkIcon className="h-4 w-4" />
-                  SubGroups
-                </h4>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setSubGroupForm({ name: "" })
-                    setIsSubGroupDialogOpen(true)
-                  }}
-                >
-                  <Plus className="mr-1 h-3 w-3" /> Add SubGroup
-                </Button>
-              </div>
-              {subGroupsLoading ? (
-                <p className="text-xs text-muted-foreground">Loading...</p>
-              ) : (
-                <div className="space-y-2">
-                  {subGroups.map((sg) => (
-                    <div
-                      key={sg.id}
-                      className="flex items-center justify-between p-2 rounded bg-background border"
-                    >
-                      <span className="text-sm">{sg.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteSubGroup(sg.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                  {subGroups.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No subgroups yet.</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
 
           {!isLoading && totalCount > pageSize && (
             <div className="px-4 py-2 border-t border-border/50 bg-muted/5 mt-2">
@@ -488,48 +349,6 @@ export function GroupManagementTab() {
               </Button>
               <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
                 {isSubmitting ? "Saving..." : currentGroup ? "Save Changes" : "Create Group"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create SubGroup Dialog */}
-      <Dialog open={isSubGroupDialogOpen} onOpenChange={setIsSubGroupDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] p-6">
-          <form onSubmit={handleCreateSubGroup}>
-            <DialogHeader className="mb-6">
-              <DialogTitle>Add SubGroup</DialogTitle>
-              <DialogDescription className="text-sm">
-                Create a new subgroup within the selected group.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-2">
-              <div className="grid gap-2">
-                <Label htmlFor="subgroup-name" className="text-sm font-medium">
-                  SubGroup Name
-                </Label>
-                <Input
-                  id="subgroup-name"
-                  value={subGroupForm.name}
-                  onChange={(e) => setSubGroupForm({ name: e.target.value })}
-                  placeholder="e.g. Backend Team"
-                  className="bg-background"
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter className="mt-6">
-              <Button
-                type="button"
-                variant="outline"
-                className="cursor-pointer"
-                onClick={() => setIsSubGroupDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" className="cursor-pointer">
-                Create SubGroup
               </Button>
             </DialogFooter>
           </form>
