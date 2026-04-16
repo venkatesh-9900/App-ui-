@@ -132,7 +132,10 @@ export const ENDPOINTS = {
         USER_ROLE_MAPPINGS: `/api/roles/user-mappings`,
         ROLE_PERMISSION_MAPPINGS: `/api/roles/permission-mappings`,
         ROLE_PERMISSION_MAPPINGS_BULK: `/api/roles/permission-mappings/bulk`,
-        USERS: `/api/iam/users`
+        USERS: `/api/iam/users`,
+        OAUTH_ORGANIZATIONS: `/api/oauth/organizations`,
+        OAUTH_ORG_IDP_MAPPINGS: `/api/oauth/organizations/identity-providers`,
+        OAUTH_IDENTITY_PROVIDERS: `/api/oauth/identity-providers`,
     },
     GET_PRESIGNED_URL: `/api/interaction/get-presigned-url-for-attached-file`,
     CREATE_GROUP: `/api/interaction/create-group`,

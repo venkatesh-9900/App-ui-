@@ -19,6 +19,8 @@ interface AuthState {
     isLoading: boolean;
     isRootUser: boolean;
     isSuperAdmin: boolean;
+    isGroupAdmin: boolean;
+    adminGroupIds: number[];
 }
 
 interface AuthContextType extends AuthState {
@@ -41,6 +43,8 @@ const INITIAL_STATE: AuthState = {
     isLoading: true,
     isRootUser: false,
     isSuperAdmin: false,
+    isGroupAdmin: false,
+    adminGroupIds: [],
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -62,6 +66,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isLoading: false,
             isRootUser: false,
             isSuperAdmin: false,
+            isGroupAdmin: false,
+            adminGroupIds: [],
         });
     }, [setAuthState]);
 
@@ -98,6 +104,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         isAuthenticated: true,
                         isRootUser: userData.is_root_user || false,
                         isSuperAdmin: userData.is_super_admin || false,
+                        isGroupAdmin: userData.is_group_admin || false,
+                        adminGroupIds: userData.admin_group_ids || [],
                         isLoading: false
                     });
                     localStorage.setItem('is_authenticated', 'true');
@@ -161,6 +169,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     isAuthenticated: true,
                     isRootUser: userData.is_root_user || false,
                     isSuperAdmin: userData.is_super_admin || false,
+                    isGroupAdmin: userData.is_group_admin || false,
+                    adminGroupIds: userData.admin_group_ids || [],
                     isLoading: false
                 });
                 localStorage.setItem('is_authenticated', 'true');
@@ -216,6 +226,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     userInfo: userData,
                     isRootUser: userData.is_root_user || false,
                     isSuperAdmin: userData.is_super_admin || false,
+                    isGroupAdmin: userData.is_group_admin || false,
+                    adminGroupIds: userData.admin_group_ids || [],
                     isLoading: false
                 });
             }
