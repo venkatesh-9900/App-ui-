@@ -28,6 +28,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { Pagination } from "@/components/common/pagination"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useSpace } from "@/contexts/space-context"
 
 export default function NotificationChannelInstancesPage() {
     const [instances, setInstances] = useState<NotificationChannelInstance[]>([])
@@ -46,6 +47,7 @@ export default function NotificationChannelInstancesPage() {
     const [totalCount, setTotalCount] = useState(0)
     const searchParams = useSearchParams()
     const router = useRouter()
+    const { selectedGroupId } = useSpace()
     // ---------------- Fetch ----------------
     const fetchInstances = async () => {
         setIsLoading(true)
@@ -53,6 +55,7 @@ export default function NotificationChannelInstancesPage() {
         await listNotificationChannelInstances({
             page,
             limit: pageSize,
+            groupId: selectedGroupId,
             successTask: (response) => {
                 if (Array.isArray(response?.data)) {
                     setInstances(response.data)
@@ -100,7 +103,7 @@ export default function NotificationChannelInstancesPage() {
 
     useEffect(() => {
         fetchInstances()
-    }, [page, pageSize])
+    }, [page, pageSize, selectedGroupId])
 
     useEffect(() => {
         fetchChannels()
@@ -128,6 +131,7 @@ export default function NotificationChannelInstancesPage() {
             payload: {
                 webhook_url: data.webhook_url,
             },
+            ...(selectedGroupId ? { group_id: selectedGroupId } : {}),
         }
 
         await createNotificationChannelInstance({

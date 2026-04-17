@@ -14,6 +14,7 @@ interface BaseServiceParams {
     errorTask: () => void;
     forbiddenTask?: () => void;
     retry?: boolean;
+    groupId?: number;
 }
 
 interface CreateAddressActivityAirdropParams extends BaseServiceParams {
@@ -102,7 +103,8 @@ export const listAddressAirdropActivities = async ({
     failureTask,
     errorTask,
     forbiddenTask,
-    retry = false
+    retry = false,
+    groupId
 }: BaseServiceParams) => {
     try {
         if (retry) {
@@ -110,7 +112,12 @@ export const listAddressAirdropActivities = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(ADDRESS_ACTIVITY_AIRDROP_ENDPOINTS.LIST, {
+        let url = ADDRESS_ACTIVITY_AIRDROP_ENDPOINTS.LIST;
+        if (groupId !== undefined) {
+            url += `?group_id=${groupId}`;
+        }
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: buildHeaderJSON(false),
         });
@@ -125,7 +132,8 @@ export const listAddressAirdropActivities = async ({
                     successTask,
                     failureTask,
                     errorTask,
-                    forbiddenTask
+                    forbiddenTask,
+                    groupId
                 });
             }
         } else if (response.status === 403) {

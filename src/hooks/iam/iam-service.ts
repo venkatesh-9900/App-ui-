@@ -12,6 +12,7 @@ import {
 // Param interfaces
 // ---------------------------------------------------------------------------
 
+export interface FetchMySpacesParams extends BaseServiceParams {}
 export interface FetchGroupsParams extends BaseServiceParams {}
 export interface CreateGroupParams extends BaseServiceParams {
     request: Partial<Group>;
@@ -90,6 +91,38 @@ export interface RemoveRolePermissionMappingParams extends BaseServiceParams {
     roleId: number;
     permissionId: number;
 }
+
+// ---------------------------------------------------------------------------
+// My Spaces (groups the current user belongs to)
+// ---------------------------------------------------------------------------
+
+export const fetchMySpaces = async ({ successTask, failureTask, errorTask, forbiddenTask, retry = false }: FetchMySpacesParams) => {
+    try {
+        if (retry) {
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const headers = { ...buildHeaderJSON(false), "x-app-name": app_name };
+        const response = await fetch(ENDPOINTS.IAM.MY_SPACES, { method: 'GET', headers });
+
+        if (response.status === 401) {
+            if (retry) {
+                await reauthenticationStep(errorTask);
+            } else {
+                await fetchMySpaces({ retry: true, successTask, failureTask, errorTask, forbiddenTask });
+            }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
+        } else if (response.ok) {
+            const data = await response.json();
+            successTask(data);
+        } else {
+            failureTask();
+        }
+    } catch (error) {
+        errorTask();
+    }
+};
 
 // ---------------------------------------------------------------------------
 // Groups

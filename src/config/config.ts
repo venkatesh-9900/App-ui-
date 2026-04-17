@@ -123,6 +123,7 @@ export const ENDPOINTS = {
     },
     IAM: {
         GROUPS: `/api/groups`,
+        MY_SPACES: `/api/groups/my-spaces`,
         ROLES: `/api/roles`,
         USER_GROUP_MAPPINGS: `/api/groups/user-mappings`,
         GROUP_ROLE_MAPPINGS: `/api/groups/role-mappings`,

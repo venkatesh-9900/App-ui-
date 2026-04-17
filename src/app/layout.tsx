@@ -1,4 +1,4 @@
-import { AuthProvider } from "@/contexts"
+import { AuthProvider, SpaceProvider } from "@/contexts"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -15,10 +15,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <html lang="en" suppressHydrationWarning>
       <body>
         <AuthProvider>
-          <main>
-            {children}
-          </main>
-          <Toaster />
+          <SpaceProvider>
+            <main>
+              {children}
+            </main>
+            <Toaster />
+          </SpaceProvider>
         </AuthProvider>
       </body>
     </html>

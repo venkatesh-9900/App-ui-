@@ -15,6 +15,7 @@ import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { listNotificationChannelInstances } from "@/hooks/notification-channel-instance"
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 export default function NotificationGroupsPage() {
     const [groups, setGroups] = useState<NotificationGroup[]>([])
@@ -28,6 +29,7 @@ export default function NotificationGroupsPage() {
     const [selectedGroup, setSelectedGroup] = useState<Partial<NotificationGroup> | null>(null)
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { selectedGroupId } = useSpace()
 
     // Guard onOpenChange to prevent infinite loops
     const handleDialogOpenChange = React.useCallback((next: boolean) => {
@@ -36,16 +38,21 @@ export default function NotificationGroupsPage() {
         }
     }, [dialogOpen])
 
-    // Fetch groups on mount
     useEffect(() => {
         fetchGroups()
         fetchChannelInstance()
         handleParams();
     }, [])
 
+    useEffect(() => {
+        fetchGroups()
+        fetchChannelInstance()
+    }, [selectedGroupId])
+
     const fetchGroups = async () => {
         setIsLoading(true)
         await listTopics({
+            groupId: selectedGroupId,
             successTask: (response) => {
                 console.log('API Response:', response)
                 if (response.data && response.data) {
@@ -76,6 +83,7 @@ export default function NotificationGroupsPage() {
     const fetchChannelInstance = async () => {
         setIsChannelInstanceLoading(true)
         await listNotificationChannelInstances({
+            groupId: selectedGroupId,
             successTask: (res) => {
                   setChannelInstances(res.data ?? [])
                   setIsChannelInstanceLoading(false)
@@ -108,8 +116,12 @@ export default function NotificationGroupsPage() {
         setIsSubmitting(true)
 
         if (dialogMode === 'create') {
+            const request = selectedGroupId
+                ? { ...formData, group_id: selectedGroupId }
+                : formData
+
             await createTopic({
-                request: formData,
+                request,
                 successTask: (data) => {
                     toast.success('Group created successfully!', {
                         description: `${formData.name} has been created.`,

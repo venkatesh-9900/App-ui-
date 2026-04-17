@@ -14,6 +14,7 @@ interface BaseServiceParams {
     errorTask: () => void;
     forbiddenTask?: () => void;
     retry?: boolean;
+    groupId?: number;
 }
 
 interface CreateAddressGroupParams extends BaseServiceParams {
@@ -99,7 +100,8 @@ export const listAddressGroups = async ({
     failureTask,
     errorTask,
     forbiddenTask,
-    retry = false
+    retry = false,
+    groupId
 }: BaseServiceParams) => {
     try {
         if (retry) {
@@ -107,7 +109,12 @@ export const listAddressGroups = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(ADDRESS_GROUP_ENDPOINTS.LIST, {
+        let url = ADDRESS_GROUP_ENDPOINTS.LIST;
+        if (groupId !== undefined) {
+            url += `?group_id=${groupId}`;
+        }
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: buildHeaderJSON(false),
         });
@@ -122,7 +129,8 @@ export const listAddressGroups = async ({
                     successTask,
                     failureTask,
                     errorTask,
-                    forbiddenTask
+                    forbiddenTask,
+                    groupId
                 });
             }
         } else if (response.status === 403) {

@@ -25,6 +25,7 @@ import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
 import { AddressWatcherInfo } from '@/components/web3/address-activity/address-activity-info'
 import { useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 export default function AddressActivityPage() {
     const [activities, setActivities] = useState<AddressActivity[]>([])
@@ -39,6 +40,7 @@ export default function AddressActivityPage() {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [accessDenied, setAccessDenied] = useState(false)
     const searchParams = useSearchParams()
+    const { selectedGroupId } = useSpace()
     const [initialData, setInitialData] = useState<{
         name?: string
         address_group_ids?: number[]
@@ -54,6 +56,11 @@ export default function AddressActivityPage() {
         fetchSubscribers()
         handleParams()
     }, [])
+
+    useEffect(() => {
+        fetchActivities()
+        fetchAddressGroups()
+    }, [selectedGroupId])
 
     const fetchActivities = async () => {
         setIsLoadingActivities(true)
@@ -81,6 +88,7 @@ export default function AddressActivityPage() {
                 setAccessDenied(true)
                 setIsLoadingActivities(false)
             },
+            groupId: selectedGroupId,
         })
     }
 
@@ -170,6 +178,7 @@ export default function AddressActivityPage() {
                 setAccessDenied(true)
                 setIsLoadingAddressGroups(false)
             },
+            groupId: selectedGroupId,
         })
     }
 
@@ -183,8 +192,12 @@ export default function AddressActivityPage() {
     const handleFormSubmit = async (formData: CreateAddressActivityRequest) => {
         setIsSubmitting(true)
 
+        const request = selectedGroupId
+            ? { ...formData, group_id: selectedGroupId }
+            : formData
+
         await createAddressActivity({
-            request: formData,
+            request,
             successTask: (data) => {
                 toast.success('Address activity watcher created!', {
                     description: `Now monitoring this address group ${formData.address_group_ids}`,

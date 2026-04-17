@@ -153,13 +153,19 @@ export function GroupsTable({
                     <span>Channel Instances</span>
                   </div>
                 </TableHead>
-                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                <TableHead className="px-4 py-2 text-left min-w-max">
+                  <div className="flex items-center gap-1">
+                    <UserCircle2Icon className="w-4 h-4" />
+                    <span>Created By</span>
+                  </div>
+                </TableHead>
+                <TableHead className="px-4 py-2 text-left min-w-max">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     <span>Created</span>
                   </div>
                 </TableHead>
-                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                <TableHead className="px-4 py-2 text-left min-w-max">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>Updated</span>
@@ -208,10 +214,13 @@ export function GroupsTable({
                     })()}
                   </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm">
+                  <TableCell className="px-4 py-3 min-w-max text-sm text-muted-foreground truncate max-w-[180px]" title={group.user_id || ''}>
+                    {group.user_id || 'N/A'}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 min-w-max text-sm">
                     {formatDate(group.created_at)}
                   </TableCell>
-                  <TableCell className="px-4 py-3 w-1/6 min-w-max text-sm text-muted-foreground">
+                  <TableCell className="px-4 py-3 min-w-max text-sm text-muted-foreground">
                     {formatTime(group.updated_at)}
                   </TableCell>
                   <TableCell className="px-4 py-3 w-20 min-w-max text-right">

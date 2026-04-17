@@ -33,6 +33,7 @@ interface DeleteNotificationChannelInstanceParams extends BaseServiceParams {
 interface ListNotificationChannelInstanceParams extends BaseServiceParams {
     page?: number;
     limit?: number;
+    groupId?: number;
 }
 
 const ENDPOINTS = {
@@ -131,6 +132,7 @@ export const upsertNotificationChannelInstance = async ({
 export const listNotificationChannelInstances = async ({
     page,
     limit,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -142,6 +144,7 @@ export const listNotificationChannelInstances = async ({
         const params = new URLSearchParams()
         if (page !== undefined) params.append('page', String(page))
         if (limit !== undefined) params.append('limit', String(limit))
+        if (groupId !== undefined) params.append('group_id', String(groupId))
 
         const url =
             params.toString().length > 0
@@ -156,7 +159,7 @@ export const listNotificationChannelInstances = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await listNotificationChannelInstances({ retry: true, page, limit, successTask, failureTask, errorTask, forbiddenTask })
+                : await listNotificationChannelInstances({ retry: true, page, limit, groupId, successTask, failureTask, errorTask, forbiddenTask })
             return
         }
 

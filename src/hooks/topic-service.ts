@@ -29,7 +29,8 @@ interface GetTopicParams extends BaseServiceParams {
 
 interface ListTopicsParams extends BaseServiceParams {
     page?: number;
-    pageSize?: number
+    pageSize?: number;
+    groupId?: number;
 }
 
 interface AddSubscriptionsParams extends BaseServiceParams {
@@ -271,6 +272,7 @@ export const deleteTopic = async ({
 export const listTopics = async ({
     page,
     pageSize,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -286,6 +288,7 @@ export const listTopics = async ({
         const params = new URLSearchParams();
         if (page) params.append('page', page.toString());
         if (pageSize) params.append('pageSize', pageSize.toString());
+        if (groupId !== undefined) params.append('group_id', groupId.toString());
 
         const url = `${TOPIC_ENDPOINTS.LIST}${params.toString() ? '?' + params.toString() : ''}`;
 
@@ -303,6 +306,7 @@ export const listTopics = async ({
                     retry: true,
                     page,
                     pageSize,
+                    groupId,
                     successTask,
                     failureTask,
                     errorTask,

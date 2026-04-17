@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Lock, Users } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import {
@@ -18,16 +18,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useSpace } from "@/contexts/space-context"
+
+const PRIVATE_SPACE_VALUE = "__private__"
 
 export function AppSidebarHeader() {
   const { setTheme, theme } = useTheme()
   const { toggleSidebar } = useSidebar()
   const [mounted, setMounted] = React.useState(false)
+  const { selectedSpace, setSelectedSpace, userGroups, isLoadingGroups } = useSpace()
 
-  // Only render theme toggle after mounting to avoid hydration mismatch
   React.useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleSpaceChange = (value: string) => {
+    if (value === PRIVATE_SPACE_VALUE) {
+      setSelectedSpace(null)
+    } else {
+      const groupId = parseInt(value, 10)
+      const group = userGroups.find((g) => g.id === groupId)
+      if (group) {
+        setSelectedSpace({ id: group.id, name: group.name })
+      }
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -77,6 +100,37 @@ export function AppSidebarHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+        </div>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
+        <div className="px-2 pt-2">
+          <Select
+            value={selectedSpace ? String(selectedSpace.id) : PRIVATE_SPACE_VALUE}
+            onValueChange={handleSpaceChange}
+            disabled={isLoadingGroups}
+          >
+            <SelectTrigger size="sm" className="w-full text-xs">
+              <SelectValue placeholder="Select Space" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={PRIVATE_SPACE_VALUE}>
+                <div className="flex items-center gap-2">
+                  <Lock className="h-3 w-3" />
+                  <span>Private</span>
+                </div>
+              </SelectItem>
+              {userGroups.length > 0 && <SelectSeparator />}
+              {userGroups.map((group) => (
+                <SelectItem key={group.id} value={String(group.id)}>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3 w-3" />
+                    <span>{group.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </SidebarMenuItem>
     </SidebarMenu>

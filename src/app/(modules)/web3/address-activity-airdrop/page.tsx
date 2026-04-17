@@ -25,6 +25,7 @@ import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
 import { AddressAirdropWatcherInfo } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-info'
 import { useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 export default function AddressActivityAirdropPage() {
     const [activities, setActivities] = useState<AddressActivityAirdrop[]>([])
@@ -39,6 +40,7 @@ export default function AddressActivityAirdropPage() {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [accessDenied, setAccessDenied] = useState(false)
     const searchParams = useSearchParams();
+    const { selectedGroupId } = useSpace()
     const [initialData, setInitialData] = useState<{
         name?: string
         address_group_ids?: number[]
@@ -55,6 +57,11 @@ export default function AddressActivityAirdropPage() {
         fetchSubscribers()
         handleParams();
     }, [])
+
+    useEffect(() => {
+        fetchActivities()
+        fetchAddressGroups()
+    }, [selectedGroupId])
 
     const fetchActivities = async () => {
         setIsLoadingActivities(true)
@@ -81,6 +88,7 @@ export default function AddressActivityAirdropPage() {
                 setAccessDenied(true)
                 setIsLoadingActivities(false)
             },
+            groupId: selectedGroupId,
         })
     }
 
@@ -153,6 +161,7 @@ export default function AddressActivityAirdropPage() {
                 setAccessDenied(true)
                 setIsLoadingAddressGroups(false)
             },
+            groupId: selectedGroupId,
         })
     }
 
@@ -166,8 +175,12 @@ export default function AddressActivityAirdropPage() {
     const handleFormSubmit = async (formData: CreateAddressActivityAirdropRequest) => {
         setIsSubmitting(true)
 
+        const request = selectedGroupId
+            ? { ...formData, group_id: selectedGroupId }
+            : formData
+
         await createAddressActivityAirdrop({
-            request: formData,
+            request,
             successTask: (data) => {
                 toast.success('Address activity airdrop watcher created!', {
                     description: `Now monitoring this address group ${formData.address_group_ids}`,

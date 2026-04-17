@@ -4,6 +4,7 @@ export interface CreateTopicRequest {
   name: string;
   description?: string;
   channel_instance_ids?: number[];
+  group_id?: number;
 }
 
 export interface UpdateTopicRequest {

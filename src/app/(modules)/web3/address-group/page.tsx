@@ -19,6 +19,7 @@ import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { getChainlist } from '@/hooks/web3/metadata.service'
 import { Chain, ChainListResponse } from '@/types/matadata'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 export default function AddressGroupPage() {
     const [groups, setGroups] = useState<AddressGroup[]>([])
@@ -30,6 +31,7 @@ export default function AddressGroupPage() {
     const [web3Networks, setWeb3Networks] = useState<Chain[]>([])
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { selectedGroupId } = useSpace()
 
     // Fetch activities on mount
     useEffect(() => {
@@ -37,6 +39,10 @@ export default function AddressGroupPage() {
         fetchChainList()
         handleParams();
     }, [])
+
+    useEffect(() => {
+        fetchGroups()
+    }, [selectedGroupId])
 
     const handleParams = () => {
         const query = Object.fromEntries(searchParams.entries());
@@ -72,6 +78,7 @@ export default function AddressGroupPage() {
                 setAccessDenied(true)
                 setIsLoadingGroups(false)
             },
+            groupId: selectedGroupId,
         })
     }
 
@@ -116,8 +123,12 @@ export default function AddressGroupPage() {
     const handleFormSubmit = async (formData: CreateAddressGroupRequest) => {
         setIsSubmitting(true)
 
+        const request = selectedGroupId
+            ? { ...formData, group_id: selectedGroupId }
+            : formData
+
         await createAddressGroup({
-            request: formData,
+            request,
             successTask: (data) => {
                 toast.success('Address group is created!')
                 setDialogOpen(false)
