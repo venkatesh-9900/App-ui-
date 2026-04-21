@@ -60,6 +60,7 @@ export function RolesManagement() {
   const [allPermissions, setAllPermissions] = useState<Permission[]>([])
   const [isPermsDialogOpen, setIsPermsDialogOpen] = useState(false)
   const [permsRoleId, setPermsRoleId] = useState<number | null>(null)
+  const [permsRoleName, setPermsRoleName] = useState<string | null>(null)
   const [permMappings, setPermMappings] = useState<RolePermission[]>([])
   const [permsLoading, setPermsLoading] = useState(false)
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<string[]>([])
@@ -118,6 +119,7 @@ export function RolesManagement() {
   }
 
   const openEditDialog = (role: Role) => {
+    console.log("Current roleeeee", role)
     setCurrentRole(role)
     setRoleForm({ name: role.name || "" })
     setIsRoleDialogOpen(true)
@@ -196,8 +198,9 @@ export function RolesManagement() {
     })
   }
 
-  const openPermsDialog = (roleId: number) => {
+  const openPermsDialog = (roleId: number, roleName: string) => {
     setPermsRoleId(roleId)
+    setPermsRoleName(roleName)
     setSelectedPermissionIds([])
     setIsPermsDialogOpen(true)
     loadPermMappings(roleId)
@@ -333,7 +336,7 @@ export function RolesManagement() {
               <DropdownMenuItem onClick={() => openEditDialog(role)} className="cursor-pointer">
                 <Pencil className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openPermsDialog(role.id)} className="cursor-pointer">
+              <DropdownMenuItem onClick={() => openPermsDialog(role.id, role.name)} className="cursor-pointer">
                 <Key className="mr-2 h-4 w-4" /> Permissions
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -489,6 +492,7 @@ export function RolesManagement() {
                 .map((m) => {
                 const perm = allPermissions.find(p => p.id === m.permission_id)
                 const isWildcard = isRootUser && perm?.name === '*'
+                const isCurrentRoleRoot = permsRoleName === "root"
                 return (
                 <div key={m.permission_id} className="flex items-center justify-between p-2 rounded border">
                   <span className="text-sm">
@@ -498,11 +502,11 @@ export function RolesManagement() {
                     variant="ghost"
                     size="sm"
                     className="cursor-pointer"
-                    disabled={isWildcard}
-                    title={isWildcard ? "Cannot remove wildcard permission" : undefined}
+                    disabled={isWildcard && isCurrentRoleRoot}
+                    title={isWildcard && isCurrentRoleRoot ? "Cannot remove wildcard permission" : undefined}
                     onClick={() => handleRemovePermission(m.permission_id)}
                   >
-                    <Trash2 className={`h-3 w-3 ${isWildcard ? 'text-muted-foreground' : 'text-destructive'}`} />
+                    <Trash2 className={`h-3 w-3 ${isWildcard && isCurrentRoleRoot ? 'text-muted-foreground' : 'text-destructive'}`} />
                   </Button>
                 </div>
               )})}
