@@ -16,6 +16,7 @@ import {
   UserPlus,
   Trash2,
   Users,
+  Search,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -39,17 +40,29 @@ export function GroupUserMappingsTab() {
   const [usersTargetId, setUsersTargetId] = useState<number | null>(null)
 
   const [allUsers, setAllUsers] = useState<{ id: number; email: string }[]>([])
+  const [allUsersError, setAllUsersError] = useState<string | null>(null)
+  const [allUsersForbidden, setAllUsersForbidden] = useState(false)
   const [groupUsers, setGroupUsers] = useState<UserGroup[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
+  const [usersError, setUsersError] = useState<string | null>(null)
+  const [usersForbidden, setUsersForbidden] = useState(false)
   const [addUserForm, setAddUserForm] = useState({ userId: "" })
+  const [mappedUsersSearch, setMappedUsersSearch] = useState("")
 
   const loadAllUsers = useCallback(() => {
     fetchIamUsers({
       successTask: (data: { data: { id: number; email: string }[] }) => {
         setAllUsers(data.data ?? [])
       },
-      failureTask: () => {},
-      errorTask: () => {},
+      failureTask: () => {
+        setAllUsersError("Failed to load users")
+      },
+      errorTask: () => {
+        setAllUsersError("An error occurred while loading users")
+      },
+      forbiddenTask: () => {
+        setAllUsersForbidden(true)
+      },
     })
   }, [])
 
@@ -93,6 +106,8 @@ export function GroupUserMappingsTab() {
 
   const loadGroupUsers = (groupId: number) => {
     setUsersLoading(true)
+    setUsersError(null)
+    setUsersForbidden(false)
     fetchUserGroupMappings({
       groupId,
       successTask: (data: { data: UserGroup[] }) => {
@@ -101,10 +116,16 @@ export function GroupUserMappingsTab() {
       },
       failureTask: () => {
         toast.error("Failed to load group users")
+        setUsersError("Failed to load group users")
         setUsersLoading(false)
       },
       errorTask: () => {
         toast.error("An error occurred while loading group users")
+        setUsersError("An error occurred while loading group users")
+        setUsersLoading(false)
+      },
+      forbiddenTask: () => {
+        setUsersForbidden(true)
         setUsersLoading(false)
       },
     })
@@ -194,24 +215,50 @@ export function GroupUserMappingsTab() {
           <div className="space-y-4">
             <div className="flex gap-2 items-end">
               <div className="flex-1">
-                <SearchableSelect
-                  items={allUsers.map(u => ({ id: u.id.toString(), label: u.email }))}
-                  value={addUserForm.userId}
-                  onValueChange={(val) => setAddUserForm({ userId: val })}
-                  placeholder="Select a user..."
-                  searchPlaceholder="Search users by email..."
-                  emptyMessage="No users found."
-                />
+                {allUsersForbidden ? (
+                  <p className="text-xs text-destructive py-2">Access denied. You don't have permission to view users.</p>
+                ) : allUsersError ? (
+                  <p className="text-xs text-destructive py-2">{allUsersError}</p>
+                ) : (
+                  <SearchableSelect
+                    items={allUsers.map(u => ({ id: u.id.toString(), label: u.email }))}
+                    value={addUserForm.userId}
+                    onValueChange={(val) => setAddUserForm({ userId: val })}
+                    placeholder="Select a user..."
+                    searchPlaceholder="Search users by email..."
+                    emptyMessage="No users found."
+                  />
+                )}
               </div>
-              <Button size="sm" onClick={handleAddUser} className="cursor-pointer">
+              <Button size="sm" onClick={handleAddUser} className="cursor-pointer" disabled={allUsersForbidden || !!allUsersError}>
                 <UserPlus className="h-4 w-4 mr-1" /> Add
               </Button>
             </div>
             {usersLoading ? (
               <p className="text-xs text-muted-foreground">Loading users...</p>
+            ) : usersForbidden ? (
+              <p className="text-xs text-destructive">Access denied. You don't have permission to view users for this group.</p>
+            ) : usersError ? (
+              <p className="text-xs text-destructive">{usersError}</p>
             ) : (
               <div className="max-h-60 overflow-y-auto space-y-2">
-                {groupUsers.map((m) => {
+                <div className="relative mb-2">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search mapped users..."
+                    value={mappedUsersSearch}
+                    onChange={(e) => setMappedUsersSearch(e.target.value)}
+                    className="w-full h-8 pl-8 pr-3 text-xs rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+                {groupUsers
+                  .filter((m) => {
+                    if (!mappedUsersSearch) return true
+                    const userEmail = allUsers.find(u => u.id === m.user_id)?.email ?? `User #${m.user_id}`
+                    return userEmail.toLowerCase().includes(mappedUsersSearch.toLowerCase())
+                  })
+                  .map((m) => {
                   const userId = m.user_id
                   const key = `g-${m.group_id}-${userId}`
                   return (

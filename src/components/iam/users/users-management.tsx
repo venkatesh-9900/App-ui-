@@ -12,6 +12,7 @@ import {
   UserPlus,
   Trash2,
   Plus,
+  Search,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -24,8 +25,10 @@ import {
 import { Role, UserRole } from "@/types/iam"
 import { SearchableSelect } from "@/components/common/searchable-select"
 import { AccessDenied } from "@/components/access-denied"
+import { useAuth } from "@/contexts/auth-context"
 
 export function UsersManagement() {
+  const { userInfo } = useAuth()
   const [roles, setRoles] = useState<Role[]>([])
   const [rolesLoading, setRolesLoading] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
@@ -34,6 +37,7 @@ export function UsersManagement() {
   const [roleMappings, setRoleMappings] = useState<Record<number, UserRole[]>>({})
   const [mappingsLoading, setMappingsLoading] = useState<Record<number, boolean>>({})
   const [addUserInputs, setAddUserInputs] = useState<Record<number, string>>({})
+  const [mappedUsersSearch, setMappedUsersSearch] = useState<Record<number, string>>({})
 
   const loadAllUsers = useCallback(() => {
     fetchIamUsers({
@@ -187,9 +191,6 @@ export function UsersManagement() {
                       <div className="flex items-center gap-2">
                         <Shield className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium">{role.name}</span>
-                        <Badge variant="outline" className="text-xs font-mono">
-                          ID: {role.id}
-                        </Badge>
                       </div>
                     </div>
                     {isExpanded && (
@@ -233,7 +234,27 @@ export function UsersManagement() {
                         <p className="text-xs text-muted-foreground">No users assigned to this role.</p>
                       ) : (
                         <div className="space-y-2">
-                          {mappings.map((mapping) => (
+                          <div className="relative mb-2">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                            <input
+                              type="text"
+                              placeholder="Search mapped users..."
+                              value={mappedUsersSearch[role.id] ?? ""}
+                              onChange={(e) => setMappedUsersSearch((prev) => ({ ...prev, [role.id]: e.target.value }))}
+                              className="w-full h-8 pl-8 pr-3 text-xs rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                            />
+                          </div>
+                          {mappings
+                            .filter((mapping) => {
+                              const search = mappedUsersSearch[role.id] ?? ""
+                              if (!search) return true
+                              const email = allUsers.find(u => u.id === mapping.user_id)?.email ?? `User #${mapping.user_id}`
+                              return email.toLowerCase().includes(search.toLowerCase())
+                            })
+                            .map((mapping) => {
+                            const mappedEmail = allUsers.find(u => u.id === mapping.user_id)?.email
+                            const isSelf = mappedEmail === userInfo?.email
+                            return (
                             <div
                               key={`${mapping.role_id}-${mapping.user_id}`}
                               className="flex items-center justify-between p-2 rounded border bg-background"
@@ -241,7 +262,7 @@ export function UsersManagement() {
                               <div className="flex items-center gap-2">
                                 <UserPlus className="h-3.5 w-3.5 text-muted-foreground" />
                                 <Badge variant="outline" className="text-xs">
-                                  {allUsers.find(u => u.id === mapping.user_id)?.email ?? `User #${mapping.user_id}`}
+                                  {mappedEmail ?? `User #${mapping.user_id}`}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">
                                   Added {new Date(mapping.created_at).toLocaleDateString()}
@@ -251,12 +272,14 @@ export function UsersManagement() {
                                 variant="ghost"
                                 size="sm"
                                 className="cursor-pointer"
+                                disabled={isSelf}
+                                title={isSelf ? "You cannot remove yourself" : undefined}
                                 onClick={() => handleRemoveUser(role.id, mapping.user_id)}
                               >
-                                <Trash2 className="h-3 w-3 text-destructive" />
+                                <Trash2 className={`h-3 w-3 ${isSelf ? 'text-muted-foreground' : 'text-destructive'}`} />
                               </Button>
                             </div>
-                          ))}
+                          )})}
                         </div>
                       )}
                     </div>

@@ -189,15 +189,6 @@ export function GroupManagementTab() {
       ),
     },
     {
-      accessorKey: "organization_id",
-      header: "Org ID",
-      cell: ({ row }) => (
-        <Badge variant="outline" className="font-mono text-xs">
-          {row.getValue("organization_id")}
-        </Badge>
-      ),
-    },
-    {
       accessorKey: "created_at",
       header: "Created",
       cell: ({ row }) => (

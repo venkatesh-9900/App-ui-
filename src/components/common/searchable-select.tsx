@@ -248,6 +248,7 @@ export function SearchableMultiSelect({
                 return (
                   <div
                     key={item.id}
+                    title={item.label}
                     className={cn(
                       "group relative flex w-full cursor-pointer select-none items-center rounded-md py-2.5 px-3 text-sm outline-none transition-all",
                       "hover:bg-accent hover:text-accent-foreground",

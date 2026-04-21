@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ColumnDef } from "@tanstack/react-table"
-import { Plus, MoreHorizontal, Pencil, Trash2, Shield, Key } from "lucide-react"
+import { Plus, MoreHorizontal, Pencil, Trash2, Shield, Key, Search } from "lucide-react"
 import { toast } from "sonner"
 import { formatDate, formatRelativeDate } from "@/utils/formatting"
 import {
@@ -41,8 +41,10 @@ import { fetchPermissions } from "@/hooks/operator/permissions-service"
 import { Role, RolePermission } from "@/types/iam"
 import { Permission } from "@/types/operator"
 import { AccessDenied } from "@/components/access-denied"
+import { useAuth } from "@/contexts/auth-context"
 
 export function RolesManagement() {
+  const { isRootUser } = useAuth()
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [accessDenied, setAccessDenied] = useState(false)
@@ -62,6 +64,7 @@ export function RolesManagement() {
   const [permsLoading, setPermsLoading] = useState(false)
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<string[]>([])
   const [isAddingPerms, setIsAddingPerms] = useState(false)
+  const [mappedPermsSearch, setMappedPermsSearch] = useState("")
 
   const loadAllPermissions = useCallback(() => {
     fetchPermissions({
@@ -272,7 +275,7 @@ export function RolesManagement() {
     const mapped = new Set(permMappings.map((m) => m.permission_id))
     return allPermissions
       .filter((p) => !mapped.has(p.id))
-      .map((p) => ({ id: p.id.toString(), label: p.name }))
+      .map((p) => ({ id: p.id.toString(), label: p.description ? `${p.description} (${p.name})` : p.name }))
   }, [allPermissions, permMappings])
 
   const columns: ColumnDef<Role>[] = [
@@ -286,13 +289,6 @@ export function RolesManagement() {
       ),
       cell: ({ row }) => (
         <div className="font-medium text-sm">{row.getValue("name")}</div>
-      ),
-    },
-    {
-      accessorKey: "organization_id",
-      header: "Organization ID",
-      cell: ({ row }) => (
-        <span className="text-sm font-mono">{row.getValue("organization_id")}</span>
       ),
     },
     {
@@ -473,21 +469,43 @@ export function RolesManagement() {
               </Button>
             </div>
             <div className="max-h-60 overflow-y-auto space-y-2">
-              {permMappings.map((m) => (
+              <div className="relative mb-2">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search mapped permissions..."
+                  value={mappedPermsSearch}
+                  onChange={(e) => setMappedPermsSearch(e.target.value)}
+                  className="w-full h-8 pl-8 pr-3 text-xs rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+              {permMappings
+                .filter((m) => {
+                  if (!mappedPermsSearch) return true
+                  const perm = allPermissions.find(p => p.id === m.permission_id)
+                  const label = perm ? (perm.description ? `${perm.description} (${perm.name})` : perm.name) : `Permission #${m.permission_id}`
+                  return label.toLowerCase().includes(mappedPermsSearch.toLowerCase())
+                })
+                .map((m) => {
+                const perm = allPermissions.find(p => p.id === m.permission_id)
+                const isWildcard = isRootUser && perm?.name === '*'
+                return (
                 <div key={m.permission_id} className="flex items-center justify-between p-2 rounded border">
                   <span className="text-sm">
-                    {allPermissions.find(p => p.id === m.permission_id)?.name ?? `Permission #${m.permission_id}`}
+                    {perm ? (perm.description ? `${perm.description} (${perm.name})` : perm.name) : `Permission #${m.permission_id}`}
                   </span>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="cursor-pointer"
+                    disabled={isWildcard}
+                    title={isWildcard ? "Cannot remove wildcard permission" : undefined}
                     onClick={() => handleRemovePermission(m.permission_id)}
                   >
-                    <Trash2 className="h-3 w-3 text-destructive" />
+                    <Trash2 className={`h-3 w-3 ${isWildcard ? 'text-muted-foreground' : 'text-destructive'}`} />
                   </Button>
                 </div>
-              ))}
+              )})}
               {!permsLoading && permMappings.length === 0 && (
                 <p className="text-xs text-muted-foreground">No permissions assigned.</p>
               )}
