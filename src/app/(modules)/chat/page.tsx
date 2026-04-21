@@ -15,11 +15,13 @@ import { useRouter } from "next/navigation"
 import { triggerChatHistoryUpdate } from "@/utils/eventBus"
 import { ArrowRightIcon, FolderClosedIcon } from "lucide-react"
 import { AccessDenied } from "@/components/access-denied"
+import { useSpace } from "@/contexts/space-context"
 
 export default function ChatPage() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const { selectedModel, setIsShared, setShareableLink } = useContext(ChatContext)
+    const { selectedSpace } = useSpace()
     const [messages, setMessages] = useState<Message[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [initialMessage, setInitialMessage] = useState<string>("")
@@ -225,6 +227,7 @@ export default function ChatPage() {
                 selectedAgent: selectedModel,
                 attachedFiles: attachedFiles,
                 groupId: groupId,
+                iamGroupId: selectedSpace?.id ?? null,
                 showError: (error: string) => {
                     console.error("Error from API:", error)
                 },

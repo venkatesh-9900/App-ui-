@@ -10,6 +10,7 @@ import { UpdateSessionTitle } from "@/types/chat-types";
 
 interface ApiParams {
     retry?: boolean;
+    iamGroupId?: number | null;
     successTask: (chat_sessions: ChatSessions[]) => void;
     failureTask: () => void;
     errorTask: () => void;
@@ -116,7 +117,7 @@ interface updateSessionTitleParams {
     forbiddenTask?: () => void;
 }
 
-export const fetchUserChatSessions = async ({successTask, failureTask, errorTask, forbiddenTask, retry = false}: ApiParams) => {
+export const fetchUserChatSessions = async ({successTask, failureTask, errorTask, forbiddenTask, iamGroupId, retry = false}: ApiParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -128,7 +129,8 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
-                'x-app-name': app_name
+                'x-app-name': app_name,
+                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
         });
         console.log(response);
@@ -141,7 +143,8 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
                     successTask,
                     failureTask,
                     errorTask,
-                    forbiddenTask
+                    forbiddenTask,
+                    iamGroupId
                 });
             }
         } else if (response.status === 403) {

@@ -26,6 +26,7 @@ import { toast } from "sonner"
 import { onChatHistoryUpdate, onChatMovedToGroup } from "@/utils/eventBus"
 import { Input } from "../ui/input"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useSpace } from "@/contexts/space-context"
 
 export function ChatSessionsList() {
   const searchParams = useSearchParams()
@@ -48,6 +49,7 @@ export function ChatSessionsList() {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState("")
   const [accessDenied, setAccessDenied] = useState(false)
+  const { selectedSpace } = useSpace()
 
   // Load chat sessions on mount since collapsible is open by default
   useEffect(() => {
@@ -75,6 +77,11 @@ export function ChatSessionsList() {
     };
   }, [])
 
+  // Reload sessions when selected space changes
+  useEffect(() => {
+    loadChatSessions()
+  }, [selectedSpace])
+
   useEffect(() => {
     if (searchTerm) {
       const filteredSessions = chatSessions.filter((session) =>
@@ -95,6 +102,7 @@ export function ChatSessionsList() {
   const loadChatSessions = () => {
     setIsLoadingChats(true)
     fetchUserChatSessions({
+      iamGroupId: selectedSpace?.id ?? null,
       successTask: (sessions) => {
         console.log("Chat sessions loaded", sessions)
         setChatSessions(sessions)

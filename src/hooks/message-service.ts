@@ -19,6 +19,7 @@ export async function handleStreamMessage({
                                               selectedAgent,
                                               attachedFiles,
                                               groupId,
+                                              iamGroupId,
                                               showError,
                                               router
                                           }: any) {
@@ -56,7 +57,8 @@ export async function handleStreamMessage({
                 'Accept': 'text/event-stream',
                 'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
                 'x-app-name': app_name,
-                'x-session-id': (!currentChatId || currentChatId === 0 || currentChatId === 'new') ? newChatId : currentChatId
+                'x-session-id': (!currentChatId || currentChatId === 0 || currentChatId === 'new') ? newChatId : currentChatId,
+                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
             body: JSON.stringify(payload)
         });
