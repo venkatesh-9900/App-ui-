@@ -38,6 +38,7 @@ import {
     Calendar,
     Activity,
     Clock,
+    UserCircle2,
 } from "lucide-react"
 import { format } from "date-fns"
 
@@ -107,6 +108,7 @@ export function NotificationChannelInstanceTable({
                             <TableHead className="px-4 py-2">Name</TableHead>
                             <TableHead className="px-4 py-2">Channel Type</TableHead>
                             <TableHead className="px-4 py-2">Publish Type</TableHead>
+                            <TableHead className="px-4 py-2">Created By</TableHead>
                             <TableHead className="px-4 py-2">Created</TableHead>
                             <TableHead className="px-4 py-2 text-right">Actions</TableHead>
                         </TableRow>
@@ -117,6 +119,7 @@ export function NotificationChannelInstanceTable({
                                 <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-[80px] rounded-full" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-[100px] rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
                                 <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-full" /></TableCell>
                             </TableRow>
@@ -166,16 +169,22 @@ export function NotificationChannelInstanceTable({
                                         <span>Publish Type</span>
                                     </div>
                                 </TableHead>
-                                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                                <TableHead className="px-4 py-2 text-left min-w-max">
+                                    <div className="flex items-center gap-1">
+                                        <UserCircle2 className="w-4 h-4" />
+                                        <span>Created By</span>
+                                    </div>
+                                </TableHead>
+                                <TableHead className="px-4 py-2 text-left min-w-max">
                                     <div className="flex items-center gap-1">
                                         <Calendar className="w-4 h-4" />
                                         <span>Created</span>
                                     </div>
                                 </TableHead>
-                                <TableHead className="px-4 py-2 text-left w-1/6 min-w-max">
+                                <TableHead className="px-4 py-2 text-left min-w-max">
                                     <div className="flex items-center gap-1">
                                         <Clock className="w-4 h-4" />
-                                        <span>Updated </span>
+                                        <span>Updated</span>
                                     </div>
                                 </TableHead>
                                 <TableHead className="px-4 py-2 text-right w-20 min-w-max">
@@ -210,6 +219,10 @@ export function NotificationChannelInstanceTable({
                                     </TableCell>
 
 
+                                    <TableCell className="px-4 py-2 text-sm text-muted-foreground truncate max-w-[180px]" title={instance.user_id || ''}>
+                                        {instance.user_id || 'N/A'}
+                                    </TableCell>
+
                                     <TableCell className="px-4 py-2 text-sm">
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -220,7 +233,7 @@ export function NotificationChannelInstanceTable({
                                     <TableCell className="px-4 py-2 text-sm">
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-4 h-4 text-muted-foreground" />
-                                            {formatDate(instance.created_at)}
+                                            {formatDate(instance.updated_at)}
                                         </div>
                                     </TableCell>
 

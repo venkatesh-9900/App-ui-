@@ -12,7 +12,9 @@ interface BaseServiceParams {
     successTask: (data: any) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
     retry?: boolean;
+    groupId?: number;
 }
 
 interface CreateAddressActivityParams extends BaseServiceParams {
@@ -49,6 +51,7 @@ export const createAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: CreateAddressActivityParams) => {
     try {
@@ -73,9 +76,12 @@ export const createAddressActivity = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.status === 200) {
             const data: AddressActivityResponse = await response.json();
             successTask(data);
@@ -96,7 +102,9 @@ export const listAddressActivities = async ({
     successTask,
     failureTask,
     errorTask,
-    retry = false
+    forbiddenTask,
+    retry = false,
+    groupId
 }: BaseServiceParams) => {
     try {
         if (retry) {
@@ -104,7 +112,12 @@ export const listAddressActivities = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(ADDRESS_ACTIVITY_ENDPOINTS.LIST, {
+        let url = ADDRESS_ACTIVITY_ENDPOINTS.LIST;
+        if (groupId !== undefined) {
+            url += `?group_id=${groupId}`;
+        }
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: buildHeaderJSON(false),
         });
@@ -118,9 +131,13 @@ export const listAddressActivities = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask,
+                    groupId
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: ListAddressActivitiesResponse = await response.json();
             successTask(data);
@@ -143,6 +160,7 @@ export const updateAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: UpdateAddressActivityParams) => {
     try {
@@ -168,9 +186,12 @@ export const updateAddressActivity = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: AddressActivityResponse = await response.json();
             successTask(data);
@@ -192,6 +213,7 @@ export const deleteAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: DeleteAddressActivityParams) => {
     try {
@@ -215,9 +237,12 @@ export const deleteAddressActivity = async ({
                     id,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: DeleteAddressActivityResponse = await response.json();
             successTask(data);
@@ -240,6 +265,7 @@ export const toggleAddressActivity = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: ToggleAddressActivityParams) => {
     try {
@@ -265,9 +291,12 @@ export const toggleAddressActivity = async ({
                     active,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: AddressActivityResponse = await response.json();
             successTask(data);

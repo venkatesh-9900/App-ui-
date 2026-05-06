@@ -52,14 +52,14 @@ export function DataTable<TData, TValue>({
     <div className={cn("overflow-hidden rounded-lg border border-border/50 bg-background/50", className)}>
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className={cn(stickyHeader && "bg-muted/50 sticky top-0 z-10 border-y border-border/50")}>
+          <TableHeader className={cn(stickyHeader && "bg-muted sticky top-0 z-10")}>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-border/50">
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead 
                       key={header.id} 
-                      className="px-3 py-3 h-auto font-semibold text-foreground text-xs"
+                      className="px-4 py-2 h-auto font-semibold text-foreground text-xs min-w-max"
                     >
                       {header.isPlaceholder
                         ? null
@@ -73,10 +73,10 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className="[&_tr:last-child]:border-b">
+          <TableBody>
             {isLoading ? (
               Array.from({ length: loadingRows }).map((_, i) => (
-                <TableRow key={i} className="border-b border-border/50 last:border-0">
+                <TableRow key={i}>
                   {columns.map((_, j) => (
                     <TableCell key={j} className="px-4 py-3">
                       <Skeleton className="h-5 w-full bg-muted/60" />
@@ -90,14 +90,14 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(
-                    "group hover:bg-muted/50 transition-colors border-b border-border/50",
+                    "hover:bg-muted/50 transition-colors",
                     onRowClick && "cursor-pointer",
                     typeof rowClassName === "function" ? rowClassName(row.original) : rowClassName
                   )}
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-3 py-1.5 text-sm">
+                    <TableCell key={cell.id} className="px-4 py-3 text-sm min-w-max">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

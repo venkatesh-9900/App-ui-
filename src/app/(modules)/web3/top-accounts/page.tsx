@@ -1,10 +1,22 @@
+"use client"
+
+import { useState } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
+import { AccessDenied } from "@/components/access-denied"
 import { TopAccountsTable } from "@/components/web3/top-accounts/top-account-table"
 import { Separator } from "@radix-ui/react-dropdown-menu"
 
-export const maxDuration = 600;
-
 export default function Page() {
+  const [accessDenied, setAccessDenied] = useState(false)
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <AccessDenied />
+      </ProtectedRoute>
+    )
+  }
+
   return (
     <ProtectedRoute>
       <div className="flex flex-1 flex-col">
@@ -22,7 +34,7 @@ export default function Page() {
             </div>
             <Separator className="my-4 bg-muted-foreground/40 h-px" />
             {/* Table */}
-            <TopAccountsTable />
+            <TopAccountsTable onForbidden={() => setAccessDenied(true)} />
 
           </div>
         </div>

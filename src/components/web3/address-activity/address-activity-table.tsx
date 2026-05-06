@@ -203,6 +203,9 @@ export function AddressActivityTable({
           description: 'Please check your connection and try again.',
         })
       },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+      },
     })
   }
 
@@ -226,6 +229,9 @@ export function AddressActivityTable({
         toast.error('An error occurred', {
           description: 'Please check your connection and try again.',
         })
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
       },
     })
   }
@@ -276,6 +282,10 @@ export function AddressActivityTable({
         toast.error('An error occurred', {
           description: 'Please check your connection and try again.',
         })
+        setIsUpdating(false)
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
         setIsUpdating(false)
       },
     })

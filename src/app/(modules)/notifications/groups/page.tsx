@@ -9,15 +9,18 @@ import { createTopic, listTopics, updateTopic, deleteTopic } from '@/hooks/topic
 import { NotificationGroup, CreateTopicRequest } from '@/types/topic'
 import { GroupFormDialog } from '@/components/notifications/groups/group-form-dialog'
 import { GroupsTable } from '@/components/notifications/groups/groups-table'
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { listNotificationChannelInstances } from "@/hooks/notification-channel-instance"
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 export default function NotificationGroupsPage() {
     const [groups, setGroups] = useState<NotificationGroup[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [accessDenied, setAccessDenied] = useState(false)
     const [ isChannelInstanceLoading, setIsChannelInstanceLoading] = useState(true)
     const [channelInstances, setChannelInstances] = useState<NotificationChannelInstance[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -26,6 +29,7 @@ export default function NotificationGroupsPage() {
     const [selectedGroup, setSelectedGroup] = useState<Partial<NotificationGroup> | null>(null)
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { selectedGroupId } = useSpace()
 
     // Guard onOpenChange to prevent infinite loops
     const handleDialogOpenChange = React.useCallback((next: boolean) => {
@@ -34,16 +38,21 @@ export default function NotificationGroupsPage() {
         }
     }, [dialogOpen])
 
-    // Fetch groups on mount
     useEffect(() => {
         fetchGroups()
         fetchChannelInstance()
         handleParams();
     }, [])
 
+    useEffect(() => {
+        fetchGroups()
+        fetchChannelInstance()
+    }, [selectedGroupId])
+
     const fetchGroups = async () => {
         setIsLoading(true)
         await listTopics({
+            groupId: selectedGroupId,
             successTask: (response) => {
                 console.log('API Response:', response)
                 if (response.data && response.data) {
@@ -64,12 +73,17 @@ export default function NotificationGroupsPage() {
                 })
                 setIsLoading(false)
             },
+            forbiddenTask: () => {
+                setAccessDenied(true)
+                setIsLoading(false)
+            },
         })
     }
 
     const fetchChannelInstance = async () => {
         setIsChannelInstanceLoading(true)
         await listNotificationChannelInstances({
+            groupId: selectedGroupId,
             successTask: (res) => {
                   setChannelInstances(res.data ?? [])
                   setIsChannelInstanceLoading(false)
@@ -102,8 +116,12 @@ export default function NotificationGroupsPage() {
         setIsSubmitting(true)
 
         if (dialogMode === 'create') {
+            const request = selectedGroupId
+                ? { ...formData, group_id: selectedGroupId }
+                : formData
+
             await createTopic({
-                request: formData,
+                request,
                 successTask: (data) => {
                     toast.success('Group created successfully!', {
                         description: `${formData.name} has been created.`,
@@ -127,6 +145,10 @@ export default function NotificationGroupsPage() {
                     toast.error('An error occurred', {
                         description: 'Please check your connection and try again.',
                     })
+                    setIsSubmitting(false)
+                },
+                forbiddenTask: () => {
+                    toast.error("Access denied")
                     setIsSubmitting(false)
                 },
             })
@@ -158,6 +180,10 @@ export default function NotificationGroupsPage() {
                     })
                     setIsSubmitting(false)
                 },
+                forbiddenTask: () => {
+                    toast.error("Access denied")
+                    setIsSubmitting(false)
+                },
             })
         }
     }
@@ -183,6 +209,9 @@ export default function NotificationGroupsPage() {
                     description: 'Please check your connection and try again.',
                 })
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+            },
         })
     }
 
@@ -207,6 +236,15 @@ export default function NotificationGroupsPage() {
         toast.success('Key copied!', {
             description: 'Topic key has been copied to clipboard.',
         })
+    }
+
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
     }
 
     return (

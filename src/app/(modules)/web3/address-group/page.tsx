@@ -14,10 +14,12 @@ import { AddressGroup, CreateAddressGroupRequest } from '@/types/address-group'
 import { AddressGroupFormDialog } from '@/components/web3/address-group/address-group-form-dialog'
 import { AddressGroupTable } from '@/components/web3/address-group/address-group-table'
 import { ProtectedRoute } from "@/components/protected-route"
+import { AccessDenied } from "@/components/access-denied"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { getChainlist } from '@/hooks/web3/metadata.service'
 import { Chain, ChainListResponse } from '@/types/matadata'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 export default function AddressGroupPage() {
     const [groups, setGroups] = useState<AddressGroup[]>([])
@@ -25,9 +27,11 @@ export default function AddressGroupPage() {
     const [isLoadingWeb3Networks, setIsLoadingWewb3Network] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [accessDenied, setAccessDenied] = useState(false)
     const [web3Networks, setWeb3Networks] = useState<Chain[]>([])
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { selectedGroupId } = useSpace()
 
     // Fetch activities on mount
     useEffect(() => {
@@ -35,6 +39,10 @@ export default function AddressGroupPage() {
         fetchChainList()
         handleParams();
     }, [])
+
+    useEffect(() => {
+        fetchGroups()
+    }, [selectedGroupId])
 
     const handleParams = () => {
         const query = Object.fromEntries(searchParams.entries());
@@ -66,6 +74,11 @@ export default function AddressGroupPage() {
                 })
                 setIsLoadingGroups(false)
             },
+            forbiddenTask: () => {
+                setAccessDenied(true)
+                setIsLoadingGroups(false)
+            },
+            groupId: selectedGroupId,
         })
     }
 
@@ -74,7 +87,6 @@ export default function AddressGroupPage() {
               try {
                 await getChainlist({
                   successTask: (response: ChainListResponse) => {
-                    // response is of type ChainListResponse
                     const apiResponse = response;
                     setIsLoadingWewb3Network(false);
                     if (apiResponse?.errors && apiResponse.errors.length > 0) {
@@ -93,6 +105,10 @@ export default function AddressGroupPage() {
                     setIsLoadingWewb3Network(false);
                     toast.error("An error occurred while fetching chain list");
                   },
+                  forbiddenTask: () => {
+                    setAccessDenied(true);
+                    setIsLoadingWewb3Network(false);
+                  },
                 });
               } catch (err) {
                 console.error("fetchChainList: unexpected error", err);
@@ -107,8 +123,12 @@ export default function AddressGroupPage() {
     const handleFormSubmit = async (formData: CreateAddressGroupRequest) => {
         setIsSubmitting(true)
 
+        const request = selectedGroupId
+            ? { ...formData, group_id: selectedGroupId }
+            : formData
+
         await createAddressGroup({
-            request: formData,
+            request,
             successTask: (data) => {
                 toast.success('Address group is created!')
                 setDialogOpen(false)
@@ -137,6 +157,10 @@ export default function AddressGroupPage() {
                 })
                 setIsSubmitting(false)
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+                setIsSubmitting(false)
+            },
         })
     }
 
@@ -159,6 +183,9 @@ export default function AddressGroupPage() {
                     description: 'Please check your connection and try again.',
                 })
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+            },
         })
     }
 
@@ -167,6 +194,15 @@ export default function AddressGroupPage() {
             setDialogOpen(next)
         }
     }, [dialogOpen])
+
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
     return (
         <ProtectedRoute>

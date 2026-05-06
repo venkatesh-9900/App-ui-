@@ -26,6 +26,7 @@ interface BaseServiceParams {
     successTask: (data: any) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
 }
 
 interface CreateSubscriberParams extends BaseServiceParams {
@@ -57,6 +58,7 @@ export const createSubscriber = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: CreateSubscriberParams) => {
     try {
@@ -83,9 +85,12 @@ export const createSubscriber = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -107,6 +112,7 @@ export const getSubscriber = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: GetSubscriberParams) => {
     try {
@@ -132,9 +138,12 @@ export const getSubscriber = async ({
                     subscriberId,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -157,6 +166,7 @@ export const updateSubscriber = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: UpdateSubscriberParams) => {
     try {
@@ -184,9 +194,12 @@ export const updateSubscriber = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -208,6 +221,7 @@ export const deleteSubscriber = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: DeleteSubscriberParams) => {
     try {
@@ -233,9 +247,12 @@ export const deleteSubscriber = async ({
                     subscriberId,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -257,6 +274,7 @@ export const searchSubscribers = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: SearchSubscribersParams) => {
     try {
@@ -298,9 +316,12 @@ export const searchSubscribers = async ({
                     params,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -321,6 +342,7 @@ export const getCurrentUserSubscriber = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: BaseServiceParams) => {
     try {
@@ -345,9 +367,12 @@ export const getCurrentUserSubscriber = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data = await response.json();
             successTask(data);
@@ -368,6 +393,7 @@ export const getActiveHumanSubscribers = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: BaseServiceParams) => {
     try {
@@ -390,9 +416,12 @@ export const getActiveHumanSubscribers = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data = await response.json();
             successTask(data);

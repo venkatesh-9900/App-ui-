@@ -12,7 +12,9 @@ interface BaseServiceParams {
     successTask: (data: any) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
     retry?: boolean;
+    groupId?: number;
 }
 
 interface CreateAddressActivityAirdropParams extends BaseServiceParams {
@@ -49,6 +51,7 @@ export const createAddressActivityAirdrop = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: CreateAddressActivityAirdropParams) => {
     try {
@@ -73,9 +76,12 @@ export const createAddressActivityAirdrop = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.status === 200) { 
             const data: AddressActivityAirdropResponse = await response.json();
             successTask(data);
@@ -96,7 +102,9 @@ export const listAddressAirdropActivities = async ({
     successTask,
     failureTask,
     errorTask,
-    retry = false
+    forbiddenTask,
+    retry = false,
+    groupId
 }: BaseServiceParams) => {
     try {
         if (retry) {
@@ -104,7 +112,12 @@ export const listAddressAirdropActivities = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        const response = await fetch(ADDRESS_ACTIVITY_AIRDROP_ENDPOINTS.LIST, {
+        let url = ADDRESS_ACTIVITY_AIRDROP_ENDPOINTS.LIST;
+        if (groupId !== undefined) {
+            url += `?group_id=${groupId}`;
+        }
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: buildHeaderJSON(false),
         });
@@ -118,9 +131,13 @@ export const listAddressAirdropActivities = async ({
                     retry: true,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask,
+                    groupId
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: ListAddressAirdropActivitiesResponse = await response.json();
             successTask(data);
@@ -143,6 +160,7 @@ export const updateAddressActivityAirdrop = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: UpdateAddressActivityAirdropParams) => {
     try {
@@ -168,9 +186,12 @@ export const updateAddressActivityAirdrop = async ({
                     request,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: AddressActivityAirdropResponse = await response.json();
             successTask(data);
@@ -192,6 +213,7 @@ export const deleteAddressActivityAirdrop = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: DeleteAddressActivityAirdropParams) => {
     try {
@@ -215,9 +237,12 @@ export const deleteAddressActivityAirdrop = async ({
                     id,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: DeleteAddressActivityAirdropResponse = await response.json();
             successTask(data);
@@ -240,6 +265,7 @@ export const toggleAddressActivityAirdrop = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false
 }: ToggleAddressActivityAirdropParams) => {
     try {
@@ -265,9 +291,12 @@ export const toggleAddressActivityAirdrop = async ({
                     active,
                     successTask,
                     failureTask,
-                    errorTask
+                    errorTask,
+                    forbiddenTask
                 });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200) {
             const data: AddressActivityAirdropResponse = await response.json();
             successTask(data);

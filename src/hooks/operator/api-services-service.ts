@@ -16,7 +16,7 @@ export interface DeleteApiServiceParams extends BaseServiceParams {
     id: number;
 }
 
-export const fetchApiServices = async ({ successTask, failureTask, errorTask, page, limit, retry = false }: BaseServiceParams) => {
+export const fetchApiServices = async ({ successTask, failureTask, errorTask, forbiddenTask, page, limit, search, retry = false }: BaseServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -25,6 +25,7 @@ export const fetchApiServices = async ({ successTask, failureTask, errorTask, pa
         const queryParams = new URLSearchParams();
         if (page !== undefined) queryParams.append("page", (page - 1).toString());
         if (limit !== undefined) queryParams.append("limit", limit.toString());
+        if (search) queryParams.append("search", search);
         
         const url = queryParams.toString() 
             ? `${ENDPOINTS.OPERATOR.SERVICES}?${queryParams.toString()}`
@@ -37,8 +38,10 @@ export const fetchApiServices = async ({ successTask, failureTask, errorTask, pa
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await fetchApiServices({ retry: true, successTask, failureTask, errorTask, page, limit });
+                await fetchApiServices({ retry: true, successTask, failureTask, errorTask, forbiddenTask, page, limit, search });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 200 || response.ok) {
             const data = await response.json();
             successTask(data);
@@ -50,7 +53,7 @@ export const fetchApiServices = async ({ successTask, failureTask, errorTask, pa
     }
 };
 
-export const createApiService = async ({ request, successTask, failureTask, errorTask, retry = false }: CreateApiServiceParams) => {
+export const createApiService = async ({ request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: CreateApiServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -67,8 +70,10 @@ export const createApiService = async ({ request, successTask, failureTask, erro
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await createApiService({ retry: true, request, successTask, failureTask, errorTask });
+                await createApiService({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.status === 201 || response.ok) {
             const data = await response.json();
             successTask(data.data || data);
@@ -80,7 +85,7 @@ export const createApiService = async ({ request, successTask, failureTask, erro
     }
 };
 
-export const updateApiService = async ({ id, request, successTask, failureTask, errorTask, retry = false }: UpdateApiServiceParams) => {
+export const updateApiService = async ({ id, request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: UpdateApiServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -97,8 +102,10 @@ export const updateApiService = async ({ id, request, successTask, failureTask, 
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await updateApiService({ retry: true, id, request, successTask, failureTask, errorTask });
+                await updateApiService({ retry: true, id, request, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             const data = await response.json();
             successTask(data.data || data);
@@ -110,7 +117,7 @@ export const updateApiService = async ({ id, request, successTask, failureTask, 
     }
 };
 
-export const deleteApiService = async ({ id, successTask, failureTask, errorTask, retry = false }: DeleteApiServiceParams) => {
+export const deleteApiService = async ({ id, successTask, failureTask, errorTask, forbiddenTask, retry = false }: DeleteApiServiceParams) => {
     try {
         if (retry) {
             await refreshAccessToken({ failureTask, errorTask });
@@ -123,8 +130,10 @@ export const deleteApiService = async ({ id, successTask, failureTask, errorTask
             if (retry) {
                 await reauthenticationStep(errorTask);
             } else {
-                await deleteApiService({ retry: true, id, successTask, failureTask, errorTask });
+                await deleteApiService({ retry: true, id, successTask, failureTask, errorTask, forbiddenTask });
             }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
         } else if (response.ok) {
             successTask(null);
         } else {

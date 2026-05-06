@@ -47,6 +47,7 @@ interface SearchTxnApiParams extends SearchTxnParams {
   successTask: (response: SearchTxnResponse) => void
   failureTask: () => void
   errorTask: () => void
+  forbiddenTask?: () => void
 }
 
 /**
@@ -64,6 +65,7 @@ export async function searchBlockchainTransaction({
   successTask,
   failureTask,
   errorTask,
+  forbiddenTask,
   retry = false,
 }: SearchTxnApiParams) {
   try {
@@ -114,9 +116,12 @@ export async function searchBlockchainTransaction({
           successTask,
           failureTask,
           errorTask,
+          forbiddenTask,
           retry: true,
         })
       }
+    } else if (response.status === 403) {
+      forbiddenTask?.();
     } else if (response.status === 200) {
       const responseData = await response.json()
       

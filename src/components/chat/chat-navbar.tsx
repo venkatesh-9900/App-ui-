@@ -70,6 +70,9 @@ export function ChatNavbar({
         errorTask: () => {
           console.error("Error toggling share")
         },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+        },
       })
     } finally {
       setIsToggling(false)
@@ -92,7 +95,7 @@ export function ChatNavbar({
       </div>
       
       <div className="flex items-center gap-2">
-        <p className="text-xs text-muted-foreground hidden md:inline">Conversation with Argus Intelligence</p>
+        <p className="text-xs text-muted-foreground hidden md:inline">Conversation with Kernel Mind</p>
         <div className="h-2 w-2 rounded-full bg-green-500 hidden md:inline"></div>
       </div>
 

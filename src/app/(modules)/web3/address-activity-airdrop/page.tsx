@@ -19,11 +19,13 @@ import { NotificationSubscriber } from '@/types/subscriber'
 import { AddressActivityAirdropFormDialog } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-form-dialog'
 import { AddressActivityAirdropTable } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-table'
 import { ProtectedRoute } from "@/components/protected-route"
+import { AccessDenied } from "@/components/access-denied"
 import { DashboardNavbar } from '@/components/web3/explorer/dashboard-navbar'
 import { AddressGroup } from '@/types/address-group'
 import { listAddressGroups } from '@/hooks/web3/address-group-service'
 import { AddressAirdropWatcherInfo } from '@/components/web3/address-airdrop-activity/address-activity-airdrop-info'
 import { useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 export default function AddressActivityAirdropPage() {
     const [activities, setActivities] = useState<AddressActivityAirdrop[]>([])
@@ -36,7 +38,9 @@ export default function AddressActivityAirdropPage() {
     const [isLoadingAddressGroups, setIsLoadingAddressGroups] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [accessDenied, setAccessDenied] = useState(false)
     const searchParams = useSearchParams();
+    const { selectedGroupId } = useSpace()
     const [initialData, setInitialData] = useState<{
         name?: string
         address_group_ids?: number[]
@@ -53,6 +57,11 @@ export default function AddressActivityAirdropPage() {
         fetchSubscribers()
         handleParams();
     }, [])
+
+    useEffect(() => {
+        fetchActivities()
+        fetchAddressGroups()
+    }, [selectedGroupId])
 
     const fetchActivities = async () => {
         setIsLoadingActivities(true)
@@ -75,6 +84,11 @@ export default function AddressActivityAirdropPage() {
                 })
                 setIsLoadingActivities(false)
             },
+            forbiddenTask: () => {
+                setAccessDenied(true)
+                setIsLoadingActivities(false)
+            },
+            groupId: selectedGroupId,
         })
     }
 
@@ -93,6 +107,10 @@ export default function AddressActivityAirdropPage() {
             },
             errorTask: () => {
                 toast.error('Error loading groups')
+                setIsLoadingGroups(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoadingGroups(false)
             },
         })
@@ -115,6 +133,10 @@ export default function AddressActivityAirdropPage() {
                 toast.error('Error loading subscribers')
                 setIsLoadingSubscribers(false)
             },
+            forbiddenTask: () => {
+                setAccessDenied(true)
+                setIsLoadingSubscribers(false)
+            },
         })
     }
 
@@ -135,6 +157,11 @@ export default function AddressActivityAirdropPage() {
                 toast.error('Error loading address groups')
                 setIsLoadingAddressGroups(false)
             },
+            forbiddenTask: () => {
+                setAccessDenied(true)
+                setIsLoadingAddressGroups(false)
+            },
+            groupId: selectedGroupId,
         })
     }
 
@@ -148,8 +175,12 @@ export default function AddressActivityAirdropPage() {
     const handleFormSubmit = async (formData: CreateAddressActivityAirdropRequest) => {
         setIsSubmitting(true)
 
+        const request = selectedGroupId
+            ? { ...formData, group_id: selectedGroupId }
+            : formData
+
         await createAddressActivityAirdrop({
-            request: formData,
+            request,
             successTask: (data) => {
                 toast.success('Address activity airdrop watcher created!', {
                     description: `Now monitoring this address group ${formData.address_group_ids}`,
@@ -168,6 +199,10 @@ export default function AddressActivityAirdropPage() {
                 toast.error('An error occurred', {
                     description: 'Please check your connection and try again.',
                 })
+                setIsSubmitting(false)
+            },
+            forbiddenTask: () => {
+                toast.error("Access denied")
                 setIsSubmitting(false)
             },
         })
@@ -196,6 +231,14 @@ export default function AddressActivityAirdropPage() {
         }
     }
 
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
   return (
         <ProtectedRoute>

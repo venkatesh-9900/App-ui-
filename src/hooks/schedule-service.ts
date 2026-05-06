@@ -8,6 +8,7 @@ interface BaseServiceParams {
     successTask: (data: any) => void;
     failureTask: () => void;
     errorTask: () => void;
+    forbiddenTask?: () => void;
     retry?: boolean;
 }
 
@@ -25,6 +26,7 @@ export const unsubscribeSchedule = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: UnSubscribeNotificationChannelInstanceParams) => {
     try {
@@ -38,7 +40,12 @@ export const unsubscribeSchedule = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await unsubscribeSchedule({ retry: true, id, successTask, failureTask, errorTask })
+                : await unsubscribeSchedule({ retry: true, id, successTask, failureTask, errorTask, forbiddenTask })
+            return
+        }
+
+        if (res.status === 403) {
+            forbiddenTask?.()
             return
         }
 

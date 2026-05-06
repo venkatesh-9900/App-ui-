@@ -19,6 +19,7 @@ import { Chain, ChainListResponse } from "@/types/matadata"
 interface BlockchainSearchProps {
   onSearchResults?: (data: SearchResultsData, params: SearchParams) => void,
   setLoading?: (loading: boolean) => void,
+  onForbidden?: () => void,
 }
 
 interface SearchParams {
@@ -45,7 +46,7 @@ interface SearchResultsData {
   errors?: string[]
 }
 
-export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearchProps) {
+export function BlockchainSearch({ onSearchResults, setLoading, onForbidden }: BlockchainSearchProps) {
   const [chainId, setChainId] = useState("1")
   const [txnHash, setTxnHash] = useState("")
   const [address, setAddress] = useState("")
@@ -77,6 +78,10 @@ export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearc
           errorTask: () => {
             setChainsLoading(false);
             toast.error("An error occurred while fetching chain list");
+          },
+          forbiddenTask: () => {
+            setChainsLoading(false);
+            onForbidden?.();
           },
         });
       } catch (err) {
@@ -124,7 +129,12 @@ export function BlockchainSearch({ onSearchResults, setLoading}: BlockchainSearc
         toast.error("Search failed")
       },
       errorTask: () => {
+        setLoading?.(false);
         toast.error("An error occurred during search")
+      },
+      forbiddenTask: () => {
+        setLoading?.(false);
+        onForbidden?.();
       },
     })
   }

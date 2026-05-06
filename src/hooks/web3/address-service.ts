@@ -16,6 +16,7 @@ interface SearchAddressParams {
   successTask: (response: NeighbourData) => void
   failureTask: () => void
   errorTask: () => void
+  forbiddenTask?: () => void
 }
 
 /**
@@ -30,6 +31,7 @@ export async function blockchainAddressLookup({
   successTask,
   failureTask,
   errorTask,
+  forbiddenTask,
   retry = false,
   excludeAddress = null
 }: SearchAddressParams) {
@@ -73,9 +75,12 @@ export async function blockchainAddressLookup({
           successTask,
           failureTask,
           errorTask,
+          forbiddenTask,
           retry: true
         })
       }
+    } else if (response.status === 403) {
+      forbiddenTask?.();
     } else if (response.status === 200) {
       const responseData = await response.json()
       if (responseData.errors && responseData.errors.length > 0) {

@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
-import { cn } from "@/lib/utils"
+import React, { useState, useEffect, useRef } from "react"
 import {
   Card,
   CardContent,
@@ -10,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Info } from "lucide-react"
+import { Plus, Info, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -50,8 +49,10 @@ export interface ApiServicesViewProps {
   totalCount: number
   page: number
   pageSize: number
+  search: string
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
+  onSearchChange: (search: string) => void
   onCreate: (data: Partial<ApiService>) => Promise<void>
   onUpdate: (id: number, data: Partial<ApiService>) => Promise<void>
   onDelete: (id: number) => void
@@ -63,8 +64,10 @@ export function ApiServicesView({
   totalCount,
   page,
   pageSize,
+  search,
   onPageChange,
   onPageSizeChange,
+  onSearchChange,
   onCreate,
   onUpdate,
   onDelete,
@@ -76,6 +79,21 @@ export function ApiServicesView({
   // Form state (local UI state)
   const [formData, setFormData] = useState<Partial<ApiService>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [localSearch, setLocalSearch] = useState(search)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    setLocalSearch(search)
+  }, [search])
+
+  const handleSearchInput = (value: string) => {
+    setLocalSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      onSearchChange(value)
+    }, 400)
+  }
 
   const openCreateDialog = () => {
     setCurrentService(null)
@@ -216,42 +234,59 @@ export function ApiServicesView({
   ]
 
   return (
-    <div className="flex-1 p-4 pt-4 space-y-4">
-      <div className="flex items-center justify-between border-b border-border/40 pb-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-bold tracking-tight">API Services</h2>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">Manage upstream or downstream API services registered in Gatekeeper.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button onClick={openCreateDialog} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Service
-          </Button>
-        </div>
-      </div>
-      
-      <Card className="border-border/50 shadow-sm py-0 overflow-hidden">
-        <CardContent className="p-0 flex flex-col">
-          <div className="w-full">
-            <DataTable
-              columns={columns}
-              data={services}
-              isLoading={isLoading}
-              className="border-0 rounded-none bg-transparent"
-            />
+    <div className="flex flex-col gap-4 px-2 py-2 md:gap-6 md:py-4 md:px-4">
+      <Card className="shadow-lg">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Server className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-sm sm:text-2xl">API Services</CardTitle>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Manage upstream or downstream API services registered in Gatekeeper.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search services..."
+                  value={localSearch}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  className="pl-9 h-9 w-full sm:w-[250px] bg-background"
+                />
+              </div>
+              <Button onClick={openCreateDialog} size="lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Service
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-hidden rounded-lg border relative flex flex-col">
+            <div className="overflow-x-auto flex-1">
+              <DataTable
+                columns={columns}
+                data={services}
+                isLoading={isLoading}
+                className="border-0 rounded-none bg-transparent"
+              />
+            </div>
           </div>
 
           {!isLoading && totalCount > pageSize && (
-            <div className="px-4 py-2 border-t border-border/50 bg-muted/5">
+            <div className="px-4 py-2 border-t border-border/50 bg-muted/5 mt-2">
               <Pagination
                 page={page}
                 pageSize={pageSize}

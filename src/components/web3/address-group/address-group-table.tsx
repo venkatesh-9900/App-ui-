@@ -170,6 +170,10 @@ export function AddressGroupTable({
         })
         setIsUpdating(false)
       },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setIsUpdating(false)
+      },
     })
   }
 

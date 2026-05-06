@@ -23,15 +23,18 @@ import {
 import { NotificationChannel } from "@/types/notification-channel"
 import { listNotificationChannel } from "@/hooks/notification-channel-service"
 import { NotificationChannelInstanceTable } from "@/components/notifications/notification-channel-instance/notification-channel-instance-table"
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { Pagination } from "@/components/common/pagination"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useSpace } from "@/contexts/space-context"
 
 export default function NotificationChannelInstancesPage() {
     const [instances, setInstances] = useState<NotificationChannelInstance[]>([])
     const [channels, setChannels] = useState<NotificationChannel[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [accessDenied, setAccessDenied] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const [dialogOpen, setDialogOpen] = useState(false)
@@ -44,6 +47,7 @@ export default function NotificationChannelInstancesPage() {
     const [totalCount, setTotalCount] = useState(0)
     const searchParams = useSearchParams()
     const router = useRouter()
+    const { selectedGroupId } = useSpace()
     // ---------------- Fetch ----------------
     const fetchInstances = async () => {
         setIsLoading(true)
@@ -51,6 +55,7 @@ export default function NotificationChannelInstancesPage() {
         await listNotificationChannelInstances({
             page,
             limit: pageSize,
+            groupId: selectedGroupId,
             successTask: (response) => {
                 if (Array.isArray(response?.data)) {
                     setInstances(response.data)
@@ -64,6 +69,10 @@ export default function NotificationChannelInstancesPage() {
             },
             errorTask: () => {
                 toast.error("Something went wrong")
+                setIsLoading(false)
+            },
+            forbiddenTask: () => {
+                setAccessDenied(true)
                 setIsLoading(false)
             },
         })
@@ -94,7 +103,7 @@ export default function NotificationChannelInstancesPage() {
 
     useEffect(() => {
         fetchInstances()
-    }, [page, pageSize])
+    }, [page, pageSize, selectedGroupId])
 
     useEffect(() => {
         fetchChannels()
@@ -122,6 +131,7 @@ export default function NotificationChannelInstancesPage() {
             payload: {
                 webhook_url: data.webhook_url,
             },
+            ...(selectedGroupId ? { group_id: selectedGroupId } : {}),
         }
 
         await createNotificationChannelInstance({
@@ -144,6 +154,10 @@ export default function NotificationChannelInstancesPage() {
             },
             errorTask: () => {
                 toast.error("Something went wrong")
+                setIsSubmitting(false)
+            },
+            forbiddenTask: () => {
+                toast.error("Access denied")
                 setIsSubmitting(false)
             },
         })
@@ -183,6 +197,10 @@ export default function NotificationChannelInstancesPage() {
                 toast.error("Something went wrong")
                 setIsSubmitting(false)
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+                setIsSubmitting(false)
+            },
         })
     }
 
@@ -200,6 +218,9 @@ export default function NotificationChannelInstancesPage() {
             errorTask: () => {
                 toast.error("Something went wrong")
             },
+            forbiddenTask: () => {
+                toast.error("Access denied")
+            },
         })
     }
 
@@ -207,6 +228,15 @@ export default function NotificationChannelInstancesPage() {
         if (!open) setSelectedInstance(null)
         setDialogOpen(open)
     }, [])
+
+    if (accessDenied) {
+        return (
+            <ProtectedRoute>
+                <DashboardNavbar />
+                <AccessDenied />
+            </ProtectedRoute>
+        )
+    }
 
     return (
         <ProtectedRoute>

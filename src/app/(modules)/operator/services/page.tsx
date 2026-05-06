@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react"
 import { ApiServicesView } from "@/components/operator/api-services-view"
+import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { fetchApiServices, createApiService, updateApiService, deleteApiService } from "@/hooks/operator/api-services-service"
@@ -10,16 +11,19 @@ import { toast } from "sonner"
 
 export default function ServicesPage() {
   const [services, setServices] = useState<ApiService[]>([])
+  const [accessDenied, setAccessDenied] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
+  const [search, setSearch] = useState("")
 
   const loadServices = useCallback(() => {
     setIsLoading(true)
     fetchApiServices({
       page,
       limit: pageSize,
+      search: search || undefined,
       successTask: (data) => {
         setServices(data.data || [])
         setTotalCount(data.count || 0)
@@ -32,9 +36,13 @@ export default function ServicesPage() {
       errorTask: () => {
         setIsLoading(false)
         toast.error("Error connecting to server")
-      }
+      },
+      forbiddenTask: () => {
+        setAccessDenied(true)
+        setIsLoading(false)
+      },
     })
-  }, [page, pageSize])
+  }, [page, pageSize, search])
 
   useEffect(() => {
     loadServices()
@@ -56,7 +64,11 @@ export default function ServicesPage() {
         errorTask: () => {
           toast.error("Error creating service")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -78,7 +90,11 @@ export default function ServicesPage() {
         errorTask: () => {
           toast.error("Error updating service")
           reject()
-        }
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          reject()
+        },
       })
     })
   }
@@ -92,25 +108,43 @@ export default function ServicesPage() {
         loadServices()
       },
       failureTask: () => toast.error("Failed to delete service"),
-      errorTask: () => toast.error("Error deleting service")
+      errorTask: () => toast.error("Error deleting service"),
+      forbiddenTask: () => {
+        toast.error("Access denied")
+      },
     })
+  }
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <DashboardNavbar />
+        <AccessDenied />
+      </ProtectedRoute>
+    )
   }
 
   return (
     <ProtectedRoute>
       <DashboardNavbar />
-      <ApiServicesView 
-        services={services}
-        isLoading={isLoading}
-        totalCount={totalCount}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-      />
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <ApiServicesView 
+            services={services}
+            isLoading={isLoading}
+            totalCount={totalCount}
+            page={page}
+            pageSize={pageSize}
+            search={search}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            onSearchChange={(val) => { setSearch(val); setPage(1) }}
+            onCreate={handleCreate}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
+        </div>
+      </div>
     </ProtectedRoute>
   )
 }

@@ -14,11 +14,14 @@ import { fetchSessionDetails } from "@/hooks/chat-service"
 import { useRouter } from "next/navigation"
 import { triggerChatHistoryUpdate } from "@/utils/eventBus"
 import { ArrowRightIcon, FolderClosedIcon } from "lucide-react"
+import { AccessDenied } from "@/components/access-denied"
+import { useSpace } from "@/contexts/space-context"
 
 export default function ChatPage() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const { selectedModel, setIsShared, setShareableLink } = useContext(ChatContext)
+    const { selectedSpace } = useSpace()
     const [messages, setMessages] = useState<Message[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [initialMessage, setInitialMessage] = useState<string>("")
@@ -34,6 +37,7 @@ export default function ChatPage() {
     const userid = searchParams.get("userid");
     const groupIdParam = searchParams.get("groupId");
     const [lastLoadedSession, setLastLoadedSession] = useState<string | null>(null);
+    const [accessDenied, setAccessDenied] = useState(false)
     const defaultPromptList = [
         "List all the watchers",
         "List all the notifications",
@@ -132,6 +136,10 @@ export default function ChatPage() {
                 errorTask: () => {
                     console.error("Error loading messages")
                 },
+                forbiddenTask: () => {
+                    setAccessDenied(true)
+                    setIsLoadingSession(false)
+                },
             })
             setReadOnly(chatData.readonly)
             console.log('Loaded chat data:', chatData)
@@ -219,6 +227,7 @@ export default function ChatPage() {
                 selectedAgent: selectedModel,
                 attachedFiles: attachedFiles,
                 groupId: groupId,
+                iamGroupId: selectedSpace?.id ?? null,
                 showError: (error: string) => {
                     console.error("Error from API:", error)
                 },
@@ -255,6 +264,8 @@ export default function ChatPage() {
             setIsLoading(false)
         }
     }, [messages, sessionId, selectedModel])
+
+    if (accessDenied) return <AccessDenied />
 
     return (
         <ProtectedRoute>

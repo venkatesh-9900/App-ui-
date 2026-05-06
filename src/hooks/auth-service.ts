@@ -24,7 +24,31 @@ interface requestOTPParams {
 interface loginWithOTPParams {
     email: string;
     otp: string;
+    organizationId: string;
     successTask: (accessToken: string) => void;
+    errorTask: (error: string) => void;
+}
+
+interface loginUserWithOTPParams {
+    email: string;
+    otp: string;
+    organizationId: string;
+    successTask: (accessToken: string) => void;
+    errorTask: (error: string) => void;
+}
+
+interface signupRootParams {
+    email: string;
+    otp: string;
+    successTask: (data: { message: string; organization_id?: string }) => void;
+    conflictTask: (data: { message: string; organization_id?: string }) => void;
+    errorTask: (error: string) => void;
+}
+
+interface retrieveOrgParams {
+    email: string;
+    otp: string;
+    successTask: (message: string) => void;
     errorTask: (error: string) => void;
 }
 
@@ -141,22 +165,21 @@ export const requestOTP = async ({ email, successTask, errorTask }: requestOTPPa
     }
 };
 
-export const loginWithOTP = async ({ email, otp, successTask, errorTask }: loginWithOTPParams) => {
+export const loginWithOTP = async ({ email, otp, organizationId, successTask, errorTask }: loginWithOTPParams) => {
     try {
-        const response = await fetch(config.ENDPOINTS.AUTH.ACCESS_TOKEN, {
+        const response = await fetch(config.ENDPOINTS.AUTH.ROOT_ACCESS_TOKEN, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                email, 
+            body: JSON.stringify({
+                email,
                 otp,
-                grant_type: 'otp'
+                organization_id: organizationId,
             }),
         });
 
-        const responseText = await response.text();
-        const responseData = JSON.parse(responseText);
+        const responseData = await response.json();
 
         if (response.ok) {
             if (responseData.access_token) {
@@ -170,6 +193,85 @@ export const loginWithOTP = async ({ email, otp, successTask, errorTask }: login
     } catch (error) {
         errorTask('An error occurred during login');
         console.error('Error during OTP login:', error);
+    }
+};
+
+export const loginUserWithOTP = async ({ email, otp, organizationId, successTask, errorTask }: loginUserWithOTPParams) => {
+    try {
+        const response = await fetch(config.ENDPOINTS.AUTH.USER_ACCESS_TOKEN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                otp,
+                organization_id: organizationId,
+            }),
+        });
+
+        const responseData = await response.json();
+
+        if (response.ok) {
+            if (responseData.access_token) {
+                successTask(responseData.access_token);
+            } else {
+                errorTask('No access token received');
+            }
+        } else {
+            errorTask(responseData.message || 'Login failed');
+        }
+    } catch (error) {
+        errorTask('An error occurred during login');
+        console.error('Error during user OTP login:', error);
+    }
+};
+
+export const signupRoot = async ({ email, otp, successTask, conflictTask, errorTask }: signupRootParams) => {
+    try {
+        const response = await fetch(config.ENDPOINTS.AUTH.SIGNUP_ROOT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, otp }),
+        });
+
+        const responseData = await response.json();
+
+        if (response.ok || response.status === 201) {
+            successTask(responseData);
+        } else if (response.status === 409) {
+            conflictTask(responseData);
+        } else {
+            errorTask(responseData.message || 'Signup failed');
+        }
+    } catch (error) {
+        errorTask('An error occurred during signup');
+        console.error('Error during root signup:', error);
+    }
+};
+
+export const retrieveOrg = async ({ email, otp, successTask, errorTask }: retrieveOrgParams) => {
+    try {
+        const response = await fetch(config.ENDPOINTS.AUTH.RETRIEVE_ORG, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, otp }),
+        });
+
+        const responseData = await response.json();
+
+        if (response.ok) {
+            successTask(responseData.message || 'Organization ID sent to your email');
+        } else {
+            errorTask(responseData.message || 'Failed to retrieve organization');
+        }
+    } catch (error) {
+        errorTask('An error occurred while retrieving organization');
+        console.error('Error during org retrieval:', error);
     }
 };
 

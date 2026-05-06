@@ -8,6 +8,7 @@ interface GetApiKeysListParams {
     successTask: (apiKeys: ApiKey[]) => void
     failureTask: () => void
     errorTask: () => void
+    forbiddenTask?: () => void
 }
 
 interface CreateApiKeyParams {
@@ -16,6 +17,7 @@ interface CreateApiKeyParams {
   successTask: (createdKey: CreatedApiKeyResponse) => void
   failureTask: () => void
   errorTask: () => void
+  forbiddenTask?: () => void
 }
 
 interface DeleteApiKeyParams {
@@ -24,12 +26,14 @@ interface DeleteApiKeyParams {
   successTask: (result: DeleteApiKeyResponse) => void
   failureTask: () => void
   errorTask: () => void
+  forbiddenTask?: () => void
 }
 
 export const getApiKeysList = async ({
     successTask,
     failureTask,
     errorTask,
+    forbiddenTask,
     retry = false,
 }: GetApiKeysListParams): Promise<void> => {
     try {
@@ -60,6 +64,7 @@ export const getApiKeysList = async ({
                     successTask,
                     failureTask,
                     errorTask,
+                    forbiddenTask,
                 })
             }
 
@@ -67,6 +72,11 @@ export const getApiKeysList = async ({
             reauthenticationStep(() => {
                 console.log("Error encountered while fetching login URL")
             })
+            return
+        }
+
+        if (response.status === 403) {
+            forbiddenTask?.()
             return
         }
 
@@ -97,6 +107,7 @@ export const createApiKey = async ({
   successTask,
   failureTask,
   errorTask,
+  forbiddenTask,
   retry = false,
 }: CreateApiKeyParams): Promise<void> => {
   try {
@@ -128,12 +139,18 @@ export const createApiKey = async ({
           successTask,
           failureTask,
           errorTask,
+          forbiddenTask,
         })
       }
 
       return reauthenticationStep(() => {
         console.error("Error encountered while fetching login URL")
       })
+    }
+
+    if (response.status === 403) {
+      forbiddenTask?.()
+      return
     }
 
     if (response.status === 200 || response.status === 201) {
@@ -159,6 +176,7 @@ export const deleteApiKey = async ({
   successTask,
   failureTask,
   errorTask,
+  forbiddenTask,
   retry = false,
 }: DeleteApiKeyParams): Promise<void> => {
   try {
@@ -190,12 +208,18 @@ export const deleteApiKey = async ({
           successTask,
           failureTask,
           errorTask,
+          forbiddenTask,
         })
       }
 
       return reauthenticationStep(() => {
         console.error("Error encountered while fetching login URL")
       })
+    }
+
+    if (response.status === 403) {
+      forbiddenTask?.()
+      return
     }
 
     if (response.status === 200) {

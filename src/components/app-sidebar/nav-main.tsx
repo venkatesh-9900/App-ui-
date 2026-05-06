@@ -19,6 +19,7 @@ import { ChatSessionsList } from "@/components/chat/chat-sessions"
 import { Web3Monitoring } from "@/components/app-sidebar/web3-monitoring"
 import { NotificationsMenu } from "@/components/app-sidebar/notifications-menu"
 import { OperatorMenu } from "@/components/app-sidebar/operator-menu"
+import { IamMenu } from "@/components/app-sidebar/iam-menu"
 
 export function NavMain({
     menuItems,
@@ -77,6 +78,7 @@ export function NavMain({
         <Web3Monitoring />
         <NotificationsMenu />
         <OperatorMenu />
+        <IamMenu />
       </SidebarMenu>
     </SidebarGroup>
   )

@@ -145,7 +145,11 @@ export const columns: ColumnDef<AccountRow>[] = [
    Main Component
 ======================= */
 
-export function TopAccountsTable() {
+type TopAccountsTableProps = {
+  onForbidden?: () => void
+}
+
+export function TopAccountsTable({ onForbidden }: TopAccountsTableProps) {
   const [data, setData] = React.useState<AccountRow[]>([])
   const [total, setTotal] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
@@ -169,6 +173,10 @@ export function TopAccountsTable() {
       pageIndex,
       pageSize,
       address: addressSearch,
+      forbiddenTask: () => {
+        setLoading(false)
+        onForbidden?.()
+      },
       successTask: (res: AccountsResponse) => {
         const rows =
           res.data?.accounts.map((row, idx) => ({

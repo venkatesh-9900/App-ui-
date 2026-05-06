@@ -12,6 +12,7 @@ export interface CreateNotificationChannelInstanceRequest {
     email?: string
     phone?: string
   }
+  group_id?: number
 }
 
 export interface UpdateNotificationChannelInstanceRequest {

@@ -1,10 +1,10 @@
-import { AuthProvider } from "@/contexts"
+import { AuthProvider, SpaceProvider } from "@/contexts"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 
 export const metadata = {
-  title: "Argus Intelligence",
-  description: "Argus Intelligence - AI powered insights",
+  title: "Kernel Mind",
+  description: "Kernel Mind - AI powered insights",
   icons: {
     icon: "/logo.png",
   },
@@ -15,10 +15,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <html lang="en" suppressHydrationWarning>
       <body>
         <AuthProvider>
-          <main>
-            {children}
-          </main>
-          <Toaster />
+          <SpaceProvider>
+            <main>
+              {children}
+            </main>
+            <Toaster />
+          </SpaceProvider>
         </AuthProvider>
       </body>
     </html>

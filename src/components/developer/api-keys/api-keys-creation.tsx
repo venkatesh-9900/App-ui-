@@ -27,6 +27,7 @@ import { createApiKey } from "@/hooks/api-keys-service"
 import { useApiKeyContext } from "@/contexts/api-key-context"
 import { formatPrettyDate } from "@/utils/formatting"
 import { CreateApiKeyRequest, CreatedApiKeyResponse } from "@/types/api-keys"
+import { toast } from "sonner"
 
 type ExpiryOption = "7" | "30" | "60" | "90" | "custom"
 
@@ -166,6 +167,10 @@ export default function CreateApiKeyPage() {
         errorTask: () => {
           setDialogLoading(false)
           setError("Unexpected error while creating API key")
+        },
+        forbiddenTask: () => {
+          toast.error("Access denied")
+          setDialogLoading(false)
         },
       })
     } catch (err: any) {
