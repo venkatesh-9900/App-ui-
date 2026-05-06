@@ -3,8 +3,8 @@ import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 
 export const metadata = {
-  title: "Argus Intelligence",
-  description: "Argus Intelligence - AI powered insights",
+  title: "Kernel Mind",
+  description: "Kernel Mind - AI powered insights",
   icons: {
     icon: "/logo.png",
   },

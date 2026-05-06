@@ -215,13 +215,13 @@ export default function LandingPage() {
           <Image
             className="dark:invert drop-shadow-xl"
             src="/logo.png"
-            alt="Argus Intelligence logo"
+            alt="Kernel Mind logo"
             width={180}
             height={38}
             priority
           />
           <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-            Argus Intelligence
+            Kernel Mind
           </h1>
         </div>
 

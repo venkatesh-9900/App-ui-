@@ -61,7 +61,7 @@ async rewrites() {
 
 ```js
 async rewrites() {
-	const apiDestination = process.env.API_BASE_URL || 'https://dev.app.argusintelligence.net';
+	const apiDestination = process.env.API_BASE_URL || 'https://dev.app.kernelmind.ai';
 
 	return [
 		// AUTH → local gateway
@@ -86,7 +86,7 @@ Examples for running the dev server:
 API_BASE_URL=http://localhost:10000 npm run dev
 
 # use remote backend (auth still local)
-API_BASE_URL=https://dev.app.argusintelligence.net npm run dev
+API_BASE_URL=https://dev.app.kernelmind.ai npm run dev
 ```
 
 Note: `next.config` reads `process.env.API_BASE_URL` at dev/build start; restart the server after changing the variable.

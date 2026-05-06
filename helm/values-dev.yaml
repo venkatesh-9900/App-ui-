@@ -32,7 +32,7 @@ ingress:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/48e2d4ea-0ed0-4dc9-b8a3-d3319f6e1447
   hosts:
-  - host: dev.app.argusintelligence.net
+  - host: dev.app.kernelmind.ai
     paths:
     - path: /
       pathType: Prefix

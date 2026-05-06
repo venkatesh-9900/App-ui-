@@ -214,7 +214,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "argus-cicd"
-                            git config user.email "cicd@argusintelligence.net"
+                            git config user.email "cicd@kernelmind.ai"
                             git config pull.rebase true
                             git config pull.ff false
                             echo "Fetching all branches..."
@@ -264,7 +264,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "argus-cicd"
-                            git config user.email "cicd@argusintelligence.net"
+                            git config user.email "cicd@kernelmind.ai"
                             git add ${CHART_PATH}/values-dev.yaml ${CHART_PATH}/Chart.yaml
                             if ! git diff --cached --quiet; then
                                 git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
@@ -356,7 +356,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "argus-cicd"
-                            git config user.email "cicd@argusintelligence.net"
+                            git config user.email "cicd@kernelmind.ai"
                             git config pull.rebase true
                             git config pull.ff false
                             echo "Fetching all branches..."
@@ -406,7 +406,7 @@ spec:
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "argus-cicd"
-                            git config user.email "cicd@argusintelligence.net"
+                            git config user.email "cicd@kernelmind.ai"
                             git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
                             if ! git diff --cached --quiet; then
                                 git commit -m "chore: bump Helm chart version to ${env.IMAGE_TAG}"
@@ -513,7 +513,7 @@ spec:
 
                     // Configure Git and create the tag
                     sh """
-                        git config user.email "cicd@argusintelligence.net"
+                        git config user.email "cicd@kernelmind.ai"
                         git config user.name "argus-cicd"
                         git tag -a v${finalVersion} -m "Release version ${finalVersion}"
                     """

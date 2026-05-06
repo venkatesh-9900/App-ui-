@@ -64,13 +64,13 @@ export function AppSidebarHeader() {
             <div className="flex size-8 group-data-[collapsible=icon]:size-8 items-center justify-center overflow-hidden flex-shrink-0">
               <Image 
                 src="/logo.png" 
-                alt="Argus Intelligence Logo" 
+                alt="Kernel Mind Logo" 
                 width={128} 
                 height={128}
               />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="truncate font-semibold">Argus Intelligence</span>
+              <span className="truncate font-semibold">Kernel Mind</span>
             </div>
           </SidebarMenuButton>
           

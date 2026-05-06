@@ -28,7 +28,7 @@ export default function ChatStarter() {
         <div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-secondary-foreground/10">
             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium text-muted-foreground">Argus Intelligence</span>
+            <span className="text-sm font-medium text-muted-foreground">Kernel Mind</span>
           </div>
         </div>
       </div>
