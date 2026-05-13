@@ -213,7 +213,7 @@ spec:
                     // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
-                            git config user.name "argus-cicd"
+                            git config user.name "kernelmind-cicd-user"
                             git config user.email "cicd@kernelmind.ai"
                             git config pull.rebase true
                             git config pull.ff false
@@ -263,7 +263,7 @@ spec:
                     // Commit, push, and create PR using credentials
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
-                            git config user.name "argus-cicd"
+                            git config user.name "kernelmind-cicd-user"
                             git config user.email "cicd@kernelmind.ai"
                             git add ${CHART_PATH}/values-dev.yaml ${CHART_PATH}/Chart.yaml
                             if ! git diff --cached --quiet; then
@@ -355,7 +355,7 @@ spec:
                     // Setup git and fetch all branches
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
-                            git config user.name "argus-cicd"
+                            git config user.name "kernelmind-cicd-user"
                             git config user.email "cicd@kernelmind.ai"
                             git config pull.rebase true
                             git config pull.ff false
@@ -405,7 +405,7 @@ spec:
                     // Commit, push, and create PR using credentials
                     withCredentials([gitUsernamePassword(credentialsId: 'argus-cicd-pat', gitToolName: 'Default')]) {
                         sh """
-                            git config user.name "argus-cicd"
+                            git config user.name "kernelmind-cicd-user"
                             git config user.email "cicd@kernelmind.ai"
                             git add ${CHART_PATH}/values-qa.yaml ${CHART_PATH}/Chart.yaml
                             if ! git diff --cached --quiet; then
