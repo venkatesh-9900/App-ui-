@@ -514,7 +514,7 @@ spec:
                     // Configure Git and create the tag
                     sh """
                         git config user.email "cicd@kernelmind.ai"
-                        git config user.name "argus-cicd"
+                        git config user.name "kernelmind-cicd-user"
                         git tag -a v${finalVersion} -m "Release version ${finalVersion}"
                     """
 
