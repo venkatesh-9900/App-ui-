@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Plus, Pencil, Trash2, KeyRound, Copy, Check } from "lucide-react"
+import { Loader2, Plus, Pencil, Trash2, KeyRound, Copy, Check, RefreshCw } from "lucide-react"
 import { fetchIdentityProviders, createIdentityProvider, updateIdentityProvider, deleteIdentityProvider, fetchOrganization } from "@/hooks/iam/oauth-service"
 import { OidcIdentityProvider, OidcIdpConfig, OAuthOrganization } from "@/types/oauth"
 import { useAuth } from "@/contexts/auth-context"
@@ -31,6 +31,7 @@ const emptyConfig: OidcIdpConfig = {
   syncMode: "LEGACY",
   clientId: "",
   clientSecret: "",
+  defaultScope: "openid email",
 }
 
 export function IdentityProvidersTab() {
@@ -48,6 +49,8 @@ export function IdentityProvidersTab() {
   const [displayName, setDisplayName] = useState("")
   const [enabled, setEnabled] = useState(true)
   const [config, setConfig] = useState<OidcIdpConfig>({ ...emptyConfig })
+  const [discoveryLoading, setDiscoveryLoading] = useState(false)
+  const [discoveryError, setDiscoveryError] = useState<string | null>(null)
 
   const loadIdps = useCallback(() => {
     setLoading(true)
@@ -124,7 +127,8 @@ export function IdentityProvidersTab() {
       clientAuthMethod: kcConfig.clientAuthMethod || "client_secret_post",
       syncMode: kcConfig.syncMode || "LEGACY",
       clientId: kcConfig.clientId || "",
-      clientSecret: "",
+      clientSecret: kcConfig.clientSecret || "",
+      defaultScope: kcConfig.defaultScope || "openid email",
     })
     setDialogOpen(true)
   }
@@ -176,6 +180,31 @@ export function IdentityProvidersTab() {
 
   const updateConfig = (key: keyof OidcIdpConfig, value: string) => {
     setConfig(prev => ({ ...prev, [key]: value }))
+  }
+
+  const fetchDiscovery = async () => {
+    const url = (config.discoveryEndpoint || "").trim()
+    if (!url) return
+    setDiscoveryLoading(true)
+    setDiscoveryError(null)
+    try {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      setConfig(prev => ({
+        ...prev,
+        authorizationUrl: json.authorization_endpoint || prev.authorizationUrl,
+        tokenUrl: json.token_endpoint || prev.tokenUrl,
+        logoutUrl: json.end_session_endpoint || prev.logoutUrl,
+        userInfoUrl: json.userinfo_endpoint || prev.userInfoUrl,
+        issuer: json.issuer || prev.issuer,
+        jwksUrl: json.jwks_uri || prev.jwksUrl,
+      }))
+    } catch (err) {
+      setDiscoveryError(err instanceof Error ? err.message : "Failed to fetch discovery endpoint")
+    } finally {
+      setDiscoveryLoading(false)
+    }
   }
 
   if (loading) {
@@ -269,13 +298,61 @@ export function IdentityProvidersTab() {
                 </div>
 
                 {config.useDiscoveryEndpoint === "true" && (
-                  <div className="space-y-2">
-                    <Label>Discovery Endpoint URL</Label>
-                    <Input
-                      value={config.discoveryEndpoint}
-                      onChange={e => updateConfig("discoveryEndpoint", e.target.value)}
-                      placeholder="https://.../.well-known/openid-configuration"
-                    />
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label>Discovery Endpoint URL</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={config.discoveryEndpoint}
+                          onChange={e => updateConfig("discoveryEndpoint", e.target.value)}
+                          placeholder="https://.../.well-known/openid-configuration"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          disabled={!config.discoveryEndpoint?.trim() || discoveryLoading}
+                          onClick={fetchDiscovery}
+                        >
+                          {discoveryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                          <span className="ml-1">Fetch</span>
+                        </Button>
+                      </div>
+                      {discoveryError && (
+                        <p className="text-xs text-destructive">{discoveryError}</p>
+                      )}
+                    </div>
+                    {(config.authorizationUrl || config.tokenUrl || config.issuer) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-md border p-3 bg-muted/40">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Authorization URL</Label>
+                          <Input value={config.authorizationUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Token URL</Label>
+                          <Input value={config.tokenUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Logout URL</Label>
+                          <Input value={config.logoutUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">User Info URL</Label>
+                          <Input value={config.userInfoUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Issuer</Label>
+                          <Input value={config.issuer} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        {config.jwksUrl && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">JWKS URL</Label>
+                            <Input value={config.jwksUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -381,6 +458,16 @@ export function IdentityProvidersTab() {
                     <Label>Client Secret *</Label>
                     <Input type="password" value={config.clientSecret} onChange={e => updateConfig("clientSecret", e.target.value)} />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Default Scopes</Label>
+                  <Input
+                    value={config.defaultScope}
+                    onChange={e => updateConfig("defaultScope", e.target.value)}
+                    placeholder="openid email"
+                  />
+                  <p className="text-xs text-muted-foreground">Space-separated list of scopes requested by default.</p>
                 </div>
               </div>
               <DialogFooter>

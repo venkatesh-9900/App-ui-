@@ -343,6 +343,7 @@ export function RolesManagement() {
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive cursor-pointer"
                 onClick={() => handleDeleteRole(role.id)}
+                disabled={role.name === "root"}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
               </DropdownMenuItem>

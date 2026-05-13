@@ -42,6 +42,7 @@ export interface OidcIdpConfig {
     clientId?: string;
     clientSecret?: string;
     syncMode?: string;
+    defaultScope?: string;
 }
 
 export interface DefaultMapperRequest {
