@@ -40,7 +40,7 @@ pipeline {
 
     environment {
         AWS_REGION     = "ap-south-1"
-        AWS_ACCOUNT_ID = "210519480143"
+        AWS_ACCOUNT_ID = "519659321340"
         ECR_REPO       = "docker/${APP_NAME}"
         ECR_BASE_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         CHART_PATH     = "helm" //chart path in the github repo
