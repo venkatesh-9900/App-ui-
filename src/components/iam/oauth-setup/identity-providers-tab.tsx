@@ -32,6 +32,7 @@ const emptyConfig: OidcIdpConfig = {
   clientId: "",
   clientSecret: "",
   defaultScope: "openid email",
+  backchannelSupported: "true",
 }
 
 export function IdentityProvidersTab() {
@@ -46,6 +47,7 @@ export function IdentityProvidersTab() {
   const [copied, setCopied] = useState(false)
 
   const [alias, setAlias] = useState("")
+  const [aliasError, setAliasError] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState("")
   const [enabled, setEnabled] = useState(true)
   const [config, setConfig] = useState<OidcIdpConfig>({ ...emptyConfig })
@@ -94,6 +96,7 @@ export function IdentityProvidersTab() {
 
   const resetForm = () => {
     setAlias("")
+    setAliasError(null)
     setDisplayName("")
     setEnabled(true)
     setConfig({ ...emptyConfig })
@@ -129,12 +132,13 @@ export function IdentityProvidersTab() {
       clientId: kcConfig.clientId || "",
       clientSecret: kcConfig.clientSecret || "",
       defaultScope: kcConfig.defaultScope || "openid email",
+      backchannelSupported: kcConfig.backchannelSupported || "true",
     })
     setDialogOpen(true)
   }
 
   const handleSave = () => {
-    if (!alias.trim()) return
+    if (!alias.trim() || aliasError) return
     setSaving(true)
     const request = {
       alias,
@@ -242,13 +246,19 @@ export function IdentityProvidersTab() {
                     <Label>Alias *</Label>
                     <Input
                       value={alias}
-                      onChange={e => { setAlias(e.target.value); setCopied(false) }}
+                      onChange={e => {
+                        const val = e.target.value
+                        setAlias(val)
+                        setCopied(false)
+                        setAliasError(val && /\s/.test(val) ? "Alias must not contain spaces" : null)
+                      }}
                       readOnly={!!editAlias}
                       tabIndex={editAlias ? -1 : undefined}
-                      className={editAlias ? "bg-muted" : undefined}
+                      className={editAlias ? "bg-muted" : aliasError ? "border-destructive" : undefined}
                       placeholder="my-oidc-idp"
                       title={editAlias ? "Alias cannot be changed after creation" : undefined}
                     />
+                    {aliasError && <p className="text-xs text-destructive">{aliasError}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label>Display Name</Label>
@@ -335,7 +345,7 @@ export function IdentityProvidersTab() {
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs text-muted-foreground">Logout URL</Label>
-                          <Input value={config.logoutUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                          <Input value={config.logoutUrl} onChange={e => updateConfig("logoutUrl", e.target.value)} className="text-xs h-8" />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs text-muted-foreground">User Info URL</Label>
@@ -395,6 +405,13 @@ export function IdentityProvidersTab() {
                       onCheckedChange={v => updateConfig("pkceEnabled", v ? "true" : "false")}
                     />
                     <Label>Use PKCE</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={config.backchannelSupported !== "false"}
+                      onCheckedChange={v => updateConfig("backchannelSupported", v ? "true" : "false")}
+                    />
+                    <Label>Backchannel Logout</Label>
                   </div>
                 </div>
 
@@ -474,7 +491,7 @@ export function IdentityProvidersTab() {
                 <DialogClose asChild>
                   <Button variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button onClick={handleSave} disabled={saving || !alias.trim()}>
+                <Button onClick={handleSave} disabled={saving || !alias.trim() || !!aliasError}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   {editAlias ? "Save" : "Create"}
                 </Button>
