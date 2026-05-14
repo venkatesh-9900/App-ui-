@@ -42,6 +42,8 @@ export interface OidcIdpConfig {
     clientId?: string;
     clientSecret?: string;
     syncMode?: string;
+    defaultScope?: string;
+    backchannelSupported?: string;
 }
 
 export interface DefaultMapperRequest {

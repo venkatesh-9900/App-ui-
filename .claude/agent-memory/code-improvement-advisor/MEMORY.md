@@ -1,0 +1,1 @@
+- [Project Tech Stack and Architecture](project_tech_stack.md) — Next.js App Router + TypeScript + Tailwind + shadcn/ui; custom OTP auth context; API proxied via rewrites

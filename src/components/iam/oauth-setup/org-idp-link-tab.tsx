@@ -19,7 +19,7 @@ interface LinkedIdp {
 }
 
 const NONE_DOMAIN = "__none__"
-const ANY_DOMAIN = "*"
+const ANY_DOMAIN = "ANY"
 
 export function OrgIdpLinkTab() {
   const [loading, setLoading] = useState(true)

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Plus, Pencil, Trash2, KeyRound, Copy, Check } from "lucide-react"
+import { Loader2, Plus, Pencil, Trash2, KeyRound, Copy, Check, RefreshCw } from "lucide-react"
 import { fetchIdentityProviders, createIdentityProvider, updateIdentityProvider, deleteIdentityProvider, fetchOrganization } from "@/hooks/iam/oauth-service"
 import { OidcIdentityProvider, OidcIdpConfig, OAuthOrganization } from "@/types/oauth"
 import { useAuth } from "@/contexts/auth-context"
@@ -31,6 +31,8 @@ const emptyConfig: OidcIdpConfig = {
   syncMode: "LEGACY",
   clientId: "",
   clientSecret: "",
+  defaultScope: "openid email",
+  backchannelSupported: "true",
 }
 
 export function IdentityProvidersTab() {
@@ -45,9 +47,12 @@ export function IdentityProvidersTab() {
   const [copied, setCopied] = useState(false)
 
   const [alias, setAlias] = useState("")
+  const [aliasError, setAliasError] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState("")
   const [enabled, setEnabled] = useState(true)
   const [config, setConfig] = useState<OidcIdpConfig>({ ...emptyConfig })
+  const [discoveryLoading, setDiscoveryLoading] = useState(false)
+  const [discoveryError, setDiscoveryError] = useState<string | null>(null)
 
   const loadIdps = useCallback(() => {
     setLoading(true)
@@ -91,6 +96,7 @@ export function IdentityProvidersTab() {
 
   const resetForm = () => {
     setAlias("")
+    setAliasError(null)
     setDisplayName("")
     setEnabled(true)
     setConfig({ ...emptyConfig })
@@ -124,13 +130,15 @@ export function IdentityProvidersTab() {
       clientAuthMethod: kcConfig.clientAuthMethod || "client_secret_post",
       syncMode: kcConfig.syncMode || "LEGACY",
       clientId: kcConfig.clientId || "",
-      clientSecret: "",
+      clientSecret: kcConfig.clientSecret || "",
+      defaultScope: kcConfig.defaultScope || "openid email",
+      backchannelSupported: kcConfig.backchannelSupported || "true",
     })
     setDialogOpen(true)
   }
 
   const handleSave = () => {
-    if (!alias.trim()) return
+    if (!alias.trim() || aliasError) return
     setSaving(true)
     const request = {
       alias,
@@ -178,6 +186,31 @@ export function IdentityProvidersTab() {
     setConfig(prev => ({ ...prev, [key]: value }))
   }
 
+  const fetchDiscovery = async () => {
+    const url = (config.discoveryEndpoint || "").trim()
+    if (!url) return
+    setDiscoveryLoading(true)
+    setDiscoveryError(null)
+    try {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      setConfig(prev => ({
+        ...prev,
+        authorizationUrl: json.authorization_endpoint || prev.authorizationUrl,
+        tokenUrl: json.token_endpoint || prev.tokenUrl,
+        logoutUrl: json.end_session_endpoint || prev.logoutUrl,
+        userInfoUrl: json.userinfo_endpoint || prev.userInfoUrl,
+        issuer: json.issuer || prev.issuer,
+        jwksUrl: json.jwks_uri || prev.jwksUrl,
+      }))
+    } catch (err) {
+      setDiscoveryError(err instanceof Error ? err.message : "Failed to fetch discovery endpoint")
+    } finally {
+      setDiscoveryLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -213,13 +246,19 @@ export function IdentityProvidersTab() {
                     <Label>Alias *</Label>
                     <Input
                       value={alias}
-                      onChange={e => { setAlias(e.target.value); setCopied(false) }}
+                      onChange={e => {
+                        const val = e.target.value
+                        setAlias(val)
+                        setCopied(false)
+                        setAliasError(val && /\s/.test(val) ? "Alias must not contain spaces" : null)
+                      }}
                       readOnly={!!editAlias}
                       tabIndex={editAlias ? -1 : undefined}
-                      className={editAlias ? "bg-muted" : undefined}
+                      className={editAlias ? "bg-muted" : aliasError ? "border-destructive" : undefined}
                       placeholder="my-oidc-idp"
                       title={editAlias ? "Alias cannot be changed after creation" : undefined}
                     />
+                    {aliasError && <p className="text-xs text-destructive">{aliasError}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label>Display Name</Label>
@@ -269,13 +308,61 @@ export function IdentityProvidersTab() {
                 </div>
 
                 {config.useDiscoveryEndpoint === "true" && (
-                  <div className="space-y-2">
-                    <Label>Discovery Endpoint URL</Label>
-                    <Input
-                      value={config.discoveryEndpoint}
-                      onChange={e => updateConfig("discoveryEndpoint", e.target.value)}
-                      placeholder="https://.../.well-known/openid-configuration"
-                    />
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label>Discovery Endpoint URL</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={config.discoveryEndpoint}
+                          onChange={e => updateConfig("discoveryEndpoint", e.target.value)}
+                          placeholder="https://.../.well-known/openid-configuration"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          disabled={!config.discoveryEndpoint?.trim() || discoveryLoading}
+                          onClick={fetchDiscovery}
+                        >
+                          {discoveryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                          <span className="ml-1">Fetch</span>
+                        </Button>
+                      </div>
+                      {discoveryError && (
+                        <p className="text-xs text-destructive">{discoveryError}</p>
+                      )}
+                    </div>
+                    {(config.authorizationUrl || config.tokenUrl || config.issuer) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-md border p-3 bg-muted/40">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Authorization URL</Label>
+                          <Input value={config.authorizationUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Token URL</Label>
+                          <Input value={config.tokenUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Logout URL</Label>
+                          <Input value={config.logoutUrl} onChange={e => updateConfig("logoutUrl", e.target.value)} className="text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">User Info URL</Label>
+                          <Input value={config.userInfoUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Issuer</Label>
+                          <Input value={config.issuer} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                        </div>
+                        {config.jwksUrl && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">JWKS URL</Label>
+                            <Input value={config.jwksUrl} readOnly tabIndex={-1} className="bg-muted text-xs h-8" />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -318,6 +405,13 @@ export function IdentityProvidersTab() {
                       onCheckedChange={v => updateConfig("pkceEnabled", v ? "true" : "false")}
                     />
                     <Label>Use PKCE</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={config.backchannelSupported !== "false"}
+                      onCheckedChange={v => updateConfig("backchannelSupported", v ? "true" : "false")}
+                    />
+                    <Label>Backchannel Logout</Label>
                   </div>
                 </div>
 
@@ -382,12 +476,22 @@ export function IdentityProvidersTab() {
                     <Input type="password" value={config.clientSecret} onChange={e => updateConfig("clientSecret", e.target.value)} />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Default Scopes</Label>
+                  <Input
+                    value={config.defaultScope}
+                    onChange={e => updateConfig("defaultScope", e.target.value)}
+                    placeholder="openid email"
+                  />
+                  <p className="text-xs text-muted-foreground">Space-separated list of scopes requested by default.</p>
+                </div>
               </div>
               <DialogFooter>
                 <DialogClose asChild>
                   <Button variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button onClick={handleSave} disabled={saving || !alias.trim()}>
+                <Button onClick={handleSave} disabled={saving || !alias.trim() || !!aliasError}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   {editAlias ? "Save" : "Create"}
                 </Button>

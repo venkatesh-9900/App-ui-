@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Mail, KeyRound, ArrowRight, UserPlus, Building2, Copy, CheckCircle2, Search, LogIn } from "lucide-react";
+import { Loader2, Mail, ArrowRight, UserPlus, Building2, Copy, CheckCircle2, Search, LogIn } from "lucide-react";
 
-type AuthMode = 'default' | 'signup' | 'login' | 'user-login' | 'retrieve-org';
+type AuthMode = 'default' | 'signin' | 'signup' | 'retrieve-org';
 type AuthStep = 'email' | 'otp' | 'result';
+type UserType = 'member' | 'admin';
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading: globalLoading, login, requestOTP, loginWithOTP, loginUserWithOTP, signupRoot, retrieveOrg } = useAuth();
@@ -18,6 +19,7 @@ export default function LandingPage() {
 
   const [mode, setMode] = useState<AuthMode>('default');
   const [step, setStep] = useState<AuthStep>('email');
+  const [userType, setUserType] = useState<UserType>('member');
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [organizationId, setOrganizationId] = useState("");
@@ -26,13 +28,22 @@ export default function LandingPage() {
   const [resultMessage, setResultMessage] = useState("");
   const [copied, setCopied] = useState(false);
 
-  if (globalLoading || isAuthenticated) {
+  if (globalLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
     return null;
   }
 
   const resetFlow = () => {
     setMode('default');
     setStep('email');
+    setUserType('member');
     setEmail("");
     setOtp("");
     setOrganizationId("");
@@ -44,6 +55,7 @@ export default function LandingPage() {
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
     setStep('email');
+    setUserType('member');
     setOtp("");
     setOrganizationId("");
     setResultOrgId("");
@@ -52,11 +64,7 @@ export default function LandingPage() {
   };
 
   const handleSSOLogin = () => {
-    if (isAuthenticated) {
-      router.push('/home');
-    } else {
-      login();
-    }
+    login();
   };
 
   const handleGetOTP = async (e: React.FormEvent) => {
@@ -65,153 +73,138 @@ export default function LandingPage() {
       toast.error("Please enter your email");
       return;
     }
-    if ((mode === 'login' || mode === 'user-login') && !organizationId) {
+    if (mode === 'signin' && !organizationId) {
       toast.error("Please enter your Organization ID");
       return;
     }
     setIsLoading(true);
-    await requestOTP({
-      email,
-      successTask: () => {
-        setIsLoading(false);
-        setStep('otp');
-        toast.success("OTP sent to your email");
-      },
-      errorTask: (error) => {
-        setIsLoading(false);
-        toast.error(error || "Failed to send OTP");
-      }
-    });
+    try {
+      await requestOTP({
+        email,
+        successTask: () => {
+          setStep('otp');
+          toast.success("OTP sent to your email");
+        },
+        errorTask: (error) => {
+          toast.error(error || "Failed to send OTP");
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp) {
-      toast.error("Please enter the OTP");
+    if (!/^\d{6}$/.test(otp)) {
+      toast.error("OTP must be exactly 6 digits");
       return;
     }
     setIsLoading(true);
-    await signupRoot({
-      email,
-      otp,
-      successTask: (data) => {
-        setIsLoading(false);
-        setResultOrgId(data.organization_id || "");
-        setResultMessage(data.message);
-        setStep('result');
-        toast.success("Root user created successfully");
-      },
-      conflictTask: (data) => {
-        setIsLoading(false);
-        setResultOrgId(data.organization_id || "");
-        setResultMessage(data.message);
-        setStep('result');
-        toast.info("You are already signed up as a root user");
-      },
-      errorTask: (error) => {
-        setIsLoading(false);
-        toast.error(error || "Signup failed");
-      }
-    });
+    try {
+      await signupRoot({
+        email,
+        otp,
+        successTask: (data) => {
+          setResultOrgId(data.organization_id || "");
+          setResultMessage(data.message);
+          setStep('result');
+          toast.success("Organization created successfully");
+        },
+        conflictTask: (data) => {
+          setResultOrgId(data.organization_id || "");
+          setResultMessage(data.message);
+          setStep('result');
+          toast.info("You already have an organization");
+        },
+        errorTask: (error) => {
+          toast.error(error || "Signup failed");
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRootLogin = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp) {
-      toast.error("Please enter the OTP");
+    if (!/^\d{6}$/.test(otp)) {
+      toast.error("OTP must be exactly 6 digits");
       return;
     }
     setIsLoading(true);
-    await loginWithOTP({
-      email,
-      otp,
-      organizationId,
-      successTask: () => {
-        setIsLoading(false);
-        const returnUrl = sessionStorage.getItem("return_url");
-        if (returnUrl && returnUrl !== '/') {
-          sessionStorage.removeItem("return_url");
-          router.push(returnUrl);
-        } else {
-          router.push('/home');
+    const loginFn = userType === 'admin' ? loginWithOTP : loginUserWithOTP;
+    try {
+      await loginFn({
+        email,
+        otp,
+        organizationId,
+        successTask: () => {
+          const returnUrl = sessionStorage.getItem("return_url");
+          if (returnUrl && returnUrl !== '/') {
+            sessionStorage.removeItem("return_url");
+            router.push(returnUrl);
+          } else {
+            router.push('/home');
+          }
+        },
+        errorTask: (error) => {
+          toast.error(error || "Login failed");
         }
-      },
-      errorTask: (error) => {
-        setIsLoading(false);
-        toast.error(error || "Login failed");
-      }
-    });
-  };
-
-  const handleUserLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp) {
-      toast.error("Please enter the OTP");
-      return;
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(true);
-    await loginUserWithOTP({
-      email,
-      otp,
-      organizationId,
-      successTask: () => {
-        setIsLoading(false);
-        const returnUrl = sessionStorage.getItem("return_url");
-        if (returnUrl && returnUrl !== '/') {
-          sessionStorage.removeItem("return_url");
-          router.push(returnUrl);
-        } else {
-          router.push('/home');
-        }
-      },
-      errorTask: (error) => {
-        setIsLoading(false);
-        toast.error(error || "Login failed");
-      }
-    });
   };
 
   const handleRetrieveOrg = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp) {
-      toast.error("Please enter the OTP");
+    if (!/^\d{6}$/.test(otp)) {
+      toast.error("OTP must be exactly 6 digits");
       return;
     }
     setIsLoading(true);
-    await retrieveOrg({
-      email,
-      otp,
-      successTask: (message) => {
-        setIsLoading(false);
-        setResultMessage(message);
-        setStep('result');
-        toast.success("Organization ID sent to your email");
-      },
-      errorTask: (error) => {
-        setIsLoading(false);
-        toast.error(error || "Failed to retrieve organization");
-      }
-    });
+    try {
+      await retrieveOrg({
+        email,
+        otp,
+        successTask: (message) => {
+          setResultMessage(message);
+          setStep('result');
+          toast.success("Organization ID sent to your email");
+        },
+        errorTask: (error) => {
+          toast.error(error || "Failed to retrieve organization");
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const copyOrgId = () => {
-    navigator.clipboard.writeText(resultOrgId);
-    setCopied(true);
-    toast.success("Organization ID copied");
-    setTimeout(() => setCopied(false), 2000);
+  const copyOrgId = async () => {
+    try {
+      await navigator.clipboard.writeText(resultOrgId);
+      setCopied(true);
+      toast.success("Organization ID copied");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy — please copy the ID manually");
+    }
   };
 
   const modeConfig = {
-    signup: { title: "Root User Signup", icon: UserPlus },
-    login: { title: "Root User Login", icon: KeyRound },
-    'user-login': { title: "User Login", icon: LogIn },
+    signin: { title: "Sign In", icon: LogIn },
+    signup: { title: "Create Organization", icon: UserPlus },
     'retrieve-org': { title: "Retrieve Organization ID", icon: Search },
   };
 
+  const currentModeConfig = mode !== 'default' ? modeConfig[mode] : null;
+
   return (
     <div className="font-sans flex items-center justify-center min-h-screen p-8 bg-gradient-to-b from-background to-secondary/20">
-      <main className="flex flex-col gap-8 items-center w-full max-w-md animate-in fade-in duration-700">
-        <div className="flex flex-col items-center gap-4 mb-4">
+      <main className="flex flex-col gap-6 items-center w-full max-w-md animate-in fade-in duration-700">
+        <div className="flex flex-col items-center">
           <Image
             className="dark:invert drop-shadow-xl"
             src="/logo.png"
@@ -226,18 +219,23 @@ export default function LandingPage() {
         </div>
 
         {mode === 'default' ? (
-          <div className="flex gap-4 items-center flex-col w-full">
-            <Button
-              data-testid="login-sso-button"
-              onClick={handleSSOLogin}
-              size="lg"
-              className="cursor-pointer w-full group transition-all duration-300 hover:scale-[1.02]"
-            >
-              Enterprise Single Sign-On
-              <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Button>
+          <div className="flex gap-1 items-center flex-col w-full">
+            <div className="w-full space-y-1.5">
+              <Button
+                data-testid="login-sso-button"
+                onClick={handleSSOLogin}
+                size="lg"
+                className="cursor-pointer w-full group transition-all duration-300 hover:scale-[1.02]"
+              >
+                Enterprise Single Sign-On
+                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                For organizations using enterprise identity providers
+              </p>
+            </div>
 
-            <div className="relative w-full py-4">
+            <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-muted" />
               </div>
@@ -246,36 +244,28 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              onClick={() => switchMode('user-login')}
-              size="lg"
-              className="cursor-pointer w-full border-primary/20 hover:bg-primary/5 transition-all duration-300"
-            >
-              <LogIn className="mr-2 w-4 h-4" />
-              User Login
-            </Button>
-
-            <div className="flex gap-3 w-full">
+            <div className="w-full space-y-1.5">
               <Button
                 variant="outline"
-                onClick={() => switchMode('login')}
+                onClick={() => switchMode('signin')}
                 size="lg"
-                className="cursor-pointer flex-1 border-primary/20 hover:bg-primary/5 transition-all duration-300"
+                className="cursor-pointer w-full group transition-all duration-300 hover:scale-[1.02]"
               >
-                <KeyRound className="mr-2 w-4 h-4" />
-                Root Login
+                <LogIn className="mr-2 w-4 h-4" />
+                Sign In
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => switchMode('signup')}
-                size="lg"
-                className="cursor-pointer flex-1 border-primary/20 hover:bg-primary/5 transition-all duration-300"
-              >
-                <UserPlus className="mr-2 w-4 h-4" />
-                Root Signup
-              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Sign in with your work email using a one-time password
+              </p>
             </div>
+
+            <button
+              type="button"
+              onClick={() => switchMode('signup')}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer mt-2"
+            >
+              New here? Create your organization →
+            </button>
           </div>
         ) : (
           <div className="w-full p-8 rounded-2xl border border-primary/10 bg-background/50 backdrop-blur-xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-500">
@@ -289,17 +279,42 @@ export default function LandingPage() {
               Back
             </Button>
 
-            <div className="flex items-center gap-2 mb-6">
-              {(() => {
-                const Icon = modeConfig[mode as keyof typeof modeConfig].icon;
-                return <Icon className="w-5 h-5 text-primary" />;
-              })()}
-              <h2 className="text-xl font-semibold">{modeConfig[mode as keyof typeof modeConfig].title}</h2>
-            </div>
+            {currentModeConfig && (
+              <div className="flex items-center gap-2 mb-6">
+                <currentModeConfig.icon className="w-5 h-5 text-primary" />
+                <h2 className="text-xl font-semibold">{currentModeConfig.title}</h2>
+              </div>
+            )}
 
-            {/* Step 1: Email input (+ org ID for login mode) */}
             {step === 'email' && (
               <form onSubmit={handleGetOTP} className="space-y-4">
+                {mode === 'signin' && (
+                  <div className="flex rounded-lg border border-border overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setUserType('member')}
+                      className={`flex-1 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                        userType === 'member'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-background text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Team Member
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserType('admin')}
+                      className={`flex-1 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                        userType === 'admin'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-background text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Admin
+                    </button>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <div className="relative">
@@ -316,9 +331,18 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {(mode === 'login' || mode === 'user-login') && (
+                {mode === 'signin' && (
                   <div className="space-y-2">
-                    <Label htmlFor="org-id">Organization ID</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="org-id">Organization ID</Label>
+                      <button
+                        type="button"
+                        onClick={() => switchMode('retrieve-org')}
+                        className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                      >
+                        Don&apos;t know your ID?
+                      </button>
+                    </div>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -340,28 +364,16 @@ export default function LandingPage() {
                   className="w-full h-11 transition-all cursor-pointer"
                 >
                   {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  {(mode === 'login' || mode === 'user-login') ? 'Send OTP' : 'Get OTP'}
+                  Send OTP
                 </Button>
-
-                {(mode === 'login' || mode === 'user-login') && (
-                  <button
-                    type="button"
-                    onClick={() => switchMode('retrieve-org')}
-                    className="w-full text-xs text-muted-foreground hover:text-primary transition-colors py-1 cursor-pointer"
-                  >
-                    Forgot Organization ID?
-                  </button>
-                )}
               </form>
             )}
 
-            {/* Step 2: OTP input */}
             {step === 'otp' && (
               <form
                 onSubmit={
                   mode === 'signup' ? handleSignup :
-                  mode === 'login' ? handleRootLogin :
-                  mode === 'user-login' ? handleUserLogin :
+                  mode === 'signin' ? handleSignIn :
                   handleRetrieveOrg
                 }
                 className="space-y-4"
@@ -391,26 +403,25 @@ export default function LandingPage() {
                   className="w-full h-11 transition-all cursor-pointer"
                 >
                   {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  {mode === 'signup' ? 'Create Account' :
-                   mode === 'login' ? 'Root Login' :
-                   mode === 'user-login' ? 'Login' :
+                  {mode === 'signup' ? 'Create Organization' :
+                   mode === 'signin' ? 'Sign In' :
                    'Retrieve Organization ID'}
                 </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => { setOtp(""); setStep('email'); }}
-                  className="w-full text-xs text-muted-foreground hover:text-primary transition-colors py-2 cursor-pointer"
+                  className="w-full text-muted-foreground cursor-pointer"
                 >
                   Didn&apos;t receive code? Try again
-                </button>
+                </Button>
               </form>
             )}
 
-            {/* Step 3: Result */}
             {step === 'result' && (
               <div className="space-y-5 animate-in fade-in duration-500">
-                {/* Signup or conflict result — show org ID */}
                 {mode === 'signup' && resultOrgId && (
                   <>
                     <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
@@ -433,23 +444,22 @@ export default function LandingPage() {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Save this ID securely. You will need it to log in.
+                        Save this ID securely — you will need it to sign in.
                       </p>
                     </div>
                     <Button
                       onClick={() => {
                         setOrganizationId(resultOrgId);
-                        switchMode('login');
+                        switchMode('signin');
                       }}
                       className="w-full h-11 cursor-pointer"
                     >
-                      Continue to Login
+                      Continue to Sign In
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </>
                 )}
 
-                {/* Retrieve-org result — check email message */}
                 {mode === 'retrieve-org' && (
                   <>
                     <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
@@ -460,10 +470,10 @@ export default function LandingPage() {
                       Check your inbox for an email with your organization ID.
                     </p>
                     <Button
-                      onClick={() => switchMode('login')}
+                      onClick={() => switchMode('signin')}
                       className="w-full h-11 cursor-pointer"
                     >
-                      Back to Login
+                      Back to Sign In
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </>
