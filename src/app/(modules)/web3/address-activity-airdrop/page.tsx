@@ -95,6 +95,7 @@ export default function AddressActivityAirdropPage() {
     const fetchGroups = async () => {
         setIsLoadingGroups(true)
         await listTopics({
+            groupId: selectedGroupId,
             successTask: (response) => {
                 if (response.data && Array.isArray(response.data)) {
                     setGroups(response.data)
