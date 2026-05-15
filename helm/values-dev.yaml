@@ -26,11 +26,11 @@ ingress:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: argus-dev-app
+    alb.ingress.kubernetes.io/group.name: km-dev-app
     alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/48e2d4ea-0ed0-4dc9-b8a3-d3319f6e1447
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:519659321340:certificate/bbfd2d24-2bc4-41e7-a4f5-af51cabf2be3
   hosts:
   - host: dev.app.kernelmind.ai
     paths:
