@@ -112,6 +112,7 @@ export default function AddressActivityPage() {
     const fetchGroups = async () => {
         setIsLoadingGroups(true)
         await listTopics({
+            groupId: selectedGroupId,
             successTask: (response) => {
                 if (response.data && response.data) {
                     setGroups(response.data)

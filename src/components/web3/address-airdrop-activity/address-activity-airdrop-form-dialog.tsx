@@ -287,14 +287,14 @@ export function AddressActivityAirdropFormDialog({
                         className="flex items-center gap-2 p-2 hover:bg-muted rounded"
                       >
                         <Checkbox
-                          id={`group-${AddressGroup.id}`}
+                          id={`address-group-${AddressGroup.id}`}
                           checked={selectedAddressGroups.includes(AddressGroup.id)}
                           onCheckedChange={() => handleAddressGroupToggle(AddressGroup.id)}
                           disabled={isSubmitting || isReadOnly}
                           className='cursor-pointer'
                         />
                         <Label
-                          htmlFor={`group-${AddressGroup.id}`}
+                          htmlFor={`address-group-${AddressGroup.id}`}
                           className="flex-1 cursor-pointer text-sm"
                         >
                           <div className="font-medium">{AddressGroup.name}</div>
