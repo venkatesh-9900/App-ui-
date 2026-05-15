@@ -1,7 +1,7 @@
 timestamp: '1.768596053795E9'
 replicaCount: 3
 image:
-  repository: 210519480143.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
+  repository: 519659321340.dkr.ecr.ap-south-1.amazonaws.com/docker/app-ui
   tag: 0.0.122
   pullPolicy: IfNotPresent
 imagePullSecrets: []
@@ -26,11 +26,11 @@ ingress:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: argus-prod-app
+    alb.ingress.kubernetes.io/group.name: km-prod-app
     alb.ingress.kubernetes.io/group.order: '2'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:210519480143:certificate/2bb5fece-2c08-42af-bf29-a4a047ca37fe
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:519659321340:certificate/e398b6ee-3aed-44a7-9bed-e71bbca2a0db
   hosts:
   - host: app.kernelmind.ai
     paths:
