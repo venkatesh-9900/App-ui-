@@ -1,6 +1,7 @@
 // ===============================
 // Jenkinsfile (Kaniko Version - No DinD)
 // ===============================
+
 def APP_NAME = "app-ui" //TODO: Replace in line https://api.github.com/repos/void-kernel/app-ui/pulls too. Currently it does not work after replacing
 
 def determineSemanticVersionFromBaseBranch(baseBranch, highestVersion) {
