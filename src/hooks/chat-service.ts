@@ -19,6 +19,7 @@ interface ApiParams {
 
 interface GroupApiParams {
     retry?: boolean;
+    iamGroupId?: number | null;
     successTask: (groups: ChatGroup[]) => void;
     failureTask: () => void;
     errorTask: () => void;
@@ -36,6 +37,7 @@ interface ChatGroupSessionsParams {
 
 interface CreateChatGroupParams{
     groupName: string;
+    iamGroupId?: number | null;
     retry?: boolean;
     successTask: (groupId: string) => void;
     failureTask: () => void;
@@ -667,7 +669,7 @@ export const hasAnyVisualizationInText = (message: ChatMessage): boolean => {
     return urls.length > 0;
 };
 
-export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, forbiddenTask, retry = false}: GroupApiParams) => {
+export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, forbiddenTask, iamGroupId, retry = false}: GroupApiParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -679,7 +681,8 @@ export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, 
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
-                'x-app-name': app_name
+                'x-app-name': app_name,
+                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
         });
         console.log(response);
@@ -688,7 +691,8 @@ export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, 
                 reauthenticationStep(errorTask);
             } else {
                 await fetchUserChatGroups({
-                    retry: true, 
+                    retry: true,
+                    iamGroupId,
                     successTask,
                     failureTask,
                     errorTask,
@@ -766,7 +770,7 @@ export const fetchChatGroupSessions = async ({ groupId, successTask, failureTask
     }
 }
 
-export const createChatGroup = async ({ groupName, successTask, failureTask, errorTask, forbiddenTask, retry = false }: CreateChatGroupParams) => {
+export const createChatGroup = async ({ groupName, iamGroupId, successTask, failureTask, errorTask, forbiddenTask, retry = false }: CreateChatGroupParams) => {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -779,7 +783,8 @@ export const createChatGroup = async ({ groupName, successTask, failureTask, err
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
-                'x-app-name': app_name
+                'x-app-name': app_name,
+                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
             body: JSON.stringify(payload)
         });
@@ -789,8 +794,9 @@ export const createChatGroup = async ({ groupName, successTask, failureTask, err
                 reauthenticationStep(errorTask);
             } else {
                 await createChatGroup({
-                    retry: true, 
+                    retry: true,
                     groupName,
+                    iamGroupId,
                     successTask,
                     failureTask,
                     errorTask,
