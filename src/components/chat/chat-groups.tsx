@@ -40,6 +40,7 @@ import { Label } from "@/components/ui/label"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { onChatHistoryUpdate } from "@/utils/eventBus"
+import { useSpace } from "@/contexts/space-context"
 
 interface ChatGroupWithCollapseState extends ChatGroup {
   is_collapsed: boolean
@@ -60,11 +61,12 @@ export function ChatGroupsList() {
   const { isMobile } = useSidebar()
   const { open, toggleSidebar } = useSidebar();
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
+  const { selectedSpace } = useSpace()
 
-  // Load chat sessions on mount since collapsible is open by default
+  // Load chat groups on mount and whenever the selected space changes
   useEffect(() => {
     loadChatGroups()
-  }, [])
+  }, [selectedSpace])
 
   useEffect(() => {
     const unsubscribe = onChatHistoryUpdate(() => {
@@ -90,6 +92,7 @@ export function ChatGroupsList() {
   const loadChatGroups = () => {
     setIsLoadingChats(true)
     fetchUserChatGroups({
+        iamGroupId: selectedSpace?.id ?? null,
         successTask: (groups) => {
           console.log("Chat groups loaded", groups)
           setChatGroups(groups.map((group) => {
@@ -255,6 +258,7 @@ export function ChatGroupsList() {
 
     createChatGroup({
       groupName: addGroupName,
+      iamGroupId: selectedSpace?.id ?? null,
       successTask: () => {
         console.log("Chat group created successfully")
         toast.success("Chat group created successfully")
