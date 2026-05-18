@@ -443,14 +443,14 @@ export function RolesManagement() {
 
       {/* Permissions Dialog */}
       <Dialog open={isPermsDialogOpen} onOpenChange={setIsPermsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Role Permissions</DialogTitle>
             <DialogDescription>
               Select one or more permissions, then add them to this role in one step.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             <div className="flex gap-2 items-end">
               <div className="flex-1 min-w-0">
                 <SearchableMultiSelect
@@ -495,8 +495,8 @@ export function RolesManagement() {
                 const isWildcard = isRootUser && perm?.name === '*'
                 const isCurrentRoleRoot = permsRoleName === "root"
                 return (
-                <div key={m.permission_id} className="flex items-center justify-between p-2 rounded border">
-                  <span className="text-sm">
+                <div key={m.permission_id} className="flex items-center justify-between gap-2 p-2 rounded border">
+                  <span className="text-sm truncate min-w-0">
                     {perm ? (perm.description ? `${perm.description} (${perm.name})` : perm.name) : `Permission #${m.permission_id}`}
                   </span>
                   <Button
