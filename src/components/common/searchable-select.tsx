@@ -49,9 +49,9 @@ export function SearchableSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between bg-background font-normal", className)}
+          className={cn("w-full max-w-full justify-between bg-background font-normal overflow-hidden shrink", className)}
         >
-          <span className="truncate flex-1 text-left flex items-center gap-2">
+          <span className="truncate min-w-0 flex-1 text-left flex items-center gap-2">
             {selectedItem ? (
               <>
                 {(() => {
@@ -85,7 +85,7 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" collisionPadding={8}>
         {showSearch && (
           <div className="flex items-center border-b px-3 py-1 bg-muted/20">
             <Search className="h-4 w-4 shrink-0 opacity-50 mr-2" />
@@ -210,13 +210,13 @@ export function SearchableMultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between bg-background font-normal", className)}
+          className={cn("w-full max-w-full justify-between bg-background font-normal overflow-hidden shrink", className)}
         >
-          <span className="truncate flex-1 text-left">{summary}</span>
+          <span className="truncate min-w-0 flex-1 text-left">{summary}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" collisionPadding={8}>
         {showSearch && (
           <div className="flex items-center border-b px-3 py-1 bg-muted/20">
             <Search className="h-4 w-4 shrink-0 opacity-50 mr-2" />
