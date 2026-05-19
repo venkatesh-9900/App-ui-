@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Loader2, Link2, Unlink } from "lucide-react"
+import { FormLabel } from "@/components/ui/form-label"
 import { fetchOrgIdpMappings, linkIdpToOrg, unlinkIdpFromOrg, fetchIdentityProviders, fetchOrganization } from "@/hooks/iam/oauth-service"
 import { OidcIdentityProvider, OAuthOrganization, OrgDomainInfo } from "@/types/oauth"
 
@@ -217,9 +218,9 @@ export function OrgIdpLinkTab() {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="hide-on-login" className="flex items-center gap-1.5">
+              <FormLabel htmlFor="hide-on-login" tooltip="If hidden, login with this provider is possible only if requested explicitly, for example using the 'kc_idp_hint' parameter. If hidden, login with this provider is possible only if requested explicitly, for example using the 'kc_idp_hint' parameter." className="flex items-center gap-1.5">
                 Hide on login page
-              </Label>
+              </FormLabel>
               <Switch
                 id="hide-on-login"
                 checked={hideOnLoginPage}
@@ -228,9 +229,9 @@ export function OrgIdpLinkTab() {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="redirect-domain" className="flex items-center gap-1.5">
+              <FormLabel htmlFor="redirect-domain" tooltip="Automatically redirect the user to this identity provider when the email domain matches the domain" className="flex items-center gap-1.5">
                 Redirect when email domain matches
-              </Label>
+              </FormLabel>
               <Switch
                 id="redirect-domain"
                 checked={redirectOnDomain}
