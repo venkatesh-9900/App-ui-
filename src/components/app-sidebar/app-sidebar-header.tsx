@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useSpace } from "@/contexts/space-context"
+import { useRouter } from "next/navigation"
 
 const PRIVATE_SPACE_VALUE = "__private__"
 
@@ -35,6 +36,7 @@ export function AppSidebarHeader() {
   const { toggleSidebar } = useSidebar()
   const [mounted, setMounted] = React.useState(false)
   const { selectedSpace, setSelectedSpace, userGroups, isLoadingGroups } = useSpace()
+  const router = useRouter()
 
   React.useEffect(() => {
     setMounted(true)
@@ -50,6 +52,7 @@ export function AppSidebarHeader() {
         setSelectedSpace({ id: group.id, name: group.name })
       }
     }
+    router.push('/home')
   }
 
   return (

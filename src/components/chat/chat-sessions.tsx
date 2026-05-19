@@ -56,6 +56,7 @@ export function ChatSessionsList() {
     loadChatSessions()
     loadSchedules()
     const unsubscribe = onChatHistoryUpdate((payload) => {
+      if (payload?.groupId) return;
       const tempSession = {
         session_id: payload?.sessionId || `temp-${Date.now()}`,
         initial_text: payload?.initialText || "New chat",

@@ -221,6 +221,7 @@ export default function ChatPage() {
                         triggerChatHistoryUpdate({
                             sessionId: newId,
                             initialText: content,
+                            groupId: groupId ?? undefined,
                         });
                     }
                 },

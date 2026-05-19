@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { ChevronRight, MessageSquare, MessageSquarePlus, Folder, FolderOpen, FolderPlus, ComponentIcon, X } from "lucide-react"
 import {
@@ -63,21 +63,6 @@ export function ChatGroupsList() {
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
   const { selectedSpace } = useSpace()
 
-  // Load chat groups on mount and whenever the selected space changes
-  useEffect(() => {
-    loadChatGroups()
-  }, [selectedSpace])
-
-  useEffect(() => {
-    const unsubscribe = onChatHistoryUpdate(() => {
-      void loadChatGroups();
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [])
-
   useEffect(() => {
     if (openAddGroupDialog) {
       setAddGroupName("")
@@ -89,7 +74,7 @@ export function ChatGroupsList() {
     return match ? match[1].trim() : text
   }
 
-  const loadChatGroups = () => {
+  const loadChatGroups = useCallback(() => {
     setIsLoadingChats(true)
     fetchUserChatGroups({
         iamGroupId: selectedSpace?.id ?? null,
@@ -156,7 +141,19 @@ export function ChatGroupsList() {
     //   }
     // ])
     setIsLoadingChats(false)
-  }
+  }, [selectedSpace])
+
+  // Load chat groups on mount and whenever the selected space changes
+  useEffect(() => {
+    loadChatGroups()
+  }, [loadChatGroups])
+
+  useEffect(() => {
+    const unsubscribe = onChatHistoryUpdate(() => {
+      void loadChatGroups();
+    });
+    return () => { unsubscribe() }
+  }, [loadChatGroups])
 
   const handleDeleteGroup = (groupId: string) => {
     setDeletingGroupId(groupId)

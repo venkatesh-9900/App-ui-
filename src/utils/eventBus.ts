@@ -1,6 +1,7 @@
 export type ChatHistoryPayload = {
   sessionId?: string
   initialText?: string
+  groupId?: string
 }
 
 export type ChatMovedToGroupPayload = {

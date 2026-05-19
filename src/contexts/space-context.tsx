@@ -16,6 +16,7 @@ interface SpaceContextValue {
     userGroups: Group[]
     isLoadingGroups: boolean
     selectedGroupId: number | undefined
+    refreshGroups: () => void
 }
 
 const SpaceContext = createContext<SpaceContextValue | undefined>(undefined)
@@ -26,9 +27,7 @@ export function SpaceProvider({ children }: { children: React.ReactNode }) {
     const [userGroups, setUserGroups] = useState<Group[]>([])
     const [isLoadingGroups, setIsLoadingGroups] = useState(false)
 
-    useEffect(() => {
-        if (!isAuthenticated) return
-
+    const loadGroups = useCallback(() => {
         setIsLoadingGroups(true)
         fetchMySpaces({
             successTask: (data) => {
@@ -40,7 +39,12 @@ export function SpaceProvider({ children }: { children: React.ReactNode }) {
             errorTask: () => setIsLoadingGroups(false),
             forbiddenTask: () => setIsLoadingGroups(false),
         })
-    }, [isAuthenticated])
+    }, [])
+
+    useEffect(() => {
+        if (!isAuthenticated) return
+        loadGroups()
+    }, [isAuthenticated, loadGroups])
 
     const selectedGroupId = useMemo(
         () => selectedSpace?.id ?? undefined,
@@ -58,8 +62,9 @@ export function SpaceProvider({ children }: { children: React.ReactNode }) {
             userGroups,
             isLoadingGroups,
             selectedGroupId,
+            refreshGroups: loadGroups,
         }),
-        [selectedSpace, handleSetSelectedSpace, userGroups, isLoadingGroups, selectedGroupId]
+        [selectedSpace, handleSetSelectedSpace, userGroups, isLoadingGroups, selectedGroupId, loadGroups]
     )
 
     return <SpaceContext.Provider value={value}>{children}</SpaceContext.Provider>
