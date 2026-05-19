@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Loader2, Link2, Unlink } from "lucide-react"
+import { toast } from "sonner"
 import { fetchOrgIdpMappings, linkIdpToOrg, unlinkIdpFromOrg, fetchIdentityProviders, fetchOrganization } from "@/hooks/iam/oauth-service"
 import { OidcIdentityProvider, OAuthOrganization, OrgDomainInfo } from "@/types/oauth"
 
@@ -50,8 +51,8 @@ export function OrgIdpLinkTab() {
         loadedMappings = true
         checkDone()
       },
-      failureTask: () => { loadedMappings = true; checkDone() },
-      errorTask: () => { loadedMappings = true; checkDone() },
+      failureTask: () => { toast.error("Failed to load linked identity providers"); loadedMappings = true; checkDone() },
+      errorTask: () => { toast.error("Error loading linked identity providers"); loadedMappings = true; checkDone() },
     })
 
     fetchIdentityProviders({
@@ -60,8 +61,8 @@ export function OrgIdpLinkTab() {
         loadedIdps = true
         checkDone()
       },
-      failureTask: () => { loadedIdps = true; checkDone() },
-      errorTask: () => { loadedIdps = true; checkDone() },
+      failureTask: () => { toast.error("Failed to load identity providers"); loadedIdps = true; checkDone() },
+      errorTask: () => { toast.error("Error loading identity providers"); loadedIdps = true; checkDone() },
     })
 
     fetchOrganization({
@@ -70,8 +71,8 @@ export function OrgIdpLinkTab() {
         loadedOrg = true
         checkDone()
       },
-      failureTask: () => { loadedOrg = true; checkDone() },
-      errorTask: () => { loadedOrg = true; checkDone() },
+      failureTask: () => { toast.error("Failed to load organization"); loadedOrg = true; checkDone() },
+      errorTask: () => { toast.error("Error loading organization"); loadedOrg = true; checkDone() },
     })
   }, [])
 
@@ -97,12 +98,13 @@ export function OrgIdpLinkTab() {
       hideOnLoginPage,
       redirectWhenEmailDomainMatches: redirectOnDomain,
       successTask: () => {
+        toast.success("Identity provider linked")
         setLinking(false)
         setDialogOpen(false)
         loadData()
       },
-      failureTask: () => setLinking(false),
-      errorTask: () => setLinking(false),
+      failureTask: () => { toast.error("Failed to link identity provider"); setLinking(false) },
+      errorTask: () => { toast.error("Error linking identity provider"); setLinking(false) },
     })
   }
 
@@ -110,9 +112,9 @@ export function OrgIdpLinkTab() {
     if (!confirm(`Unlink identity provider "${alias}" from this organization?`)) return
     unlinkIdpFromOrg({
       alias,
-      successTask: () => loadData(),
-      failureTask: () => {},
-      errorTask: () => {},
+      successTask: () => { toast.success("Identity provider unlinked"); loadData() },
+      failureTask: () => toast.error("Failed to unlink identity provider"),
+      errorTask: () => toast.error("Error unlinking identity provider"),
     })
   }
 

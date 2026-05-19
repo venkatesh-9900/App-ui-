@@ -56,9 +56,11 @@ export function GroupUserMappingsTab() {
       },
       failureTask: () => {
         setAllUsersError("Failed to load users")
+        toast.error("Failed to load users")
       },
       errorTask: () => {
         setAllUsersError("An error occurred while loading users")
+        toast.error("An error occurred while loading users")
       },
       forbiddenTask: () => {
         setAllUsersForbidden(true)

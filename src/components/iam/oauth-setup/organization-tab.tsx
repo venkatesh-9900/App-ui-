@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Plus, X, Building2 } from "lucide-react"
+import { toast } from "sonner"
 import { fetchOrganization, createOrganization, updateOrganization, deleteOrganization } from "@/hooks/iam/oauth-service"
 import { OAuthOrganization, OrgDomainInfo } from "@/types/oauth"
 
@@ -42,8 +43,8 @@ export function OrganizationTab() {
         }
         setLoading(false)
       },
-      failureTask: () => setLoading(false),
-      errorTask: () => setLoading(false),
+      failureTask: () => { toast.error("Failed to load organization"); setLoading(false) },
+      errorTask: () => { toast.error("Error loading organization"); setLoading(false) },
     })
   }, [])
 
@@ -73,12 +74,13 @@ export function OrganizationTab() {
         new_domains: pendingNewDomains.length > 0 ? pendingNewDomains : undefined,
       },
       successTask: () => {
+        toast.success("Organization created")
         setSaving(false)
         setPendingNewDomains([])
         loadOrg()
       },
-      failureTask: () => setSaving(false),
-      errorTask: () => setSaving(false),
+      failureTask: () => { toast.error("Failed to create organization"); setSaving(false) },
+      errorTask: () => { toast.error("Error creating organization"); setSaving(false) },
     })
   }
 
@@ -95,13 +97,14 @@ export function OrganizationTab() {
         remove_domain_ids: removeDomainIds.length > 0 ? removeDomainIds : undefined,
       },
       successTask: () => {
+        toast.success("Organization updated")
         setSaving(false)
         setPendingNewDomains([])
         setRemoveDomainIds([])
         loadOrg()
       },
-      failureTask: () => setSaving(false),
-      errorTask: () => setSaving(false),
+      failureTask: () => { toast.error("Failed to update organization"); setSaving(false) },
+      errorTask: () => { toast.error("Error updating organization"); setSaving(false) },
     })
   }
 
@@ -110,13 +113,14 @@ export function OrganizationTab() {
     setSaving(true)
     deleteOrganization({
       successTask: () => {
+        toast.success("Organization deleted")
         setSaving(false)
         setOrgData(null)
         setName("")
         loadOrg()
       },
-      failureTask: () => setSaving(false),
-      errorTask: () => setSaving(false),
+      failureTask: () => { toast.error("Failed to delete organization"); setSaving(false) },
+      errorTask: () => { toast.error("Error deleting organization"); setSaving(false) },
     })
   }
 

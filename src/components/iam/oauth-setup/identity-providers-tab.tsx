@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Plus, Pencil, Trash2, KeyRound, Copy, Check, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
 import { fetchIdentityProviders, createIdentityProvider, updateIdentityProvider, deleteIdentityProvider, fetchOrganization } from "@/hooks/iam/oauth-service"
 import { OidcIdentityProvider, OidcIdpConfig, OAuthOrganization } from "@/types/oauth"
 import { useAuth } from "@/contexts/auth-context"
@@ -61,8 +62,8 @@ export function IdentityProvidersTab() {
         setIdps(data.data || [])
         setLoading(false)
       },
-      failureTask: () => setLoading(false),
-      errorTask: () => setLoading(false),
+      failureTask: () => { toast.error("Failed to load identity providers"); setLoading(false) },
+      errorTask: () => { toast.error("Error loading identity providers"); setLoading(false) },
     })
   }, [])
 
@@ -158,16 +159,16 @@ export function IdentityProvidersTab() {
       updateIdentityProvider({
         alias: editAlias,
         request,
-        successTask: () => { setSaving(false); setDialogOpen(false); loadIdps() },
-        failureTask: () => setSaving(false),
-        errorTask: () => setSaving(false),
+        successTask: () => { toast.success("Identity provider updated"); setSaving(false); setDialogOpen(false); loadIdps() },
+        failureTask: () => { toast.error("Failed to update identity provider"); setSaving(false) },
+        errorTask: () => { toast.error("Error updating identity provider"); setSaving(false) },
       })
     } else {
       createIdentityProvider({
         request,
-        successTask: () => { setSaving(false); setDialogOpen(false); loadIdps() },
-        failureTask: () => setSaving(false),
-        errorTask: () => setSaving(false),
+        successTask: () => { toast.success("Identity provider created"); setSaving(false); setDialogOpen(false); loadIdps() },
+        failureTask: () => { toast.error("Failed to create identity provider"); setSaving(false) },
+        errorTask: () => { toast.error("Error creating identity provider"); setSaving(false) },
       })
     }
   }
@@ -176,9 +177,9 @@ export function IdentityProvidersTab() {
     if (!confirm(`Delete identity provider "${idpAlias}"?`)) return
     deleteIdentityProvider({
       alias: idpAlias,
-      successTask: () => loadIdps(),
-      failureTask: () => {},
-      errorTask: () => {},
+      successTask: () => { toast.success("Identity provider deleted"); loadIdps() },
+      failureTask: () => toast.error("Failed to delete identity provider"),
+      errorTask: () => toast.error("Error deleting identity provider"),
     })
   }
 
