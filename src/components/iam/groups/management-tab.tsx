@@ -42,8 +42,10 @@ import {
 } from "@/hooks/iam/iam-service"
 import { Group } from "@/types/iam"
 import { AccessDenied } from "@/components/access-denied"
+import { useSpace } from "@/contexts/space-context"
 
 export function GroupManagementTab() {
+  const { refreshGroups } = useSpace()
   const [groups, setGroups] = useState<Group[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
@@ -107,6 +109,7 @@ export function GroupManagementTab() {
         setIsGroupDialogOpen(false)
         setIsSubmitting(false)
         loadGroups()
+        refreshGroups()
       },
       failureTask: () => {
         toast.error("Failed to create group")
