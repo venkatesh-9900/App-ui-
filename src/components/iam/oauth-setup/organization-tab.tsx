@@ -183,14 +183,18 @@ export function OrganizationTab() {
                 <Badge key={d.id} variant="secondary" className="flex items-center gap-1 py-1 px-3">
                   {d.domain}
                   {orgData?.configured && (
-                    <X className="h-3 w-3 cursor-pointer hover:text-destructive" onClick={() => handleRemoveExistingDomain(d.id)} />
+                    <span role="button" tabIndex={0} className="cursor-pointer hover:text-destructive" onClick={() => handleRemoveExistingDomain(d.id)} onKeyDown={e => e.key === "Enter" && handleRemoveExistingDomain(d.id)}>
+                      <X className="h-3 w-3" />
+                    </span>
                   )}
                 </Badge>
               ))}
               {pendingNewDomains.map((d, i) => (
                 <Badge key={`new-${i}`} variant="default" className="flex items-center gap-1 py-1 px-3">
                   {d.domain}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleRemovePendingDomain(i)} />
+                  <span role="button" tabIndex={0} className="cursor-pointer" onClick={() => handleRemovePendingDomain(i)} onKeyDown={e => e.key === "Enter" && handleRemovePendingDomain(i)}>
+                    <X className="h-3 w-3" />
+                  </span>
                 </Badge>
               ))}
             </div>
