@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Plus, Pencil, Trash2, KeyRound, Copy, Check, RefreshCw } from "lucide-react"
+import { FormLabel } from "@/components/ui/form-label"
 import { fetchIdentityProviders, createIdentityProvider, updateIdentityProvider, deleteIdentityProvider, fetchOrganization } from "@/hooks/iam/oauth-service"
 import { OidcIdentityProvider, OidcIdpConfig, OAuthOrganization } from "@/types/oauth"
 import { useAuth } from "@/contexts/auth-context"
@@ -243,7 +244,7 @@ export function IdentityProvidersTab() {
               <div className="space-y-4 py-2">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Alias *</Label>
+                    <FormLabel tooltip="The alias uniquely identifies an identity provider and it is also used to build the redirect URI.">Alias *</FormLabel>
                     <Input
                       value={alias}
                       onChange={e => {
@@ -268,7 +269,7 @@ export function IdentityProvidersTab() {
 
                 {alias.trim() && (
                   <div className="space-y-2">
-                    <Label>Redirect URI</Label>
+                    <FormLabel tooltip="The redirect uri to use when configuring the identity provider.">Redirect URI</FormLabel>
                     <div className="flex items-center gap-2">
                       <Input
                         value={redirectUri || "Loading..."}
@@ -397,7 +398,7 @@ export function IdentityProvidersTab() {
                       checked={config.validateSignature === "true"}
                       onCheckedChange={v => updateConfig("validateSignature", v ? "true" : "false")}
                     />
-                    <Label>Validate Signatures</Label>
+                    <FormLabel tooltip="Enable/disable signature validation of external OIDC provider signatures.">Validate Signatures</FormLabel>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -411,7 +412,7 @@ export function IdentityProvidersTab() {
                       checked={config.backchannelSupported !== "false"}
                       onCheckedChange={v => updateConfig("backchannelSupported", v ? "true" : "false")}
                     />
-                    <Label>Backchannel Logout</Label>
+                    <FormLabel tooltip="Does the external IDP support backchannel logout?">Backchannel Logout</FormLabel>
                   </div>
                 </div>
 
@@ -438,7 +439,7 @@ export function IdentityProvidersTab() {
                 )}
 
                 <div className="space-y-2">
-                  <Label>Client Authentication Method</Label>
+                  <FormLabel tooltip="The client authentication method (cfr. https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication). In case of JWT signed with private key, the realm private key is used.">Client Authentication Method</FormLabel>
                   <Select value={config.clientAuthMethod} onValueChange={v => updateConfig("clientAuthMethod", v)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -453,7 +454,7 @@ export function IdentityProvidersTab() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Sync Mode</Label>
+                  <FormLabel tooltip="Default sync mode for all mappers. The sync mode determines when user data is synced using the mappers. Three possible values exist: 'legacy' to keep the behavior before this option was introduced, 'import' to import the user only once, specifically during the first login of the user with this identity provider, and force' to always update the user at every login with this identity provider.">Sync Mode</FormLabel>
                   <Select value={config.syncMode} onValueChange={v => updateConfig("syncMode", v)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -468,17 +469,17 @@ export function IdentityProvidersTab() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Client ID *</Label>
+                    <FormLabel tooltip="The client identifier registered with the identity provider.">Client ID *</FormLabel>
                     <Input value={config.clientId} onChange={e => updateConfig("clientId", e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Client Secret *</Label>
+                    <FormLabel tooltip="The client secret registered with the identity provider.">Client Secret *</FormLabel>
                     <Input type="password" value={config.clientSecret} onChange={e => updateConfig("clientSecret", e.target.value)} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Default Scopes</Label>
+                  <FormLabel tooltip="The scopes to be sent when asking for authorization. It can be a space-separated list of scopes. Defaults to 'openid'.">Default Scopes</FormLabel>
                   <Input
                     value={config.defaultScope}
                     onChange={e => updateConfig("defaultScope", e.target.value)}
