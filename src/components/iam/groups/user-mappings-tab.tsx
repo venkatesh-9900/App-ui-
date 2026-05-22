@@ -80,11 +80,11 @@ export function GroupUserMappingsTab() {
         setIsLoading(false)
       },
       failureTask: () => {
-        toast.error("Failed to load groups")
+        toast.error("Failed to load spaces")
         setIsLoading(false)
       },
       errorTask: () => {
-        toast.error("An error occurred while loading groups")
+        toast.error("An error occurred while loading spaces")
         setIsLoading(false)
       },
       forbiddenTask: () => {
@@ -100,7 +100,7 @@ export function GroupUserMappingsTab() {
 
   const openGroupUsersDialog = (group: Group) => {
     setUsersTargetId(group.id)
-    setUsersDialogTitle(`Users in Group: ${group.name}`)
+    setUsersDialogTitle(`Users in Space: ${group.name}`)
     setAddUserForm({ userId: "" })
     setIsUsersDialogOpen(true)
     loadGroupUsers(group.id)
@@ -117,13 +117,13 @@ export function GroupUserMappingsTab() {
         setUsersLoading(false)
       },
       failureTask: () => {
-        toast.error("Failed to load group users")
-        setUsersError("Failed to load group users")
+        toast.error("Failed to load space users")
+        setUsersError("Failed to load space users")
         setUsersLoading(false)
       },
       errorTask: () => {
-        toast.error("An error occurred while loading group users")
-        setUsersError("An error occurred while loading group users")
+        toast.error("An error occurred while loading space users")
+        setUsersError("An error occurred while loading space users")
         setUsersLoading(false)
       },
       forbiddenTask: () => {
@@ -139,7 +139,7 @@ export function GroupUserMappingsTab() {
     addUserGroupMapping({
       request: { user_id: Number(addUserForm.userId), group_id: usersTargetId },
       successTask: () => {
-        toast.success("User added to group")
+        toast.success("User added to space")
         setAddUserForm({ userId: "" })
         loadGroupUsers(usersTargetId!)
       },
@@ -155,7 +155,7 @@ export function GroupUserMappingsTab() {
       userId,
       groupId: usersTargetId,
       successTask: () => {
-        toast.success("User removed from group")
+        toast.success("User removed from space")
         loadGroupUsers(usersTargetId!)
       },
       failureTask: () => toast.error("Failed to remove user"),
@@ -169,11 +169,11 @@ export function GroupUserMappingsTab() {
   return (
     <div className="space-y-4 mt-4">
       <p className="text-sm text-muted-foreground">
-        Manage user mappings for groups.
+        Manage user mappings for spaces.
       </p>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading groups...</p>
+        <p className="text-sm text-muted-foreground">Loading spaces...</p>
       ) : (
         <div className="space-y-2">
           {groups.map((group) => (
@@ -202,7 +202,7 @@ export function GroupUserMappingsTab() {
             </Card>
           ))}
           {groups.length === 0 && !isLoading && (
-            <p className="text-sm text-muted-foreground">No groups found.</p>
+            <p className="text-sm text-muted-foreground">No spaces found.</p>
           )}
         </div>
       )}
@@ -239,7 +239,7 @@ export function GroupUserMappingsTab() {
             {usersLoading ? (
               <p className="text-xs text-muted-foreground">Loading users...</p>
             ) : usersForbidden ? (
-              <p className="text-xs text-destructive">Access denied. You don't have permission to view users for this group.</p>
+              <p className="text-xs text-destructive">Access denied. You don't have permission to view users for this space.</p>
             ) : usersError ? (
               <p className="text-xs text-destructive">{usersError}</p>
             ) : (

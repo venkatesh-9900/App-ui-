@@ -26,7 +26,7 @@ function GroupsPageContent() {
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 px-2 py-2 md:gap-6 md:py-4 md:px-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
-              <h2 className="text-sm sm:text-2xl font-bold tracking-tight">Groups</h2>
+              <h2 className="text-sm sm:text-2xl font-bold tracking-tight">Spaces</h2>
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange}>
