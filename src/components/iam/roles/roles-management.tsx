@@ -14,7 +14,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DataTable } from "@/components/common/data-table"
-import { Pagination } from "@/components/common/pagination"
 import { SearchableMultiSelect } from "@/components/common/searchable-select"
 import {
   DropdownMenu,
@@ -48,10 +47,6 @@ export function RolesManagement() {
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [accessDenied, setAccessDenied] = useState(false)
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalCount, setTotalCount] = useState(0)
-
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false)
   const [currentRole, setCurrentRole] = useState<Role | null>(null)
   const [roleForm, setRoleForm] = useState({ name: "" })
@@ -69,7 +64,6 @@ export function RolesManagement() {
 
   const loadAllPermissions = useCallback(() => {
     fetchPermissions({
-      limit: 200,
       successTask: (data: any) => {
         const items = data?.data ?? data?.items ?? data ?? []
         setAllPermissions(Array.isArray(items) ? items : [])
@@ -86,11 +80,8 @@ export function RolesManagement() {
   const loadRoles = useCallback(() => {
     setIsLoading(true)
     fetchRoles({
-      page,
-      limit: pageSize,
       successTask: (data: { data: Role[]; count: number }) => {
         setRoles(data.data ?? [])
-        setTotalCount(data.count ?? 0)
         setIsLoading(false)
       },
       failureTask: () => {
@@ -106,7 +97,7 @@ export function RolesManagement() {
         setIsLoading(false)
       },
     })
-  }, [page, pageSize])
+  }, [])
 
   useEffect(() => {
     loadRoles()
@@ -386,17 +377,6 @@ export function RolesManagement() {
               />
             </div>
           </div>
-          {!isLoading && totalCount > pageSize && (
-            <div className="px-4 py-2 border-t border-border/50 bg-muted/5 mt-2">
-              <Pagination
-                page={page}
-                pageSize={pageSize}
-                totalCount={totalCount}
-                onPageChange={setPage}
-                onPageSizeChange={setPageSize}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
 

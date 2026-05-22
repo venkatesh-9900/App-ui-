@@ -13,20 +13,14 @@ export default function PermissionsPage() {
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [accessDenied, setAccessDenied] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [totalCount, setTotalCount] = useState(0)
   const [search, setSearch] = useState("")
 
   const loadPermissions = useCallback(() => {
     setIsLoading(true)
     fetchPermissions({
-      page,
-      limit: pageSize,
       search: search || undefined,
       successTask: (data) => {
         setPermissions(data.data || [])
-        setTotalCount(data.count || 0)
         setIsLoading(false)
       },
       failureTask: () => {
@@ -42,7 +36,7 @@ export default function PermissionsPage() {
         setIsLoading(false)
       },
     })
-  }, [page, pageSize, search])
+  }, [search])
 
   useEffect(() => {
     loadPermissions()
@@ -129,16 +123,11 @@ export default function PermissionsPage() {
       <DashboardNavbar />
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
-          <PermissionsView 
+          <PermissionsView
             permissions={permissions}
             isLoading={isLoading}
-            totalCount={totalCount}
-            page={page}
-            pageSize={pageSize}
             search={search}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            onSearchChange={(val) => { setSearch(val); setPage(1) }}
+            onSearchChange={setSearch}
             onCreate={handleCreate}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
