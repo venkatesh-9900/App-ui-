@@ -59,9 +59,11 @@ export function GroupRoleMappingsTab() {
       },
       failureTask: () => {
         setAllRolesError("Failed to load roles")
+        toast.error("Failed to load roles")
       },
       errorTask: () => {
         setAllRolesError("An error occurred while loading roles")
+        toast.error("An error occurred while loading roles")
       },
       forbiddenTask: () => {
         setAllRolesForbidden(true)

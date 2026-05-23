@@ -45,7 +45,7 @@ import { AccessDenied } from "@/components/access-denied"
 import { useSpace } from "@/contexts/space-context"
 
 export function GroupManagementTab() {
-  const { refreshGroups } = useSpace()
+  const { refreshGroups, selectedSpace, setSelectedSpace } = useSpace()
   const [groups, setGroups] = useState<Group[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
@@ -159,7 +159,9 @@ export function GroupManagementTab() {
       id,
       successTask: () => {
         toast.success("Group deleted successfully")
+        if (selectedSpace?.id === id) setSelectedSpace(null)
         loadGroups()
+        refreshGroups()
       },
       failureTask: () => toast.error("Failed to delete group"),
       errorTask: () => toast.error("An error occurred while deleting group"),
