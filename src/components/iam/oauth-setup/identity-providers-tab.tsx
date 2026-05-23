@@ -46,6 +46,9 @@ export function IdentityProvidersTab() {
   const [editAlias, setEditAlias] = useState<string | null>(null)
   const [redirectUriBase, setRedirectUriBase] = useState("")
   const [copied, setCopied] = useState(false)
+  const [redirectUriDialogOpen, setRedirectUriDialogOpen] = useState(false)
+  const [createdRedirectUri, setCreatedRedirectUri] = useState("")
+  const [redirectCopied, setRedirectCopied] = useState(false)
 
   const [alias, setAlias] = useState("")
   const [aliasError, setAliasError] = useState<string | null>(null)
@@ -166,7 +169,16 @@ export function IdentityProvidersTab() {
     } else {
       createIdentityProvider({
         request,
-        successTask: () => { setSaving(false); setDialogOpen(false); loadIdps() },
+        successTask: (data: any) => {
+          setSaving(false)
+          setDialogOpen(false)
+          loadIdps()
+          const finalAlias = data?.data?.alias || data?.alias || ""
+          if (finalAlias && redirectUriBase) {
+            setCreatedRedirectUri(`${redirectUriBase}/${finalAlias}/endpoint`)
+            setRedirectUriDialogOpen(true)
+          }
+        },
         failureTask: () => setSaving(false),
         errorTask: () => setSaving(false),
       })
@@ -267,7 +279,7 @@ export function IdentityProvidersTab() {
                   </div>
                 </div>
 
-                {alias.trim() && (
+                {editAlias && alias.trim() && (
                   <div className="space-y-2">
                     <FormLabel tooltip="The redirect uri to use when configuring the identity provider.">Redirect URI</FormLabel>
                     <div className="flex items-center gap-2">
@@ -500,6 +512,52 @@ export function IdentityProvidersTab() {
             </DialogContent>
           </Dialog>
         </CardHeader>
+
+        {/* Post-creation redirect URI dialog */}
+        <Dialog open={redirectUriDialogOpen} onOpenChange={(open) => { setRedirectUriDialogOpen(open); if (!open) setRedirectCopied(false) }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-500" />
+                Identity Provider Created
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">
+                Your identity provider has been created. Copy the redirect URI below and configure it as the callback URL in your external identity provider dashboard.
+              </p>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Redirect URI</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={createdRedirectUri}
+                    readOnly
+                    tabIndex={-1}
+                    className="bg-muted font-mono text-xs"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdRedirectUri)
+                      setRedirectCopied(true)
+                      setTimeout(() => setRedirectCopied(false), 2000)
+                    }}
+                    title="Copy to clipboard"
+                  >
+                    {redirectCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setRedirectUriDialogOpen(false)}>Done</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <CardContent>
           {idps.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No identity providers configured yet.</p>

@@ -47,11 +47,13 @@ export function GroupFormDialog({
 }: GroupFormDialogProps) {
   const [formData, setFormData] = useState<CreateTopicRequest>({
     name: '',
-    description: ''
+    description: '',
+    channel_instance_ids: [],
   })
   const [errors, setErrors] = useState<{
     name?: string
     description?: string
+    channelInstanceIds?: string
   }>({})
   const [subscribers, setSubscribers] = useState<NotificationSubscriber[]>([])
   const [selectedSubscribers, setSelectedSubscribers] = useState<string[]>([])
@@ -137,6 +139,7 @@ const loadChannelInstances = useCallback(() => {
       })
     } else {
       setFormData({ name: '', description: '', channel_instance_ids: [] })
+      setSelectedChannelInstanceIds([])
     }
 
     // Reset common state
@@ -173,6 +176,7 @@ const loadChannelInstances = useCallback(() => {
     const newErrors: {
       name?: string
       description?: string
+      channelInstanceIds?: string
     } = {}
 
     if (!formData.name.trim()) {
@@ -181,9 +185,13 @@ const loadChannelInstances = useCallback(() => {
       newErrors.name = 'Group name must be at least 3 characters'
     }
 
+    if (selectedChannelInstanceIds.length === 0) {
+      newErrors.channelInstanceIds = 'At least one channel instance is required'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [formData.name])
+  }, [formData.name, selectedChannelInstanceIds])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
@@ -298,15 +306,15 @@ const loadChannelInstances = useCallback(() => {
   // }, [initialData, loadExistingSubscriptions])
 
   const handleChannelToggle = useCallback((id: number) => {
-      setSelectedChannelInstanceIds(prev => {
-        if (prev.includes(id)) {
-          return prev.filter(key => key !== id)
-        } else {
-          return [...prev, id]
-        }
-      })
-      
-    }, [])
+    setSelectedChannelInstanceIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(key => key !== id)
+      } else {
+        return [...prev, id]
+      }
+    })
+    setErrors(prev => ({ ...prev, channelInstanceIds: undefined }))
+  }, [])
 
   const handleRuntimeNavigation = () => {
     let returnUrl = "/notifications/groups?openGroup=true"
@@ -491,7 +499,7 @@ const loadChannelInstances = useCallback(() => {
             <div className="grid gap-2 border-t pt-4">
               <div className='flex items-center'>
                 <Label className="font-semibold">
-                  Channel Instances
+                  Channel Instances <span className="text-destructive">*</span>
                 </Label>
                 {!returnUrl && (
                   <Badge className='cursor-pointer px-2 py-1 ml-2'
@@ -507,7 +515,7 @@ const loadChannelInstances = useCallback(() => {
                 Select one or more channels for this group
               </p>
 
-              <div className="border rounded-lg max-h-72 overflow-y-auto">
+              <div className={`border rounded-lg max-h-72 overflow-y-auto ${errors.channelInstanceIds ? 'border-destructive' : ''}`}>
                 {channelInstances.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">
                     No channel instances found
@@ -533,6 +541,9 @@ const loadChannelInstances = useCallback(() => {
                     ))
                 )}
               </div>
+              {errors.channelInstanceIds && (
+                <p className="text-sm text-destructive">{errors.channelInstanceIds}</p>
+              )}
             </div>
 
           </div>
