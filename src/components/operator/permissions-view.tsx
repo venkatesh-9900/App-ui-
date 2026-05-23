@@ -30,7 +30,6 @@ import { Label } from "@/components/ui/label"
 import { Permission } from "@/types/operator"
 import { toast } from "sonner"
 import { formatDate, formatRelativeDate } from "@/utils/formatting"
-import { Pagination } from "@/components/common/pagination"
 import { DataTable } from "@/components/common/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 import { Shield, FileText, Calendar, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
@@ -46,12 +45,7 @@ import {
 export interface PermissionsViewProps {
   permissions: Permission[]
   isLoading: boolean
-  totalCount: number
-  page: number
-  pageSize: number
   search: string
-  onPageChange: (page: number) => void
-  onPageSizeChange: (pageSize: number) => void
   onSearchChange: (search: string) => void
   onCreate: (data: { name: string; description: string }) => Promise<void>
   onUpdate: (id: number, data: { name: string; description: string }) => Promise<void>
@@ -61,12 +55,7 @@ export interface PermissionsViewProps {
 export function PermissionsView({
   permissions,
   isLoading,
-  totalCount,
-  page,
-  pageSize,
   search,
-  onPageChange,
-  onPageSizeChange,
   onSearchChange,
   onCreate,
   onUpdate,
@@ -273,17 +262,6 @@ export function PermissionsView({
             </div>
           </div>
 
-          {!isLoading && totalCount > pageSize && (
-            <div className="px-4 py-2 border-t border-border/50 bg-muted/5 mt-2">
-              <Pagination
-                page={page}
-                pageSize={pageSize}
-                totalCount={totalCount}
-                onPageChange={onPageChange}
-                onPageSizeChange={onPageSizeChange}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
 
