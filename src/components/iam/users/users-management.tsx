@@ -13,6 +13,7 @@ import {
   Trash2,
   Plus,
   Search,
+  Info,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -153,6 +154,13 @@ export function UsersManagement() {
               <CardTitle className="text-sm sm:text-2xl">Users</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">Manage user-role mappings. Expand a role to view and manage its assigned users.</p>
             </div>
+          </div>
+          <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              <span className="font-semibold">Individual role assignments may not take effect</span>{" "}
+              if the user is already a member of a group. Group-level permissions take highest priority and will override any roles assigned here.
+            </p>
           </div>
         </CardHeader>
         <CardContent>
