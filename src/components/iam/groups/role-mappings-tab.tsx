@@ -83,11 +83,11 @@ export function GroupRoleMappingsTab() {
         setIsLoading(false)
       },
       failureTask: () => {
-        toast.error("Failed to load groups")
+        toast.error("Failed to load spaces")
         setIsLoading(false)
       },
       errorTask: () => {
-        toast.error("An error occurred while loading groups")
+        toast.error("An error occurred while loading spaces")
         setIsLoading(false)
       },
       forbiddenTask: () => {
@@ -103,7 +103,7 @@ export function GroupRoleMappingsTab() {
 
   const openGroupRolesDialog = (group: Group) => {
     setRolesTargetId(group.id)
-    setRolesDialogTitle(`Roles for Group: ${group.name}`)
+    setRolesDialogTitle(`Roles for Space: ${group.name}`)
     setAddRoleForm({ roleId: "" })
     setIsRolesDialogOpen(true)
     loadGroupRoles(group.id)
@@ -120,13 +120,13 @@ export function GroupRoleMappingsTab() {
         setRolesLoading(false)
       },
       failureTask: () => {
-        toast.error("Failed to load group roles")
-        setRolesError("Failed to load group roles")
+        toast.error("Failed to load space roles")
+        setRolesError("Failed to load space roles")
         setRolesLoading(false)
       },
       errorTask: () => {
-        toast.error("An error occurred while loading group roles")
-        setRolesError("An error occurred while loading group roles")
+        toast.error("An error occurred while loading space roles")
+        setRolesError("An error occurred while loading space roles")
         setRolesLoading(false)
       },
       forbiddenTask: () => {
@@ -142,7 +142,7 @@ export function GroupRoleMappingsTab() {
     addGroupRoleMapping({
       request: { group_id: rolesTargetId, role_id: Number(addRoleForm.roleId) },
       successTask: () => {
-        toast.success("Role mapped to group")
+        toast.success("Role mapped to space")
         setAddRoleForm({ roleId: "" })
         loadGroupRoles(rolesTargetId!)
       },
@@ -172,11 +172,11 @@ export function GroupRoleMappingsTab() {
   return (
     <div className="space-y-4 mt-4">
       <p className="text-sm text-muted-foreground">
-        Manage role mappings for groups.
+        Manage role mappings for spaces.
       </p>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading groups...</p>
+        <p className="text-sm text-muted-foreground">Loading spaces...</p>
       ) : (
         <div className="space-y-2">
           {groups.map((group) => (
@@ -205,7 +205,7 @@ export function GroupRoleMappingsTab() {
             </Card>
           ))}
           {groups.length === 0 && !isLoading && (
-            <p className="text-sm text-muted-foreground">No groups found.</p>
+            <p className="text-sm text-muted-foreground">No spaces found.</p>
           )}
         </div>
       )}
@@ -242,7 +242,7 @@ export function GroupRoleMappingsTab() {
             {rolesLoading ? (
               <p className="text-xs text-muted-foreground">Loading roles...</p>
             ) : rolesForbidden ? (
-              <p className="text-xs text-destructive">Access denied. You don't have permission to view roles for this group.</p>
+              <p className="text-xs text-destructive">Access denied. You don't have permission to view roles for this space.</p>
             ) : rolesError ? (
               <p className="text-xs text-destructive">{rolesError}</p>
             ) : (

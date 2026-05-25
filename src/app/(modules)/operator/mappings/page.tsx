@@ -6,7 +6,7 @@ import { AccessDenied } from "@/components/access-denied"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DashboardNavbar } from "@/components/web3/explorer/dashboard-navbar"
 import { fetchMappings, createMapping, deleteMapping, updateMapping } from "@/hooks/operator/mappings-service"
-import { fetchApis } from "@/hooks/operator/apis-service"
+import { fetchApis, fetchUnboundApis } from "@/hooks/operator/apis-service"
 import { fetchPermissions } from "@/hooks/operator/permissions-service"
 import { fetchApiServices } from "@/hooks/operator/api-services-service"
 import { ApiMapping, Api, Permission, ApiService } from "@/types/operator"
@@ -135,6 +135,15 @@ export default function MappingsPage() {
     })
   }
 
+  const handleFetchUnboundApis = (callback: (apis: Api[]) => void) => {
+    fetchUnboundApis({
+      limit: 1000,
+      successTask: (data) => callback(data.data || []),
+      failureTask: () => callback([]),
+      errorTask: () => callback([]),
+    })
+  }
+
   const handleDelete = (apiId: number, permissionId: number) => {
     toast.info("Unbinding permission...")
     deleteMapping({
@@ -166,7 +175,7 @@ export default function MappingsPage() {
       <DashboardNavbar />
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
-          <ApiMappingsView 
+          <ApiMappingsView
             mappings={mappings}
             apis={apis}
             permissions={permissions}
@@ -182,6 +191,7 @@ export default function MappingsPage() {
             onCreate={handleCreate}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
+            onFetchUnboundApis={handleFetchUnboundApis}
           />
         </div>
       </div>

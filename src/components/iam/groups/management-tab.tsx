@@ -72,11 +72,11 @@ export function GroupManagementTab() {
         setIsLoading(false)
       },
       failureTask: () => {
-        toast.error("Failed to load groups")
+        toast.error("Failed to load spaces")
         setIsLoading(false)
       },
       errorTask: () => {
-        toast.error("An error occurred while loading groups")
+        toast.error("An error occurred while loading spaces")
         setIsLoading(false)
       },
       forbiddenTask: () => {
@@ -108,18 +108,18 @@ export function GroupManagementTab() {
     createGroup({
       request: { name: groupForm.name, admin_email: groupForm.adminEmail },
       successTask: () => {
-        toast.success("Group created successfully")
+        toast.success("Space created successfully")
         setIsGroupDialogOpen(false)
         setIsSubmitting(false)
         loadGroups()
         refreshGroups()
       },
       failureTask: () => {
-        toast.error("Failed to create group")
+        toast.error("Failed to create space")
         setIsSubmitting(false)
       },
       errorTask: () => {
-        toast.error("An error occurred while creating group")
+        toast.error("An error occurred while creating space")
         setIsSubmitting(false)
       },
       forbiddenTask: () => {
@@ -137,17 +137,17 @@ export function GroupManagementTab() {
       id: currentGroup.id,
       request: { name: groupForm.name, admin_email: groupForm.adminEmail },
       successTask: () => {
-        toast.success("Group updated successfully")
+        toast.success("Space updated successfully")
         setIsGroupDialogOpen(false)
         setIsSubmitting(false)
         loadGroups()
       },
       failureTask: () => {
-        toast.error("Failed to update group")
+        toast.error("Failed to update space")
         setIsSubmitting(false)
       },
       errorTask: () => {
-        toast.error("An error occurred while updating group")
+        toast.error("An error occurred while updating space")
         setIsSubmitting(false)
       },
       forbiddenTask: () => {
@@ -161,13 +161,13 @@ export function GroupManagementTab() {
     deleteGroup({
       id,
       successTask: () => {
-        toast.success("Group deleted successfully")
+        toast.success("Space deleted successfully")
         if (selectedSpace?.id === id) setSelectedSpace(null)
         loadGroups()
         refreshGroups()
       },
-      failureTask: () => toast.error("Failed to delete group"),
-      errorTask: () => toast.error("An error occurred while deleting group"),
+      failureTask: () => toast.error("Failed to delete space"),
+      errorTask: () => toast.error("An error occurred while deleting space"),
       forbiddenTask: () => toast.error("Access denied"),
     })
   }
@@ -259,13 +259,13 @@ export function GroupManagementTab() {
                 <Users className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-sm sm:text-2xl">Groups</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">Manage groups and their structure.</p>
+                <CardTitle className="text-sm sm:text-2xl">Spaces</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">Manage spaces and their structure.</p>
               </div>
             </div>
             {canCreateGroup && (
               <Button onClick={openCreateGroupDialog} size="lg" className="w-fit">
-                <Plus className="w-4 h-4 mr-2" /> Create Group
+                <Plus className="w-4 h-4 mr-2" /> Create Space
               </Button>
             )}
           </div>
@@ -302,12 +302,12 @@ export function GroupManagementTab() {
           <form onSubmit={currentGroup ? handleUpdateGroup : handleCreateGroup}>
             <DialogHeader className="mb-6">
               <DialogTitle className="text-xl">
-                {currentGroup ? "Edit Group" : "Create Group"}
+                {currentGroup ? "Edit Space" : "Create Space"}
               </DialogTitle>
               <DialogDescription className="text-sm">
                 {currentGroup
-                  ? "Update the details of the group."
-                  : "Create a new group to organize users and roles."}
+                  ? "Update the details of the space."
+                  : "Create a new space to organize users and roles."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-5 py-2">
@@ -349,7 +349,7 @@ export function GroupManagementTab() {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
-                {isSubmitting ? "Saving..." : currentGroup ? "Save Changes" : "Create Group"}
+                {isSubmitting ? "Saving..." : currentGroup ? "Save Changes" : "Create Space"}
               </Button>
             </DialogFooter>
           </form>
