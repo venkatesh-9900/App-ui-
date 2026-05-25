@@ -20,7 +20,7 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 
 const menuItems = [
-  { name: "Groups", url: "/iam/groups", icon: Users },
+  { name: "Spaces", url: "/iam/groups", icon: Users },
   { name: "Roles", url: "/iam/roles", icon: ShieldCheck },
   { name: "Users", url: "/iam/users", icon: UserCog },
   { name: "OAuth Setup", url: "/iam/oauth-setup", icon: Globe, requireRoot: true },
