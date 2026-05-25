@@ -61,6 +61,7 @@ export interface ApiMappingsViewProps {
   onCreate: (data: { api_id: number; permission_id: number }) => Promise<void>
   onUpdate: (id: number, data: { api_id: number; permission_id: number }) => Promise<void>
   onDelete: (apiId: number, permissionId: number) => void
+  onFetchUnboundApis: (callback: (apis: Api[]) => void) => void
 }
 
 export function ApiMappingsView({
@@ -79,11 +80,14 @@ export function ApiMappingsView({
   onCreate,
   onUpdate,
   onDelete,
+  onFetchUnboundApis,
 }: ApiMappingsViewProps) {
   // Dialog state (local UI state)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentMapping, setCurrentMapping] = useState<ApiMapping | null>(null)
+  const [unboundApis, setUnboundApis] = useState<Api[]>([])
+  const [isLoadingUnboundApis, setIsLoadingUnboundApis] = useState(false)
   
   // Form state (local UI state)
   const [formData, setFormData] = useState({
@@ -109,6 +113,11 @@ export function ApiMappingsView({
   const openCreateDialog = () => {
     setCurrentMapping(null)
     setFormData({ api_id: "", permission_id: "" })
+    setIsLoadingUnboundApis(true)
+    onFetchUnboundApis((apis) => {
+      setUnboundApis(apis)
+      setIsLoadingUnboundApis(false)
+    })
     setIsDialogOpen(true)
   }
 
@@ -374,13 +383,13 @@ export function ApiMappingsView({
               <div className="grid gap-2">
                 <Label htmlFor="api" className="text-sm font-medium">Target API</Label>
                 <SearchableSelect
-                  items={apis.map(api => ({ 
-                    id: api.id.toString(), 
-                    label: `[${api.method}] ${api.path}` 
+                  items={(currentMapping ? apis : unboundApis).map(api => ({
+                    id: api.id.toString(),
+                    label: `[${api.method}] ${api.path}`
                   }))}
                   value={formData.api_id}
                   onValueChange={(val) => setFormData({...formData, api_id: val})}
-                  placeholder="Select an API path..."
+                  placeholder={isLoadingUnboundApis ? "Loading..." : "Select an API path..."}
                   searchPlaceholder="Search API path..."
                 />
               </div>

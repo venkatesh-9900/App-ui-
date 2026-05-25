@@ -117,6 +117,7 @@ export const ENDPOINTS = {
     },
     OPERATOR: {
         APIS: `/api/operator/apis`,
+        UNBOUND_APIS: `/api/operator/apis/unbound`,
         SERVICES: `/api/operator/api-services`,
         PERMISSIONS: `/api/operator/permissions`,
         MAPPINGS: `/api/operator/api-permissions`
