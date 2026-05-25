@@ -43,9 +43,12 @@ import {
 import { Group } from "@/types/iam"
 import { AccessDenied } from "@/components/access-denied"
 import { useSpace } from "@/contexts/space-context"
+import { useAuth } from "@/contexts/auth-context"
 
 export function GroupManagementTab() {
   const { refreshGroups, selectedSpace, setSelectedSpace } = useSpace()
+  const { isRootUser, isSuperAdmin } = useAuth()
+  const canCreateGroup = isRootUser || isSuperAdmin
   const [groups, setGroups] = useState<Group[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
@@ -260,9 +263,11 @@ export function GroupManagementTab() {
                 <p className="text-sm text-muted-foreground mt-1">Manage groups and their structure.</p>
               </div>
             </div>
-            <Button onClick={openCreateGroupDialog} size="lg" className="w-fit">
-              <Plus className="w-4 h-4 mr-2" /> Create Group
-            </Button>
+            {canCreateGroup && (
+              <Button onClick={openCreateGroupDialog} size="lg" className="w-fit">
+                <Plus className="w-4 h-4 mr-2" /> Create Group
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
