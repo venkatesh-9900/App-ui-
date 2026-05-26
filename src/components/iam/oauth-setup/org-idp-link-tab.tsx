@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Loader2, Link2, Unlink } from "lucide-react"
+import { Loader2, Link2, Unlink, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { FormLabel } from "@/components/ui/form-label"
 import { fetchOrgIdpMappings, linkIdpToOrg, unlinkIdpFromOrg, fetchIdentityProviders, fetchOrganization } from "@/hooks/iam/oauth-service"
@@ -28,6 +28,7 @@ export function OrgIdpLinkTab() {
   const [linkedIdps, setLinkedIdps] = useState<LinkedIdp[]>([])
   const [availableIdps, setAvailableIdps] = useState<OidcIdentityProvider[]>([])
   const [domains, setDomains] = useState<OrgDomainInfo[]>([])
+  const [orgConfigured, setOrgConfigured] = useState(false)
   const [linking, setLinking] = useState(false)
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -68,6 +69,7 @@ export function OrgIdpLinkTab() {
 
     fetchOrganization({
       successTask: (data: OAuthOrganization) => {
+        setOrgConfigured(data.configured)
         setDomains(data.domains || [])
         loadedOrg = true
         checkDone()
@@ -140,17 +142,23 @@ export function OrgIdpLinkTab() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {unlinkableIdps.length > 0 && (
-            <Button onClick={openLinkDialog}>
-              <Link2 className="h-4 w-4 mr-1" /> Link Identity Provider
-            </Button>
-          )}
-
-          {linkedIdps.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No identity providers linked to this organization yet.
-            </p>
+          {!orgConfigured ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              Configure organization first before linking identity providers.
+            </div>
           ) : (
+            <>
+              {unlinkableIdps.length > 0 && (
+                <Button onClick={openLinkDialog}>
+                  <Link2 className="h-4 w-4 mr-1" /> Link Identity Provider
+                </Button>
+              )}
+              {linkedIdps.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No identity providers linked to this organization yet.
+                </p>
+              ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -175,6 +183,8 @@ export function OrgIdpLinkTab() {
                 ))}
               </TableBody>
             </Table>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
