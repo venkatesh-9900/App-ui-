@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,6 +28,8 @@ export function OrganizationTab() {
   const [removeDomainIds, setRemoveDomainIds] = useState<number[]>([])
 
   const [orgId, setOrgId] = useState("")
+  const labelInputRef = useRef<HTMLInputElement>(null)
+  const domainInputRef = useRef<HTMLInputElement>(null)
 
   const loadOrg = useCallback(() => {
     setLoading(true)
@@ -55,6 +57,7 @@ export function OrganizationTab() {
     setPendingNewDomains(prev => [...prev, { name: newDomainName || newDomainValue, domain: newDomainValue }])
     setNewDomainName("")
     setNewDomainValue("")
+    setTimeout(() => labelInputRef.current?.focus(), 0)
   }
 
   const handleRemovePendingDomain = (idx: number) => {
@@ -204,18 +207,33 @@ export function OrganizationTab() {
             </div>
             <div className="flex gap-2">
               <Input
+                ref={labelInputRef}
                 value={newDomainName}
                 onChange={e => setNewDomainName(e.target.value)}
                 placeholder="Label (e.g. Primary)"
                 className="max-w-[200px]"
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault()
+                    domainInputRef.current?.focus()
+                  }
+                }}
               />
               <Input
+                ref={domainInputRef}
                 value={newDomainValue}
                 onChange={e => setNewDomainValue(e.target.value)}
                 placeholder="Domain (e.g. example.com)"
                 onKeyDown={e => e.key === "Enter" && handleAddDomain()}
+                onBlur={() => { if (newDomainValue.trim()) handleAddDomain(); }}
               />
-              <Button type="button" variant="outline" size="icon" onClick={handleAddDomain}>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onMouseDown={e => e.preventDefault()}
+                onClick={handleAddDomain}
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
