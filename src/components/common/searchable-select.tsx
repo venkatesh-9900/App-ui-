@@ -169,6 +169,7 @@ interface SearchableMultiSelectProps {
   emptyMessage?: string
   className?: string
   showSearch?: boolean
+  selectionLabel?: string
 }
 
 export function SearchableMultiSelect({
@@ -180,6 +181,7 @@ export function SearchableMultiSelect({
   emptyMessage = "No item found.",
   className,
   showSearch = true,
+  selectionLabel = "items",
 }: SearchableMultiSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -201,7 +203,7 @@ export function SearchableMultiSelect({
       ? placeholder
       : value.length === 1
         ? items.find((i) => i.id === value[0])?.label ?? `${value.length} selected`
-        : `${value.length} permissions selected`
+        : `${value.length} ${selectionLabel} selected`
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
