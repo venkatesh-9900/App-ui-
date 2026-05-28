@@ -39,6 +39,12 @@ export interface LinkIdpToOrgParams extends BaseServiceParams {
     hideOnLoginPage?: boolean;
     redirectWhenEmailDomainMatches?: boolean;
 }
+export interface UpdateLinkSettingsParams extends BaseServiceParams {
+    alias: string;
+    domain?: string;
+    hideOnLoginPage?: boolean;
+    redirectWhenEmailDomainMatches?: boolean;
+}
 export interface UnlinkIdpFromOrgParams extends BaseServiceParams {
     alias: string;
 }
@@ -208,6 +214,26 @@ export const linkIdpToOrg = async ({ alias, domain, hideOnLoginPage, redirectWhe
         if (response.status === 401) {
             if (retry) await reauthenticationStep(errorTask);
             else await linkIdpToOrg({ retry: true, alias, domain, hideOnLoginPage, redirectWhenEmailDomainMatches, successTask, failureTask, errorTask, forbiddenTask });
+        } else if (response.status === 403) { forbiddenTask?.(); }
+        else if (response.ok) { successTask(await response.json()); }
+        else { failureTask(); }
+    } catch { errorTask(); }
+};
+
+export const updateLinkSettings = async ({ alias, domain, hideOnLoginPage, redirectWhenEmailDomainMatches, successTask, failureTask, errorTask, forbiddenTask, retry = false }: UpdateLinkSettingsParams) => {
+    try {
+        if (retry) await refreshAccessToken({ failureTask, errorTask });
+        const headers = { ...buildHeaderJSON(false), "x-app-name": app_name };
+        const body: Record<string, unknown> = {};
+        if (domain !== undefined) body.domain = domain;
+        if (hideOnLoginPage !== undefined) body.hideOnLoginPage = hideOnLoginPage;
+        if (redirectWhenEmailDomainMatches !== undefined) body.redirectWhenEmailDomainMatches = redirectWhenEmailDomainMatches;
+        const response = await fetch(`${ENDPOINTS.IAM.OAUTH_ORG_IDP_MAPPINGS}?alias=${alias}`, {
+            method: 'PUT', headers, body: JSON.stringify(body)
+        });
+        if (response.status === 401) {
+            if (retry) await reauthenticationStep(errorTask);
+            else await updateLinkSettings({ retry: true, alias, domain, hideOnLoginPage, redirectWhenEmailDomainMatches, successTask, failureTask, errorTask, forbiddenTask });
         } else if (response.status === 403) { forbiddenTask?.(); }
         else if (response.ok) { successTask(await response.json()); }
         else { failureTask(); }
