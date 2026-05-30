@@ -6,8 +6,7 @@ export function truncateText (address: string) {
 }
 
 // Ensures a date string is parsed as UTC (appends Z if no timezone designator)
-const asUTC = (s: string) =>
-  s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s) ? s : s + 'Z'
+const asUTC = (s: string) => s.endsWith('Z') ? s : s + 'Z'
 
 export function formatDate(dateString?: string) {
     if (!dateString) return 'N/A'

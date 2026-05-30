@@ -215,7 +215,7 @@ export default function AAWDetailsPage() {
 
 
     // Format Header Time
-    const asUTC = (s: string) => s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s) ? s : s + 'Z'
+    const asUTC = (s: string) => s.endsWith('Z') ? s : s + 'Z'
     const startTime = new Date(asUTC(groupInfo.start_time)).toLocaleString("en-US", {
         hour12: true,
         month: "short",
