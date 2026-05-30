@@ -149,7 +149,7 @@ export default function ChatPage() {
                 id: `msg-${idx}`,
                 role: msg.author === "user" ? "user" : "assistant",
                 content: msg.content,
-                timestamp: new Date(msg.timestamp),
+                timestamp: new Date(msg.timestamp.endsWith('Z') ? msg.timestamp : msg.timestamp + 'Z'),
                 attachments: msg.attached_files || [],
             }))
 
@@ -186,7 +186,7 @@ export default function ChatPage() {
             id: `msg-${idx}`,
             role: msg.author === "user" ? "user" : "assistant",
             content: msg.content,
-            timestamp: new Date(msg.timestamp),
+            timestamp: new Date(msg.timestamp.endsWith('Z') ? msg.timestamp : msg.timestamp + 'Z'),
             attachments: msg.attached_files || [],
         }))
         setMessages(displayMessages)
@@ -204,7 +204,7 @@ export default function ChatPage() {
                         id: `msg-${idx}`,
                         role: msg.author === "user" ? "user" : "assistant",
                         content: msg.content,
-                        timestamp: new Date(msg.timestamp),
+                        timestamp: new Date(msg.timestamp.endsWith('Z') ? msg.timestamp : msg.timestamp + 'Z'),
                         attachments: msg.attached_files || [],
                         isStreaming: msg.isStreaming,  // Pass streaming state
                     }))

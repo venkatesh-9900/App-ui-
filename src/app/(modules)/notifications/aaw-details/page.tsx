@@ -215,14 +215,15 @@ export default function AAWDetailsPage() {
 
 
     // Format Header Time
-    const startTime = new Date(groupInfo?.start_time).toLocaleString("en-US", {
+    const asUTC = (s: string) => s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s) ? s : s + 'Z'
+    const startTime = new Date(asUTC(groupInfo.start_time)).toLocaleString("en-US", {
         hour12: true,
         month: "short",
         day: "numeric",
         hour: "2-digit",
         minute: "2-digit",
     })
-    const endTime = new Date(groupInfo.end_time).toLocaleString("en-US", {
+    const endTime = new Date(asUTC(groupInfo.end_time)).toLocaleString("en-US", {
         hour12: true,
         month: "short",
         day: "numeric",

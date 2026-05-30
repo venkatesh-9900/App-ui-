@@ -31,8 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Edit2, Group, UserRound } from 'lucide-react'
 import { AddressGroup, CreateAddressGroupRequest } from '@/types/address-group'
-import { format } from 'date-fns'
-import { truncateText } from '@/utils/formatting'
+import { truncateText, formatDate } from '@/utils/formatting'
 import { AddressGroupFormDialog } from '@/components/web3/address-group/address-group-form-dialog'
 import { updateAddressGroup } from '@/hooks/web3/address-group-service'
 import { toast } from 'sonner'
@@ -78,15 +77,6 @@ export function AddressGroupTable({
     }
     setDeleteDialogOpen(false)
     setSelectedGroup(null)
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A'
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy')
-    } catch {
-      return 'N/A'
-    }
   }
 
   const formatTime = (dateString?: string) => {

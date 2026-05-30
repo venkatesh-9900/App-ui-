@@ -18,10 +18,11 @@ const enableCopyAddress = ["txn_hash", "block_hash", "from_address", "to_address
 function formatTimestamp(value: any) {
   if (!value) return "-"; // null / empty → show "-"
 
-  const date = new Date(value);
+  const utcValue = typeof value === 'string' && !value.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(value) ? value + 'Z' : value
+  const date = new Date(utcValue);
   if (isNaN(date.getTime())) return String(value); // if not a valid date
 
-  return date.toLocaleString("en-IN", {
+  return date.toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",

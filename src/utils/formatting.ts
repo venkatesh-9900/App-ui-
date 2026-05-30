@@ -5,10 +5,14 @@ export function truncateText (address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
+// Ensures a date string is parsed as UTC (appends Z if no timezone designator)
+const asUTC = (s: string) =>
+  s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s) ? s : s + 'Z'
+
 export function formatDate(dateString?: string) {
     if (!dateString) return 'N/A'
     try {
-      return format(new Date(dateString), 'MMM d, yyyy')
+      return format(new Date(asUTC(dateString)), 'MMM d, yyyy')
     } catch {
       return 'N/A'
     }
@@ -29,7 +33,7 @@ export function formatDate(dateString?: string) {
  * // 👉 "Jan 1, 2026, 05:29:59"
  */
 export function formatPrettyDate(dateString: string) {
-  const d = new Date(dateString)
+  const d = new Date(asUTC(dateString))
 
   return d.toLocaleString("en-US", {
     month: "short", // "Jan"
@@ -45,7 +49,7 @@ export function formatPrettyDate(dateString: string) {
 export function formatRelativeDate(dateString?: string) {
   if (!dateString) return "N/A"
   try {
-    return formatDistanceToNowStrict(new Date(dateString), { addSuffix: true })
+    return formatDistanceToNowStrict(new Date(asUTC(dateString)), { addSuffix: true })
   } catch {
     return "N/A"
   }
