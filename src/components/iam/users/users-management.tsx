@@ -273,7 +273,7 @@ export function UsersManagement() {
                                   {mappedEmail ?? `User #${mapping.user_id}`}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">
-                                  Added {new Date(mapping.created_at).toLocaleDateString()}
+                                  Added {new Date(mapping.created_at.endsWith('Z') ? mapping.created_at : mapping.created_at + 'Z').toLocaleDateString()}
                                 </span>
                               </div>
                               <Button

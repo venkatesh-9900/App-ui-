@@ -40,7 +40,7 @@ import {
     Clock,
     UserCircle2,
 } from "lucide-react"
-import { format } from "date-fns"
+import { formatDate } from "@/utils/formatting"
 
 import { NotificationChannelInstance } from "@/types/notification-channel-instance"
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@radix-ui/react-tooltip"
@@ -84,15 +84,6 @@ export function NotificationChannelInstanceTable({
         setSelectedInstance(null)
     }
     
-
-    const formatDate = (date?: string | Date) => {
-        if (!date) return "N/A"
-        try {
-            return format(new Date(date), "MMM d, yyyy")
-        } catch {
-            return "N/A"
-        }
-    }
 
     const isChannelEmailOrSms = (instances: NotificationChannelInstance) => {
         if ([1, 2].includes(instances.channel_id)) return true

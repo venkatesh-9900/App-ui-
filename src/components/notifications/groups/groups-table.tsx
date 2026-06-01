@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, Pencil, Trash2, Copy, Calendar, Tag, Key, Clock, UserCircle2Icon, Webhook } from 'lucide-react'
 import { NotificationGroup } from '@/types/topic'
-import { format } from 'date-fns'
+import { formatDate } from '@/utils/formatting'
 import { useAuth } from '@/contexts'
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 
@@ -67,15 +67,6 @@ export function GroupsTable({
     }
     setDeleteDialogOpen(false)
     setSelectedGroup(null)
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A'
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy')
-    } catch {
-      return 'N/A'
-    }
   }
 
   const getChannelInstances = (groupIds: number[]) => {
