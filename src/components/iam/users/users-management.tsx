@@ -38,7 +38,7 @@ export function UsersManagement() {
   const [roleMappings, setRoleMappings] = useState<Record<number, UserRole[]>>({})
   const [mappingsLoading, setMappingsLoading] = useState<Record<number, boolean>>({})
   const [addUserInputs, setAddUserInputs] = useState<Record<number, string[]>>({})
-  const [isAddingUsers, setIsAddingUsers] = useState<Record<number, boolean>>({})
+  const [isAddingUsers, setIsAddingUsers] = useState<Record<number, boolean>>({}) 
   const [mappedUsersSearch, setMappedUsersSearch] = useState<Record<number, string>>({})
 
   const loadAllUsers = useCallback(() => {
