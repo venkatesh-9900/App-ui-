@@ -6,7 +6,7 @@ set -e
 # Environment (dev | qa | prod)
 # --------------------------------------------------
 ENVIRONMENT=${1:-dev}
-API_BASE_URL="https://${ENVIRONMENT}.app.argusintelligence.net"
+API_BASE_URL="https://${ENVIRONMENT}.app.kernelmind.io"
 
 cleanup() {
   echo ""
