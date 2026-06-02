@@ -31,8 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, Trash2, Calendar, Clock, Activity, Hash, Play, Pause, Group, Edit2, Users } from 'lucide-react'
 import { AddressActivity, CreateAddressActivityRequest, UpdateAddressActivityRequest } from '@/types/address-activity'
-import { format } from 'date-fns'
-import { truncateText } from '@/utils/formatting'
+import { truncateText, formatDate } from '@/utils/formatting'
 import { AddressGroup } from '@/types/address-group'
 import { useAuth } from '@/contexts'
 import { NotificationSubscriber } from '@/types/subscriber'
@@ -120,15 +119,6 @@ export function AddressActivityTable({
     handleToggleActivity(activity.id, newStatus)
     // Reset toggling state after a delay
     setTimeout(() => setTogglingId(null), 1000)
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A'
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy')
-    } catch {
-      return 'N/A'
-    }
   }
 
   const formatTime = (dateString?: string) => {
