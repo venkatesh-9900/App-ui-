@@ -44,6 +44,9 @@ export interface FetchUserGroupMappingsParams extends BaseServiceParams {
 export interface AddUserGroupMappingParams extends BaseServiceParams {
     request: Partial<UserGroup>;
 }
+export interface BulkAddUserGroupMappingParams extends BaseServiceParams {
+    request: { group_id: number; user_ids: number[] };
+}
 export interface RemoveUserGroupMappingParams extends BaseServiceParams {
     userId: number;
     groupId: number;
@@ -56,6 +59,9 @@ export interface FetchGroupRoleMappingsParams extends BaseServiceParams {
 export interface AddGroupRoleMappingParams extends BaseServiceParams {
     request: Partial<GroupRole>;
 }
+export interface BulkAddGroupRoleMappingParams extends BaseServiceParams {
+    request: { group_id: number; role_ids: number[] };
+}
 export interface RemoveGroupRoleMappingParams extends BaseServiceParams {
     groupId: number;
     roleId: number;
@@ -67,6 +73,9 @@ export interface FetchUserRoleMappingsParams extends BaseServiceParams {
 }
 export interface AddUserRoleMappingParams extends BaseServiceParams {
     request: Partial<UserRole>;
+}
+export interface BulkAddUserRoleMappingParams extends BaseServiceParams {
+    request: { role_id: number; user_ids: number[] };
 }
 export interface RemoveUserRoleMappingParams extends BaseServiceParams {
     userId: number;
@@ -460,6 +469,38 @@ export const addUserGroupMapping = async ({ request, successTask, failureTask, e
     }
 };
 
+export const bulkAddUserGroupMappings = async ({ request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: BulkAddUserGroupMappingParams) => {
+    try {
+        if (retry) {
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const headers = { ...buildHeaderJSON(false), "x-app-name": app_name };
+        const response = await fetch(ENDPOINTS.IAM.USER_GROUP_MAPPINGS_BULK, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(request)
+        });
+
+        if (response.status === 401) {
+            if (retry) {
+                await reauthenticationStep(errorTask);
+            } else {
+                await bulkAddUserGroupMappings({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask });
+            }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
+        } else if (response.ok) {
+            const data = await response.json();
+            successTask(data);
+        } else {
+            failureTask();
+        }
+    } catch (error) {
+        errorTask();
+    }
+};
+
 export const removeUserGroupMapping = async ({ userId, groupId, successTask, failureTask, errorTask, forbiddenTask, retry = false }: RemoveUserGroupMappingParams) => {
     try {
         if (retry) {
@@ -561,6 +602,38 @@ export const addGroupRoleMapping = async ({ request, successTask, failureTask, e
     }
 };
 
+export const bulkAddGroupRoleMappings = async ({ request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: BulkAddGroupRoleMappingParams) => {
+    try {
+        if (retry) {
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const headers = { ...buildHeaderJSON(false), "x-app-name": app_name };
+        const response = await fetch(ENDPOINTS.IAM.GROUP_ROLE_MAPPINGS_BULK, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(request)
+        });
+
+        if (response.status === 401) {
+            if (retry) {
+                await reauthenticationStep(errorTask);
+            } else {
+                await bulkAddGroupRoleMappings({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask });
+            }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
+        } else if (response.ok) {
+            const data = await response.json();
+            successTask(data);
+        } else {
+            failureTask();
+        }
+    } catch (error) {
+        errorTask();
+    }
+};
+
 export const removeGroupRoleMapping = async ({ groupId, roleId, successTask, failureTask, errorTask, forbiddenTask, retry = false }: RemoveGroupRoleMappingParams) => {
     try {
         if (retry) {
@@ -654,6 +727,38 @@ export const addUserRoleMapping = async ({ request, successTask, failureTask, er
         } else if (response.ok) {
             const data = await response.json();
             successTask(data.data || data);
+        } else {
+            failureTask();
+        }
+    } catch (error) {
+        errorTask();
+    }
+};
+
+export const bulkAddUserRoleMappings = async ({ request, successTask, failureTask, errorTask, forbiddenTask, retry = false }: BulkAddUserRoleMappingParams) => {
+    try {
+        if (retry) {
+            await refreshAccessToken({ failureTask, errorTask });
+        }
+
+        const headers = { ...buildHeaderJSON(false), "x-app-name": app_name };
+        const response = await fetch(ENDPOINTS.IAM.USER_ROLE_MAPPINGS_BULK, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(request)
+        });
+
+        if (response.status === 401) {
+            if (retry) {
+                await reauthenticationStep(errorTask);
+            } else {
+                await bulkAddUserRoleMappings({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask });
+            }
+        } else if (response.status === 403) {
+            forbiddenTask?.();
+        } else if (response.ok) {
+            const data = await response.json();
+            successTask(data);
         } else {
             failureTask();
         }

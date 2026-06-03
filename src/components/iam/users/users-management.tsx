@@ -20,11 +20,11 @@ import {
   fetchRoles,
   fetchIamUsers,
   fetchUserRoleMappings,
-  addUserRoleMapping,
+  bulkAddUserRoleMappings,
   removeUserRoleMapping,
 } from "@/hooks/iam/iam-service"
 import { Role, UserRole } from "@/types/iam"
-import { SearchableSelect } from "@/components/common/searchable-select"
+import { SearchableMultiSelect } from "@/components/common/searchable-select"
 import { AccessDenied } from "@/components/access-denied"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -37,7 +37,8 @@ export function UsersManagement() {
   const [allUsers, setAllUsers] = useState<{ id: number; email: string }[]>([])
   const [roleMappings, setRoleMappings] = useState<Record<number, UserRole[]>>({})
   const [mappingsLoading, setMappingsLoading] = useState<Record<number, boolean>>({})
-  const [addUserInputs, setAddUserInputs] = useState<Record<number, string>>({})
+  const [addUserInputs, setAddUserInputs] = useState<Record<number, string[]>>({})
+  const [isAddingUsers, setIsAddingUsers] = useState<Record<number, boolean>>({}) 
   const [mappedUsersSearch, setMappedUsersSearch] = useState<Record<number, string>>({})
 
   const loadAllUsers = useCallback(() => {
@@ -109,20 +110,31 @@ export function UsersManagement() {
     }
   }
 
-  const handleAddUser = (roleId: number) => {
-    const userId = addUserInputs[roleId]?.trim()
-    if (!userId) return
+  const handleAddUsers = (roleId: number) => {
+    const userIds = addUserInputs[roleId] ?? []
+    if (userIds.length === 0) return
 
-    addUserRoleMapping({
-      request: { role_id: roleId, user_id: Number(userId) },
+    setIsAddingUsers((prev) => ({ ...prev, [roleId]: true }))
+    bulkAddUserRoleMappings({
+      request: { role_id: roleId, user_ids: userIds.map(Number) },
       successTask: () => {
-        toast.success("User added to role")
-        setAddUserInputs((prev) => ({ ...prev, [roleId]: "" }))
+        toast.success(`${userIds.length} user(s) added to role`)
+        setAddUserInputs((prev) => ({ ...prev, [roleId]: [] }))
         loadMappingsForRole(roleId)
+        setIsAddingUsers((prev) => ({ ...prev, [roleId]: false }))
       },
-      failureTask: () => toast.error("Failed to add user to role"),
-      errorTask: () => toast.error("An error occurred while adding user"),
-      forbiddenTask: () => toast.error("Access denied"),
+      failureTask: () => {
+        toast.error("Failed to add users to role")
+        setIsAddingUsers((prev) => ({ ...prev, [roleId]: false }))
+      },
+      errorTask: () => {
+        toast.error("An error occurred while adding users")
+        setIsAddingUsers((prev) => ({ ...prev, [roleId]: false }))
+      },
+      forbiddenTask: () => {
+        toast.error("Access denied")
+        setIsAddingUsers((prev) => ({ ...prev, [roleId]: false }))
+      },
     })
   }
 
@@ -177,7 +189,11 @@ export function UsersManagement() {
             const isExpanded = expandedRoleId === role.id
             const mappings = roleMappings[role.id] ?? []
             const isLoadingMappings = mappingsLoading[role.id] ?? false
-            const userInput = addUserInputs[role.id] ?? ""
+            const selectedUserIds = addUserInputs[role.id] ?? []
+            const mappedUserIds = new Set(mappings.map((m) => m.user_id))
+            const addableUserItems = allUsers
+              .filter((u) => !mappedUserIds.has(u.id))
+              .map((u) => ({ id: u.id.toString(), label: u.email }))
 
             return (
               <Card key={role.id} className="border-border/50 shadow-lg overflow-hidden">
@@ -213,26 +229,28 @@ export function UsersManagement() {
                     <div className="px-3 py-3 sm:px-6 sm:py-4 bg-muted/30 border-t border-border/50 space-y-4">
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                         <div className="flex-1 sm:max-w-xs">
-                          <SearchableSelect
-                            items={allUsers.map(u => ({ id: u.id.toString(), label: u.email }))}
-                            value={userInput}
+                          <SearchableMultiSelect
+                            items={addableUserItems}
+                            value={selectedUserIds}
                             onValueChange={(val) =>
                               setAddUserInputs((prev) => ({
                                 ...prev,
                                 [role.id]: val,
                               }))
                             }
-                            placeholder="Select a user..."
+                            placeholder="Select users..."
                             searchPlaceholder="Search users by email..."
                             emptyMessage="No users found."
+                            selectionLabel="users"
                           />
                         </div>
                         <Button
                           size="sm"
-                          onClick={() => handleAddUser(role.id)}
+                          disabled={selectedUserIds.length === 0 || (isAddingUsers[role.id] ?? false)}
+                          onClick={() => handleAddUsers(role.id)}
                           className="cursor-pointer"
                         >
-                          <Plus className="h-4 w-4 mr-1" /> Add User
+                          <Plus className="h-4 w-4 mr-1" /> Add User{selectedUserIds.length > 1 ? "s" : ""}
                         </Button>
                       </div>
 

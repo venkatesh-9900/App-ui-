@@ -23,11 +23,11 @@ import {
   fetchGroups,
   fetchRoles,
   fetchGroupRoleMappings,
-  addGroupRoleMapping,
+  bulkAddGroupRoleMappings,
   removeGroupRoleMapping,
 } from "@/hooks/iam/iam-service"
 import { Group, GroupRole, Role } from "@/types/iam"
-import { SearchableSelect } from "@/components/common/searchable-select"
+import { SearchableMultiSelect } from "@/components/common/searchable-select"
 import { AccessDenied } from "@/components/access-denied"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -48,7 +48,8 @@ export function GroupRoleMappingsTab() {
   const [rolesLoading, setRolesLoading] = useState(false)
   const [rolesError, setRolesError] = useState<string | null>(null)
   const [rolesForbidden, setRolesForbidden] = useState(false)
-  const [addRoleForm, setAddRoleForm] = useState({ roleId: "" })
+  const [addRoleForm, setAddRoleForm] = useState({ roleIds: [] as string[] })
+  const [isAddingRoles, setIsAddingRoles] = useState(false)
   const [mappedRolesSearch, setMappedRolesSearch] = useState("")
 
   const loadAllRoles = useCallback(() => {
@@ -104,7 +105,7 @@ export function GroupRoleMappingsTab() {
   const openGroupRolesDialog = (group: Group) => {
     setRolesTargetId(group.id)
     setRolesDialogTitle(`Roles for Space: ${group.name}`)
-    setAddRoleForm({ roleId: "" })
+    setAddRoleForm({ roleIds: [] })
     setIsRolesDialogOpen(true)
     loadGroupRoles(group.id)
   }
@@ -136,19 +137,21 @@ export function GroupRoleMappingsTab() {
     })
   }
 
-  const handleAddRole = () => {
-    if (!rolesTargetId || !addRoleForm.roleId) return
+  const handleAddRoles = () => {
+    if (!rolesTargetId || addRoleForm.roleIds.length === 0) return
 
-    addGroupRoleMapping({
-      request: { group_id: rolesTargetId, role_id: Number(addRoleForm.roleId) },
+    setIsAddingRoles(true)
+    bulkAddGroupRoleMappings({
+      request: { group_id: rolesTargetId, role_ids: addRoleForm.roleIds.map(Number) },
       successTask: () => {
-        toast.success("Role mapped to space")
-        setAddRoleForm({ roleId: "" })
+        toast.success(`${addRoleForm.roleIds.length} role(s) mapped to space`)
+        setAddRoleForm({ roleIds: [] })
         loadGroupRoles(rolesTargetId!)
+        setIsAddingRoles(false)
       },
-      failureTask: () => toast.error("Failed to map role"),
-      errorTask: () => toast.error("An error occurred while mapping role"),
-      forbiddenTask: () => toast.error("Access denied"),
+      failureTask: () => { toast.error("Failed to map roles"); setIsAddingRoles(false) },
+      errorTask: () => { toast.error("An error occurred while mapping roles"); setIsAddingRoles(false) },
+      forbiddenTask: () => { toast.error("Access denied"); setIsAddingRoles(false) },
     })
   }
 
@@ -225,18 +228,21 @@ export function GroupRoleMappingsTab() {
                 ) : allRolesError ? (
                   <p className="text-xs text-destructive py-2">{allRolesError}</p>
                 ) : (
-                  <SearchableSelect
-                    items={allRoles.map(r => ({ id: r.id.toString(), label: r.name }))}
-                    value={addRoleForm.roleId}
-                    onValueChange={(val) => setAddRoleForm({ roleId: val })}
-                    placeholder="Select a role..."
+                  <SearchableMultiSelect
+                    items={allRoles
+                      .filter(r => !groupRoles.some(m => m.role_id === r.id))
+                      .map(r => ({ id: r.id.toString(), label: r.name }))}
+                    value={addRoleForm.roleIds}
+                    onValueChange={(val) => setAddRoleForm({ roleIds: val })}
+                    placeholder="Select roles..."
                     searchPlaceholder="Search roles..."
                     emptyMessage="No roles found."
+                    selectionLabel="roles"
                   />
                 )}
               </div>
-              <Button size="sm" onClick={handleAddRole} className="cursor-pointer" disabled={allRolesForbidden || !!allRolesError}>
-                <Shield className="h-4 w-4 mr-1" /> Add
+              <Button size="sm" onClick={handleAddRoles} className="cursor-pointer" disabled={allRolesForbidden || !!allRolesError || addRoleForm.roleIds.length === 0 || isAddingRoles}>
+                <Shield className="h-4 w-4 mr-1" /> Add{addRoleForm.roleIds.length > 1 ? ` (${addRoleForm.roleIds.length})` : ""}
               </Button>
             </div>
             {rolesLoading ? (

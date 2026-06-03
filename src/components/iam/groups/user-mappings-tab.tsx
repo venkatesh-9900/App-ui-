@@ -23,11 +23,11 @@ import {
   fetchGroups,
   fetchIamUsers,
   fetchUserGroupMappings,
-  addUserGroupMapping,
+  bulkAddUserGroupMappings,
   removeUserGroupMapping,
 } from "@/hooks/iam/iam-service"
 import { Group, UserGroup } from "@/types/iam"
-import { SearchableSelect } from "@/components/common/searchable-select"
+import { SearchableMultiSelect } from "@/components/common/searchable-select"
 import { AccessDenied } from "@/components/access-denied"
 
 export function GroupUserMappingsTab() {
@@ -46,7 +46,8 @@ export function GroupUserMappingsTab() {
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersError, setUsersError] = useState<string | null>(null)
   const [usersForbidden, setUsersForbidden] = useState(false)
-  const [addUserForm, setAddUserForm] = useState({ userId: "" })
+  const [addUserForm, setAddUserForm] = useState({ userIds: [] as string[] })
+  const [isAddingUsers, setIsAddingUsers] = useState(false)
   const [mappedUsersSearch, setMappedUsersSearch] = useState("")
 
   const loadAllUsers = useCallback(() => {
@@ -101,7 +102,7 @@ export function GroupUserMappingsTab() {
   const openGroupUsersDialog = (group: Group) => {
     setUsersTargetId(group.id)
     setUsersDialogTitle(`Users in Space: ${group.name}`)
-    setAddUserForm({ userId: "" })
+    setAddUserForm({ userIds: [] })
     setIsUsersDialogOpen(true)
     loadGroupUsers(group.id)
   }
@@ -133,19 +134,21 @@ export function GroupUserMappingsTab() {
     })
   }
 
-  const handleAddUser = () => {
-    if (!usersTargetId || !addUserForm.userId) return
+  const handleAddUsers = () => {
+    if (!usersTargetId || addUserForm.userIds.length === 0) return
 
-    addUserGroupMapping({
-      request: { user_id: Number(addUserForm.userId), group_id: usersTargetId },
+    setIsAddingUsers(true)
+    bulkAddUserGroupMappings({
+      request: { group_id: usersTargetId, user_ids: addUserForm.userIds.map(Number) },
       successTask: () => {
-        toast.success("User added to space")
-        setAddUserForm({ userId: "" })
+        toast.success(`${addUserForm.userIds.length} user(s) added to space`)
+        setAddUserForm({ userIds: [] })
         loadGroupUsers(usersTargetId!)
+        setIsAddingUsers(false)
       },
-      failureTask: () => toast.error("Failed to add user"),
-      errorTask: () => toast.error("An error occurred while adding user"),
-      forbiddenTask: () => toast.error("Access denied"),
+      failureTask: () => { toast.error("Failed to add users"); setIsAddingUsers(false) },
+      errorTask: () => { toast.error("An error occurred while adding users"); setIsAddingUsers(false) },
+      forbiddenTask: () => { toast.error("Access denied"); setIsAddingUsers(false) },
     })
   }
 
@@ -222,18 +225,21 @@ export function GroupUserMappingsTab() {
                 ) : allUsersError ? (
                   <p className="text-xs text-destructive py-2">{allUsersError}</p>
                 ) : (
-                  <SearchableSelect
-                    items={allUsers.map(u => ({ id: u.id.toString(), label: u.email }))}
-                    value={addUserForm.userId}
-                    onValueChange={(val) => setAddUserForm({ userId: val })}
-                    placeholder="Select a user..."
+                  <SearchableMultiSelect
+                    items={allUsers
+                      .filter(u => !groupUsers.some(m => m.user_id === u.id))
+                      .map(u => ({ id: u.id.toString(), label: u.email }))}
+                    value={addUserForm.userIds}
+                    onValueChange={(val) => setAddUserForm({ userIds: val })}
+                    placeholder="Select users..."
                     searchPlaceholder="Search users by email..."
                     emptyMessage="No users found."
+                    selectionLabel="users"
                   />
                 )}
               </div>
-              <Button size="sm" onClick={handleAddUser} className="cursor-pointer" disabled={allUsersForbidden || !!allUsersError}>
-                <UserPlus className="h-4 w-4 mr-1" /> Add
+              <Button size="sm" onClick={handleAddUsers} className="cursor-pointer" disabled={allUsersForbidden || !!allUsersError || addUserForm.userIds.length === 0 || isAddingUsers}>
+                <UserPlus className="h-4 w-4 mr-1" /> Add{addUserForm.userIds.length > 1 ? ` (${addUserForm.userIds.length})` : ""}
               </Button>
             </div>
             {usersLoading ? (

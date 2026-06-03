@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/common/data-table"
 import { Pagination } from "@/components/common/pagination"
 import {
@@ -235,6 +234,7 @@ export function GroupManagementTab() {
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive cursor-pointer"
                   onClick={() => handleDeleteGroup(group.id)}
+                  disabled={!canCreateGroup}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete

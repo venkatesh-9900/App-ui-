@@ -440,6 +440,7 @@ export function RolesManagement() {
                   placeholder="Select permissions..."
                   searchPlaceholder="Search permissions..."
                   emptyMessage="No unmapped permissions."
+                  selectionLabel="permissions"
                 />
               </div>
               <Button
