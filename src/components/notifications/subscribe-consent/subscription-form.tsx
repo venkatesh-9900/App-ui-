@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle2, Bell, BellOff } from 'lucide-react'
+import { Loader2, CheckCircle2, Bell } from 'lucide-react'
 import { CreateNotificationChannelInstanceRequest } from '@/types/notification-channel-instance'
 import { NotificationSubscriberInfo } from '@/types/notification-channel-instance'
 
@@ -28,8 +28,6 @@ interface SubscriptionFormProps {
   isSuccess: boolean
   existingSubscriber: NotificationSubscriberInfo | null
   onSubmit: (payload: CreateNotificationChannelInstanceRequest) => void
-  onUnsubscribe?: () => void
-  isUnsubscribing?: boolean
 }
 
 export function SubscriptionForm({
@@ -39,8 +37,6 @@ export function SubscriptionForm({
   isSuccess,
   existingSubscriber,
   onSubmit,
-  onUnsubscribe,
-  isUnsubscribing = false,
 }: SubscriptionFormProps) {
   const [formData, setFormData] = useState<SubscriberFormData>({
     firstName: '',
@@ -251,25 +247,6 @@ export function SubscriptionForm({
           )}
         </Button>
 
-        {/* Unsubscribe Button - Hidden for now */}
-        {/* {existingSubscriber && existingSubscriber.active && onUnsubscribe && (
-          <div className="pt-2 border-t mt-3">
-            <Button
-              type="button"
-              variant="destructive"
-              className="w-full cursor-pointer"
-              onClick={onUnsubscribe}
-              disabled={isUnsubscribing}
-              size="lg"
-            >
-              <BellOff className="w-4 h-4 mr-2" />
-              {isUnsubscribing ? 'Unsubscribing...' : 'Unsubscribe from All Notifications'}
-            </Button>
-            <p className="text-sm text-muted-foreground text-center mt-2">
-              This will stop all email and SMS notifications
-            </p>
-          </div>
-        )} */}
       </div>
     </form>
   )

@@ -11,11 +11,9 @@ import {
   deleteAddressActivity,
   toggleAddressActivity 
 } from '@/hooks/web3/address-activity-service'
-import { listTopics } from '@/hooks/topic-service'
-import { getActiveHumanSubscribers } from '@/hooks/subscriber-service'
+import { listNotificationGroups } from '@/hooks/notification-group-service'
 import { AddressActivity, CreateAddressActivityRequest } from '@/types/address-activity'
-import { NotificationGroup } from '@/types/topic'
-import { NotificationSubscriber } from '@/types/subscriber'
+import { NotificationGroup } from '@/types/notification-group'
 import { AddressActivityFormDialog } from '@/components/web3/address-activity/address-activity-form-dialog'
 import { AddressActivityTable } from '@/components/web3/address-activity/address-activity-table'
 import { ProtectedRoute } from "@/components/protected-route"
@@ -30,11 +28,9 @@ import { useSpace } from '@/contexts/space-context'
 export default function AddressActivityPage() {
     const [activities, setActivities] = useState<AddressActivity[]>([])
     const [groups, setGroups] = useState<NotificationGroup[]>([])
-    const [subscribers, setSubscribers] = useState<NotificationSubscriber[]>([])
     const [addressGroups, setAddressGroups] = useState<AddressGroup[]>([]); // Adjust type as needed
     const [isLoadingActivities, setIsLoadingActivities] = useState(true)
     const [isLoadingGroups, setIsLoadingGroups] = useState(false)
-    const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false)
     const [isLoadingAddressGroups, setIsLoadingAddressGroups] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
@@ -53,7 +49,6 @@ export default function AddressActivityPage() {
         fetchActivities()
         fetchAddressGroups();
         fetchGroups()
-        fetchSubscribers()
         handleParams()
     }, [])
 
@@ -111,7 +106,7 @@ export default function AddressActivityPage() {
 
     const fetchGroups = async () => {
         setIsLoadingGroups(true)
-        await listTopics({
+        await listNotificationGroups({
             groupId: selectedGroupId,
             successTask: (response) => {
                 if (response.data && response.data) {
@@ -130,30 +125,6 @@ export default function AddressActivityPage() {
             forbiddenTask: () => {
                 setAccessDenied(true)
                 setIsLoadingGroups(false)
-            },
-        })
-    }
-
-    const fetchSubscribers = async () => {
-        setIsLoadingSubscribers(true)
-        await getActiveHumanSubscribers({
-            successTask: (response) => {
-                if (response.data && Array.isArray(response.data)) {
-                    setSubscribers(response.data)
-                }
-                setIsLoadingSubscribers(false)
-            },
-            failureTask: () => {
-                toast.error('Failed to load subscribers')
-                setIsLoadingSubscribers(false)
-            },
-            errorTask: () => {
-                toast.error('Error loading subscribers')
-                setIsLoadingSubscribers(false)
-            },
-            forbiddenTask: () => {
-                setAccessDenied(true)
-                setIsLoadingSubscribers(false)
             },
         })
     }
@@ -270,7 +241,6 @@ export default function AddressActivityPage() {
                                     activities={activities}
                                     addressGroups={addressGroups}
                                     groups={groups}
-                                    subscribers={subscribers}
                                     isLoading={isLoadingActivities}
                                     loadingAddressGroups={isLoadingAddressGroups}
                                 />
@@ -287,10 +257,8 @@ export default function AddressActivityPage() {
                             groups={groups}
                             initialData={initialData}
                             addressGroups={addressGroups}
-                            subscribers={subscribers}
                             loadingGroups={isLoadingGroups}
                             loadingAddressGroups={isLoadingAddressGroups}
-                            loadingSubscribers={isLoadingSubscribers}
                         />
         </div>
       </div>

@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Bell } from 'lucide-react'
-import { createSubscriber, getCurrentUserSubscriber, deleteSubscriber } from '@/hooks/subscriber-service'
-import { CreateSubscriberRequest, NotificationSubscriber } from '@/types/subscriber'
 import { ConsentToggles } from '@/components/notifications/subscribe-consent/consent-toggles'
 import { SubscriptionForm } from '@/components/notifications/subscribe-consent/subscription-form'
 import { EmptyState } from '@/components/notifications/subscribe-consent/empty-state'
@@ -160,44 +158,6 @@ export default function SubscribeConsentPage() {
     }
   }
 
-  // Handle unsubscribe
-  const handleUnsubscribe = async () => {
-    if (!existingSubscriber) return
-
-    setIsUnsubscribing(true)
-
-    await deleteSubscriber({
-      subscriberId: '1', //existingSubscriber.novu_subscriber_id, // now we dont have unsubsribe option 
-      successTask: () => {
-        toast.success('Unsubscribed successfully', {
-          description: 'You have been unsubscribed from all notifications.',
-        })
-
-        // Reset state
-        setExistingSubscriber(null)
-        setEmailConsent(false)
-        setSmsConsent(false)
-        setIsUnsubscribing(false)
-      },
-      failureTask: () => {
-        toast.error('Unsubscribe failed', {
-          description: 'Failed to unsubscribe. Please try again.',
-        })
-        setIsUnsubscribing(false)
-      },
-      errorTask: () => {
-        toast.error('Unsubscribe failed', {
-          description: 'An unexpected error occurred. Please try again.',
-        })
-        setIsUnsubscribing(false)
-      },
-      forbiddenTask: () => {
-        toast.error("Access denied")
-        setIsUnsubscribing(false)
-      }
-    })
-  }
-
   if (accessDenied) {
     return (
       <ProtectedRoute>
@@ -250,8 +210,6 @@ export default function SubscribeConsentPage() {
                 isSuccess={isSuccess}
                 existingSubscriber={existingSubscriber}
                 onSubmit={handleSubscriberCreation}
-                onUnsubscribe={handleUnsubscribe}
-                isUnsubscribing={isUnsubscribing}
               />
             ) : (
               <EmptyState />

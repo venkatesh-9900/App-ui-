@@ -58,7 +58,7 @@ export function AddressWatcherInfo() {
                   <strong>Address Groups:</strong> Wallet addresses to monitor.
                 </li>
                 <li>
-                  <strong>Notification Groups:</strong> Topics triggered on activity.
+                  <strong>Notification Groups:</strong> Notification groups triggered on activity.
                 </li>
                 <li>
                   <strong>Subscribers:</strong> Who receives notifications.

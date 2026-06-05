@@ -34,8 +34,7 @@ import { AddressActivityAirdrop, CreateAddressActivityAirdropRequest, UpdateAddr
 import { truncateText, formatDate } from '@/utils/formatting'
 import { AddressGroup } from '@/types/address-group'
 import { useAuth } from '@/contexts'
-import { NotificationSubscriber } from '@/types/subscriber'
-import { NotificationGroup } from '@/types/topic'
+import { NotificationGroup } from '@/types/notification-group'
 import { AddressActivityAirdropFormDialog } from './address-activity-airdrop-form-dialog'
 import { deleteAddressActivityAirdrop, toggleAddressActivityAirdrop, updateAddressActivityAirdrop } from '@/hooks/web3/address-activity-airdrop-service'
 import { toast } from 'sonner'
@@ -44,7 +43,6 @@ interface AddressActivityAirdropTableProps {
   activities: AddressActivityAirdrop[]
   addressGroups: AddressGroup[]
   groups: NotificationGroup[]
-  subscribers: NotificationSubscriber[]
   isLoading: boolean
   loadingAddressGroups: boolean
 }
@@ -55,7 +53,6 @@ export function AddressActivityAirdropTable({
   isLoading,
   loadingAddressGroups,
   groups,
-  subscribers,
 }: AddressActivityAirdropTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<AddressActivityAirdrop | null>(null)
@@ -566,10 +563,8 @@ export function AddressActivityAirdropTable({
         }}
         groups={groups}
         addressGroups={addressGroups}
-        subscribers={subscribers}
         loadingGroups={false}
         loadingAddressGroups={false}
-        loadingSubscribers={false}
       />
       )}
     </div>

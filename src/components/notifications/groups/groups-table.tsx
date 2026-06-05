@@ -30,7 +30,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, Pencil, Trash2, Copy, Calendar, Tag, Key, Clock, UserCircle2Icon, Webhook } from 'lucide-react'
-import { NotificationGroup } from '@/types/topic'
+import { NotificationGroup } from '@/types/notification-group'
 import { formatDate } from '@/utils/formatting'
 import { useAuth } from '@/contexts'
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
@@ -77,8 +77,9 @@ export function GroupsTable({
   const formatTime = (dateString?: string) => {
     if (!dateString) return ''
     try {
-      // Handle UTC timestamps by appending 'Z' if not present
-      const isoDate = dateString.endsWith('Z') ? dateString : `${dateString}Z`
+      // Treat naive timestamps as UTC, but leave an existing tz designator
+      // (trailing 'Z' or a numeric offset like "+05:30") untouched.
+      const isoDate = /(Z|[+-]\d{2}:?\d{2})$/.test(dateString) ? dateString : `${dateString}Z`
       const date = new Date(isoDate)
       const now = new Date()
       const diffInMs = now.getTime() - date.getTime()
@@ -228,10 +229,6 @@ export function GroupsTable({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        {/* <DropdownMenuItem onClick={() => onCopyKey(group.novu_topic_key)} className="cursor-pointer">
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copy key
-                        </DropdownMenuItem> */}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onEdit(group)} className="cursor-pointer" disabled={group.user_id !== userInfo?.email}>
                           <Pencil className="mr-2 h-4 w-4" />
