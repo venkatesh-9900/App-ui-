@@ -34,8 +34,7 @@ import { AddressActivity, CreateAddressActivityRequest, UpdateAddressActivityReq
 import { truncateText, formatDate } from '@/utils/formatting'
 import { AddressGroup } from '@/types/address-group'
 import { useAuth } from '@/contexts'
-import { NotificationSubscriber } from '@/types/subscriber'
-import { NotificationGroup } from '@/types/topic'
+import { NotificationGroup } from '@/types/notification-group'
 import { AddressActivityFormDialog } from './address-activity-form-dialog'
 import { deleteAddressActivity, toggleAddressActivity, updateAddressActivity } from '@/hooks/web3/address-activity-service'
 import { toast } from 'sonner'
@@ -44,7 +43,6 @@ interface AddressActivityTableProps {
   activities: AddressActivity[]
   addressGroups: AddressGroup[]
   groups: NotificationGroup[]
-  subscribers: NotificationSubscriber[]
   isLoading: boolean
   loadingAddressGroups: boolean
 }
@@ -55,7 +53,6 @@ export function AddressActivityTable({
   isLoading,
   loadingAddressGroups,
   groups,
-  subscribers,
 }: AddressActivityTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState<AddressActivity | null>(null)
@@ -567,10 +564,8 @@ export function AddressActivityTable({
         }}
         groups={groups}
         addressGroups={addressGroups}
-        subscribers={subscribers}
         loadingGroups={false}
         loadingAddressGroups={false}
-        loadingSubscribers={false}
       />
       )}
     </div>

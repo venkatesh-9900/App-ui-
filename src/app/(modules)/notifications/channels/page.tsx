@@ -83,7 +83,7 @@ export default function NotificationChannelInstancesPage() {
         setIsLoading(true)
 
         await listNotificationChannel({
-            novu_supported: false,
+            listing: false,
             successTask: (response) => {
                 if (Array.isArray(response?.data)) {
                     setChannels(response.data)
@@ -131,7 +131,7 @@ export default function NotificationChannelInstancesPage() {
             payload: {
                 webhook_url: data.webhook_url,
             },
-            ...(selectedGroupId ? { group_id: selectedGroupId } : {}),
+            ...(selectedGroupId ? { iam_group_id: selectedGroupId } : {}),
         }
 
         await createNotificationChannelInstance({

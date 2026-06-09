@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Plus, Users } from 'lucide-react'
-import { createTopic, listTopics, updateTopic, deleteTopic } from '@/hooks/topic-service'
-import { NotificationGroup, CreateTopicRequest } from '@/types/topic'
+import { createNotificationGroup, listNotificationGroups, updateNotificationGroup, deleteNotificationGroup } from '@/hooks/notification-group-service'
+import { NotificationGroup, CreateNotificationGroupRequest } from '@/types/notification-group'
 import { GroupFormDialog } from '@/components/notifications/groups/group-form-dialog'
 import { GroupsTable } from '@/components/notifications/groups/groups-table'
 import { AccessDenied } from "@/components/access-denied"
@@ -51,7 +51,7 @@ export default function NotificationGroupsPage() {
 
     const fetchGroups = async () => {
         setIsLoading(true)
-        await listTopics({
+        await listNotificationGroups({
             groupId: selectedGroupId,
             successTask: (response) => {
                 console.log('API Response:', response)
@@ -112,15 +112,15 @@ export default function NotificationGroupsPage() {
         setDialogOpen(true)
     }
 
-    const handleFormSubmit = async (formData: CreateTopicRequest) => {
+    const handleFormSubmit = async (formData: CreateNotificationGroupRequest) => {
         setIsSubmitting(true)
 
         if (dialogMode === 'create') {
             const request = selectedGroupId
-                ? { ...formData, group_id: selectedGroupId }
+                ? { ...formData, iam_group_id: selectedGroupId }
                 : formData
 
-            await createTopic({
+            await createNotificationGroup({
                 request,
                 successTask: (data) => {
                     toast.success('Group created successfully!', {
@@ -153,7 +153,7 @@ export default function NotificationGroupsPage() {
                 },
             })
         } else if (selectedGroup && selectedGroup.id) {
-            await updateTopic({
+            await updateNotificationGroup({
                 id: selectedGroup.id,
                 request: {
                     name: formData.name,
@@ -191,7 +191,7 @@ export default function NotificationGroupsPage() {
     const handleDeleteGroup = async (id: number) => {
         const groupToDelete = groups.find(g => g.id === id)
 
-        await deleteTopic({
+        await deleteNotificationGroup({
             id: id,
             successTask: () => {
                 toast.success('Group deleted successfully!', {
@@ -234,7 +234,7 @@ export default function NotificationGroupsPage() {
     const handleCopyKey = (topicKey: string) => {
         navigator.clipboard.writeText(topicKey)
         toast.success('Key copied!', {
-            description: 'Topic key has been copied to clipboard.',
+            description: 'Notification group key copied to clipboard.',
         })
     }
 
@@ -300,7 +300,6 @@ export default function NotificationGroupsPage() {
                                     ? {
                                         name: selectedGroup.name || '',
                                         description: selectedGroup.description || "",
-                                        topicKey: selectedGroup.novu_topic_key,
                                         channel_instance_ids: selectedGroup.channel_instance_ids ?? [],
                                     }
                                     : undefined

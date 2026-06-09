@@ -1,24 +1,16 @@
-// Topic/Group related types
+// Notification group related types
 
-export interface CreateTopicRequest {
+export interface CreateNotificationGroupRequest {
   name: string;
   description?: string;
   channel_instance_ids: number[];
-  group_id?: number;
+  iam_group_id?: number;
 }
 
-export interface UpdateTopicRequest {
+export interface UpdateNotificationGroupRequest {
   name?: string;
   description?: string;
   channel_instance_ids: number[];
-}
-
-export interface Topic {
-  _id: string;
-  key: string;
-  name: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 // Database response for notification groups
@@ -26,7 +18,6 @@ export interface NotificationGroup {
   id: number;
   name: string;
   description?: string;
-  novu_topic_key: string;
   channel_instance_ids: number[];
   user_id?: string;
   organization_id: string;
@@ -34,12 +25,12 @@ export interface NotificationGroup {
   updated_at: string;
 }
 
-export interface TopicResponse {
+export interface NotificationGroupResponse {
   message: string;
   data: NotificationGroup;
 }
 
-export interface ListTopicsResponse {
+export interface ListNotificationGroupsResponse {
   status: string;
   message: string;
   data: {
@@ -48,7 +39,6 @@ export interface ListTopicsResponse {
   };
 }
 
-export interface DeleteTopicResponse {
+export interface DeleteNotificationGroupResponse {
   message: string;
 }
-

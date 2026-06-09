@@ -144,7 +144,7 @@ export const listNotificationChannelInstances = async ({
         const params = new URLSearchParams()
         if (page !== undefined) params.append('page', String(page))
         if (limit !== undefined) params.append('limit', String(limit))
-        if (groupId !== undefined) params.append('group_id', String(groupId))
+        if (groupId !== undefined) params.append('iam_group_id', String(groupId))
 
         const url =
             params.toString().length > 0

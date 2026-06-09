@@ -12,15 +12,15 @@ interface BaseServiceParams {
     forbiddenTask?: () => void;
 }
 interface ListNotificationChannelParams extends BaseServiceParams {
-    novu_supported: boolean
+    listing: boolean
 }
 
 const ENDPOINTS = {
-    LIST: (novu_supported: boolean) => `/api/notification-channels?novu_supported=${novu_supported}`,
+    LIST: (listing: boolean) => `/api/notification-channels?listing=${listing}`,
 }
 
 export const listNotificationChannel = async ({
-    novu_supported,
+    listing,
     successTask,
     failureTask,
     errorTask,
@@ -29,8 +29,8 @@ export const listNotificationChannel = async ({
 }: ListNotificationChannelParams) => {
     try {
         if (retry) await refreshAccessToken({ failureTask, errorTask })
-      
-        const res = await fetch(ENDPOINTS.LIST(novu_supported), {
+
+        const res = await fetch(ENDPOINTS.LIST(listing), {
             method: 'GET',
             headers: buildHeaderJSON(false),
         })
@@ -38,7 +38,7 @@ export const listNotificationChannel = async ({
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await listNotificationChannel({ retry: true, novu_supported, successTask, failureTask, errorTask, forbiddenTask })
+                : await listNotificationChannel({ retry: true, listing, successTask, failureTask, errorTask, forbiddenTask })
             return
         }
 

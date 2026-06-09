@@ -14,8 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Plus, X, Users, Bell, Mail } from 'lucide-react'
 import { CreateAddressActivityAirdropRequest } from '@/types/address-activity-airdrop'
-import { NotificationGroup } from '@/types/topic'
-import { NotificationSubscriber } from '@/types/subscriber'
+import { NotificationGroup } from '@/types/notification-group'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { AddressGroup } from '@/types/address-group'
@@ -39,11 +38,9 @@ interface AddressActivityAirdropFormDialogProps {
   }
 
   groups: NotificationGroup[]
-  subscribers: NotificationSubscriber[]
   addressGroups: AddressGroup[]
 
   loadingGroups: boolean
-  loadingSubscribers: boolean
   loadingAddressGroups: boolean
 }
 
@@ -62,11 +59,9 @@ export function AddressActivityAirdropFormDialog({
   isSubmitting,
   groups,
   addressGroups,
-  subscribers,
   mode = "create",
   initialData,
   loadingGroups,
-  loadingSubscribers,
   loadingAddressGroups,
 }: AddressActivityAirdropFormDialogProps) {
   const [name, setName] = useState<string>('')
@@ -132,19 +127,6 @@ export function AddressActivityAirdropFormDialog({
       setErrors(prev => ({ ...prev, groups: undefined, subscribers: undefined, addressGroups: undefined }))
     }
   }, [errors.groups])
-
-  const handleSubscriberToggle = useCallback((subscriberId: number) => {
-    setSelectedSubscribers(prev => {
-      if (prev.includes(subscriberId)) {
-        return prev.filter(id => id !== subscriberId)
-      } else {
-        return [...prev, subscriberId]
-      }
-    })
-    if (errors.subscribers || errors.groups || errors.addressGroups) {
-      setErrors(prev => ({ ...prev, subscribers: undefined, groups: undefined, addressGroups: undefined }))
-    }
-  }, [errors.subscribers])
 
   const handleChannelToggle = useCallback((channelId: string) => {
     setSelectedChannels(prev => {
@@ -372,61 +354,6 @@ export function AddressActivityAirdropFormDialog({
               )}
             </div>
 
-            {/* Subscribers Section */}
-            {/* <div className="grid gap-3 border-t pt-4">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-primary" />
-                <Label className="text-left font-semibold">
-                  Subscribers <span className="text-destructive">*</span>
-                </Label>
-              </div>
-              <p className="text-xs text-muted-foreground -mt-2">
-                Select individual subscribers to notify
-              </p>
-
-              {loadingSubscribers ? (
-                <div className="flex items-center justify-center py-6">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
-              ) : subscribers.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg bg-muted/30">
-                  No active subscribers available
-                </p>
-              ) : (
-                <div className="border rounded-lg p-3 bg-muted/30 max-h-48 overflow-y-auto">
-                  <div className="space-y-2">
-                    {subscribers.map((subscriber) => (
-                      <div
-                        key={subscriber.id}
-                        className="flex items-center gap-2 p-2 hover:bg-muted rounded"
-                      >
-                        <Checkbox
-                          id={`sub-${subscriber.id}`}
-                          checked={selectedSubscribers.includes((subscriber.id))}
-                          onCheckedChange={() => handleSubscriberToggle((subscriber.id))}
-                          disabled={isSubmitting || isReadOnly}
-                          className='cursor-pointer'
-                        />
-                        <Label
-                          htmlFor={`sub-${subscriber.id}`}
-                          className="flex-1 cursor-pointer text-sm"
-                        >
-                          <div className="font-medium">
-                            {subscriber.first_name} {subscriber.last_name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {subscriber.email}
-                          </div>
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {errors.subscribers && (
-                <p className="text-sm text-destructive">{errors.subscribers}</p>
-              )}
-            </div> */}
 
             {/* Channels Section */}
             {/* <div className="grid gap-3 border-t pt-4">
