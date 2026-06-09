@@ -23,6 +23,7 @@ import { listNotificationChannelInstances } from '@/hooks/notification-channel-i
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 import { Badge } from '@/components/ui/badge'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 interface GroupFormDialogProps {
   open: boolean
@@ -63,10 +64,12 @@ const [channelInstances, setChannelInstances] = useState<NotificationChannelInst
 const [selectedChannelInstanceIds, setSelectedChannelInstanceIds] = useState<number[]>([])
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { selectedGroupId } = useSpace()
   const { returnUrl } = Object.fromEntries(searchParams.entries());
 
 const loadChannelInstances = useCallback(() => {
   listNotificationChannelInstances({
+    groupId: selectedGroupId,
     successTask: (res) => {
       setChannelInstances(res.data ?? [])
     },
@@ -77,7 +80,7 @@ const loadChannelInstances = useCallback(() => {
       toast.error("Something went wrong while loading channels")
     },
   })
-}, [])
+}, [selectedGroupId])
 
   // Load existing subscriptions for the group
   // const loadExistingSubscriptions = useCallback((topicKey: string) => {
