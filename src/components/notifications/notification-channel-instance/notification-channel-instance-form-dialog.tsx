@@ -195,7 +195,7 @@ export function NotificationChannelInstanceFormDialog({
 
                                 <SelectContent>
                                     {channels.map((c) => (
-                                        <SelectItem key={c.id} value={c.id.toString()} disabled={c.id == 5}>
+                                        <SelectItem key={c.id} value={c.id.toString()} disabled={c.id == 5 || c.id == 1}>
                                             {c.display_name}
                                         </SelectItem>
                                     ))}

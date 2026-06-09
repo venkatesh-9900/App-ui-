@@ -83,7 +83,7 @@ export default function NotificationChannelInstancesPage() {
         setIsLoading(true)
 
         await listNotificationChannel({
-            listing: false,
+            listing: true,
             successTask: (response) => {
                 if (Array.isArray(response?.data)) {
                     setChannels(response.data)

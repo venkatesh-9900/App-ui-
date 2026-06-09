@@ -39,11 +39,10 @@ export default function NotificationGroupsPage() {
     }, [dialogOpen])
 
     useEffect(() => {
-        fetchGroups()
-        fetchChannelInstance()
         handleParams();
     }, [])
 
+    // Runs on mount and whenever the selected space changes.
     useEffect(() => {
         fetchGroups()
         fetchChannelInstance()
