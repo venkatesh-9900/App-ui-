@@ -194,7 +194,7 @@ export default function AddressActivityPage() {
         setIsSubmitting(true)
 
         const request = selectedGroupId
-            ? { ...formData, group_id: selectedGroupId }
+            ? { ...formData, iam_group_id: selectedGroupId }
             : formData
 
         await createAddressActivity({
