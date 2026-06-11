@@ -54,6 +54,7 @@ export const createAddressGroup = async ({
             console.log("Refreshing access token");
             await refreshAccessToken({ failureTask, errorTask });
         }
+        
         const response = await fetch(ADDRESS_GROUP_ENDPOINTS.CREATE, {
             method: 'POST',
             headers: {
