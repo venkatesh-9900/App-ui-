@@ -61,7 +61,7 @@ export const createNotificationGroup = async ({
             method: 'POST',
             headers: {
                 ...buildHeaderJSON(false),
-                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
             },
             body: JSON.stringify(request),
         });
@@ -119,7 +119,7 @@ export const updateNotificationGroup = async ({
             method: 'PATCH',
             headers: {
                 ...buildHeaderJSON(false),
-                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
             },
             body: JSON.stringify(request),
         });
@@ -177,7 +177,7 @@ export const deleteNotificationGroup = async ({
             method: 'DELETE',
             headers: {
                 ...buildHeaderJSON(false),
-                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
             },
         });
 
@@ -240,7 +240,7 @@ export const listNotificationGroups = async ({
             method: 'GET',
             headers: {
                 ...buildHeaderJSON(false),
-                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
             },
         });
 

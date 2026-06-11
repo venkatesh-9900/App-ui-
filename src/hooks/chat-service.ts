@@ -132,7 +132,7 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
         });
         console.log(response);
@@ -682,7 +682,7 @@ export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
         });
         console.log(response);
@@ -784,7 +784,7 @@ export const createChatGroup = async ({ groupName, iamGroupId, successTask, fail
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
             body: JSON.stringify(payload)
         });
@@ -1029,7 +1029,7 @@ export async function fetchUserSchedules({successTask, failureTask, errorTask, f
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
@@ -1077,7 +1077,7 @@ export async function pauseSchedule({scheduleId, iamGroupId, successTask, failur
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
@@ -1126,7 +1126,7 @@ export async function resumeSchedule({scheduleId, iamGroupId, successTask, failu
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
@@ -1175,7 +1175,7 @@ export async function deleteSchedule({scheduleId, iamGroupId, successTask, failu
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
