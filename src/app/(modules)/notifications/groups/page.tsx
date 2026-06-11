@@ -115,12 +115,9 @@ export default function NotificationGroupsPage() {
         setIsSubmitting(true)
 
         if (dialogMode === 'create') {
-            const request = selectedGroupId
-                ? { ...formData, iam_group_id: selectedGroupId }
-                : formData
-
             await createNotificationGroup({
-                request,
+                request: formData,
+                groupId: selectedGroupId,
                 successTask: (data) => {
                     toast.success('Group created successfully!', {
                         description: `${formData.name} has been created.`,
@@ -154,6 +151,7 @@ export default function NotificationGroupsPage() {
         } else if (selectedGroup && selectedGroup.id) {
             await updateNotificationGroup({
                 id: selectedGroup.id,
+                groupId: selectedGroupId,
                 request: {
                     name: formData.name,
                     description: formData.description,
@@ -192,6 +190,7 @@ export default function NotificationGroupsPage() {
 
         await deleteNotificationGroup({
             id: id,
+            groupId: selectedGroupId,
             successTask: () => {
                 toast.success('Group deleted successfully!', {
                     description: `${groupToDelete?.name || 'The group'} has been deleted.`,

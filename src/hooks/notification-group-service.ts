@@ -12,15 +12,18 @@ interface BaseServiceParams {
 
 interface CreateNotificationGroupParams extends BaseServiceParams {
     request: CreateNotificationGroupRequest;
+    groupId?: number;
 }
 
 interface UpdateNotificationGroupParams extends BaseServiceParams {
     id: number;
     request: UpdateNotificationGroupRequest;
+    groupId?: number;
 }
 
 interface DeleteNotificationGroupParams extends BaseServiceParams {
     id: number;
+    groupId?: number;
 }
 
 interface ListNotificationGroupsParams extends BaseServiceParams {
@@ -41,6 +44,7 @@ const NOTIFICATION_GROUP_ENDPOINTS = {
  */
 export const createNotificationGroup = async ({
     request,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -55,7 +59,10 @@ export const createNotificationGroup = async ({
 
         const response = await fetch(NOTIFICATION_GROUP_ENDPOINTS.CREATE, {
             method: 'POST',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
             body: JSON.stringify(request),
         });
 
@@ -67,6 +74,7 @@ export const createNotificationGroup = async ({
                 await createNotificationGroup({
                     retry: true,
                     request,
+                    groupId,
                     successTask,
                     failureTask,
                     errorTask,
@@ -94,6 +102,7 @@ export const createNotificationGroup = async ({
 export const updateNotificationGroup = async ({
     id,
     request,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -108,7 +117,10 @@ export const updateNotificationGroup = async ({
 
         const response = await fetch(NOTIFICATION_GROUP_ENDPOINTS.UPDATE(id), {
             method: 'PATCH',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
             body: JSON.stringify(request),
         });
 
@@ -121,6 +133,7 @@ export const updateNotificationGroup = async ({
                     retry: true,
                     id,
                     request,
+                    groupId,
                     successTask,
                     failureTask,
                     errorTask,
@@ -147,6 +160,7 @@ export const updateNotificationGroup = async ({
  */
 export const deleteNotificationGroup = async ({
     id,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -161,7 +175,10 @@ export const deleteNotificationGroup = async ({
 
         const response = await fetch(NOTIFICATION_GROUP_ENDPOINTS.DELETE(id), {
             method: 'DELETE',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
         });
 
         if (response.status === 401) {
@@ -172,6 +189,7 @@ export const deleteNotificationGroup = async ({
                 await deleteNotificationGroup({
                     retry: true,
                     id,
+                    groupId,
                     successTask,
                     failureTask,
                     errorTask,
@@ -215,13 +233,15 @@ export const listNotificationGroups = async ({
         const params = new URLSearchParams();
         if (page) params.append('page', page.toString());
         if (pageSize) params.append('pageSize', pageSize.toString());
-        if (groupId !== undefined) params.append('iam_group_id', groupId.toString());
 
         const url = `${NOTIFICATION_GROUP_ENDPOINTS.LIST}${params.toString() ? '?' + params.toString() : ''}`;
 
         const response = await fetch(url, {
             method: 'GET',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
         });
 
         if (response.status === 401) {

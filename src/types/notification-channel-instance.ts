@@ -12,7 +12,7 @@ export interface CreateNotificationChannelInstanceRequest {
     email?: string
     phone?: string
   }
-  iam_group_id?: number
+  // iam_group_id is sent via the x-iam-group-id header, not the request body.
 }
 
 export interface UpdateNotificationChannelInstanceRequest {

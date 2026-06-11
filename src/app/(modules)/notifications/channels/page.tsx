@@ -131,11 +131,11 @@ export default function NotificationChannelInstancesPage() {
             payload: {
                 webhook_url: data.webhook_url,
             },
-            ...(selectedGroupId ? { iam_group_id: selectedGroupId } : {}),
         }
 
         await createNotificationChannelInstance({
             request,
+            groupId: selectedGroupId,
             successTask: () => {
                 toast.success("Channel created successfully")
                 setDialogOpen(false)
@@ -182,6 +182,7 @@ export default function NotificationChannelInstancesPage() {
         await updateNotificationChannelInstance({
             id,
             request,
+            groupId: selectedGroupId,
             successTask: () => {
                 toast.success("Channel updated successfully")
                 setDialogOpen(false)
@@ -208,6 +209,7 @@ export default function NotificationChannelInstancesPage() {
     const handleDelete = async (id: number) => {
         await deleteNotificationChannelInstance({
             id,
+            groupId: selectedGroupId,
             successTask: () => {
                 toast.success("Channel deleted successfully")
                 fetchInstances()

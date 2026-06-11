@@ -14,15 +14,18 @@ interface listNotificationLog extends BaseServiceParams {
     page: number;
     limit: number;
     filter_by?: boolean;
+    groupId?: number;
 }
 
 interface updateNotificationLog extends BaseServiceParams {
     id: number;
     request: UpdateNotificationLogRequest;
+    groupId?: number;
 }
 
 interface DeleteNotificationLogParams extends BaseServiceParams {
     id: number;
+    groupId?: number;
 }
 
 
@@ -38,6 +41,7 @@ export const listNotificationLog = async ({
     page,
     limit,
     filter_by,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -52,7 +56,10 @@ export const listNotificationLog = async ({
 
         const response = await fetch(NOTIFICATION_LOG_ENDPOINTS.GET(page, limit, filter_by), {
             method: 'GET',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
         });
 
         if (response.status === 401) {
@@ -69,6 +76,7 @@ export const listNotificationLog = async ({
                     errorTask,
                     forbiddenTask,
                     filter_by,
+                    groupId,
                 });
             }
         } else if (response.status === 403) {
@@ -89,6 +97,7 @@ export const listNotificationLog = async ({
 export const updateNotificationLog = async ({
     id,
     request,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -103,7 +112,10 @@ export const updateNotificationLog = async ({
 
         const response = await fetch(NOTIFICATION_LOG_ENDPOINTS.UPDATE(id), {
             method: 'PUT',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
             body: JSON.stringify(request),
         });
 
@@ -116,6 +128,7 @@ export const updateNotificationLog = async ({
                     retry: true,
                     id,
                     request,
+                    groupId,
                     successTask,
                     failureTask,
                     errorTask,
@@ -139,6 +152,7 @@ export const updateNotificationLog = async ({
 
 export const deleteNotificationLog = async ({
     id,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -153,7 +167,10 @@ export const deleteNotificationLog = async ({
 
         const response = await fetch(NOTIFICATION_LOG_ENDPOINTS.DELETE(id), {
             method: 'DELETE',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
         });
 
         if (response.status === 401) {
@@ -164,6 +181,7 @@ export const deleteNotificationLog = async ({
                 await deleteNotificationLog({
                     retry: true,
                     id,
+                    groupId,
                     successTask,
                     failureTask,
                     errorTask,

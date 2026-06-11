@@ -20,6 +20,7 @@ import {
 } from "@/hooks/notification-log-service"
 
 import { NotificationLog as NotificationLogType } from "@/types/notifcation-log"
+import { useSpace } from "@/contexts/space-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,7 @@ type ReadFilter = "all" | "read" | "unread"
 
 export default function NotificationsPage() {
   const router = useRouter()
+  const { selectedGroupId } = useSpace()
 
   const [data, setData] = useState<NotificationLogType[]>([])
   const [loading, setLoading] = useState(false)
@@ -42,7 +44,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchLogs()
-  }, [page, limit, readFilter])
+  }, [page, limit, readFilter, selectedGroupId])
 
   const fetchLogs = async () => {
     setLoading(true)
@@ -51,6 +53,7 @@ export default function NotificationsPage() {
       page,
       limit,
       filter_by: readFilter === "all" ? undefined : readFilter === "read" ? true : false,
+      groupId: selectedGroupId,
       successTask: (res) => {
         setData(res.data ?? [])
         setTotalCount(res.count ?? 0)
@@ -86,6 +89,7 @@ export default function NotificationsPage() {
     )
     await updateNotificationLog({
       id: id,
+      groupId: selectedGroupId,
       request: { read_status: readStatus },
       successTask: () => {
         console.log('Notification read status updated successfully')
@@ -110,6 +114,7 @@ export default function NotificationsPage() {
     setTotalCount((prev) => prev - 1)
     await deleteNotificationLog({
       id: id,
+      groupId: selectedGroupId,
       successTask: () => {
         console.log('Notification log deleted successfully')
         fetchLogs()
