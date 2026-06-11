@@ -1,0 +1,53 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.132.4
+    container_name: "local-otel-collector"
+    command: ["--config=/etc/otel-collector.yml"]
+    volumes:
+      - ./otel-collector-local.yml:/etc/otel-collector.yml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+  postgres:
+    image: "postgres:17.2"
+    container_name: "local-postgres"
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=xyz
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - local-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d xyz"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8.2.1
+    container_name: "local-redis"
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  nats:
+    image: nats:2.11.8
+    container_name: "local-nats"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    volumes:
+      - local-nats-data:/data
+
+volumes:
+  local-postgres-data:
+  local-nats-data:

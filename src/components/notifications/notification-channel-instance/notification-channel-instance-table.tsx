@@ -40,7 +40,7 @@ import {
     Clock,
     UserCircle2,
 } from "lucide-react"
-import { formatDate } from "@/utils/formatting"
+import { formatDate, formatRelativeDate } from "@/utils/formatting"
 
 import { NotificationChannelInstance } from "@/types/notification-channel-instance"
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@radix-ui/react-tooltip"
@@ -216,16 +216,12 @@ export function NotificationChannelInstanceTable({
 
                                     <TableCell className="px-4 py-2 text-sm">
                                         <div className="flex items-center gap-1">
-                                            <Calendar className="w-4 h-4 text-muted-foreground" />
                                             {formatDate(instance.created_at)}
                                         </div>
                                     </TableCell>
 
-                                    <TableCell className="px-4 py-2 text-sm">
-                                        <div className="flex items-center gap-1">
-                                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                                            {formatDate(instance.updated_at)}
-                                        </div>
+                                    <TableCell className="px-4 py-2 text-sm text-muted-foreground">
+                                        {formatRelativeDate(instance.updated_at)}
                                     </TableCell>
 
                                     <TableCell className="px-4 py-2 text-right">

@@ -1,20 +1,5 @@
 import { GenericResponse } from "./teams";
 
-/**
- * Subscriber data structure based on notification-engine API
- */
-export interface CreateSubscriberRequest {
-    subscriberId: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    phone?: string;
-    avatar?: string;
-    timezone?: string;
-    locale?: string;
-    data?: Record<string, any>;
-}
-
 export interface UpdateSubscriberRequest {
     firstName?: string;
     lastName?: string;
@@ -83,7 +68,7 @@ export interface GetCurrentUserSubscriberResponse {
 
 export interface NotificationSubscriber {
     id: number;
-    novu_subscriber_id: string;
+    subscriber_id: string;
     first_name?: string;
     last_name?: string;
     email: string | null;

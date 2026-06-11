@@ -14,25 +14,24 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Users, Check, X, Plus } from 'lucide-react'
-import { CreateTopicRequest } from '@/types/topic'
+import { CreateNotificationGroupRequest } from '@/types/notification-group'
 import { NotificationSubscriber } from '@/types/subscriber'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Checkbox } from '@/components/ui/checkbox'
-import { getActiveHumanSubscribers } from '@/hooks/subscriber-service'
-import { addSubscriptionsToTopic, listTopicSubscriptions, removeSubscriptionsFromTopic } from '@/hooks/topic-service'
 import { toast } from 'sonner'
 import { listNotificationChannelInstances } from '@/hooks/notification-channel-instance'
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 import { Badge } from '@/components/ui/badge'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useSpace } from '@/contexts/space-context'
 
 interface GroupFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: CreateTopicRequest) => void
+  onSubmit: (data: CreateNotificationGroupRequest) => void
   isSubmitting: boolean
   mode: 'create' | 'edit'
-  initialData?: CreateTopicRequest & { topicKey?: string } & { channel_instance_ids?: number[] }
+  initialData?: CreateNotificationGroupRequest & { topicKey?: string } & { channel_instance_ids?: number[] }
 }
 type EditableField = "name" | "description"
 
@@ -45,7 +44,7 @@ export function GroupFormDialog({
   mode,
   initialData,
 }: GroupFormDialogProps) {
-  const [formData, setFormData] = useState<CreateTopicRequest>({
+  const [formData, setFormData] = useState<CreateNotificationGroupRequest>({
     name: '',
     description: '',
     channel_instance_ids: [],
@@ -65,10 +64,12 @@ const [channelInstances, setChannelInstances] = useState<NotificationChannelInst
 const [selectedChannelInstanceIds, setSelectedChannelInstanceIds] = useState<number[]>([])
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { selectedGroupId } = useSpace()
   const { returnUrl } = Object.fromEntries(searchParams.entries());
 
 const loadChannelInstances = useCallback(() => {
   listNotificationChannelInstances({
+    groupId: selectedGroupId,
     successTask: (res) => {
       setChannelInstances(res.data ?? [])
     },
@@ -79,7 +80,7 @@ const loadChannelInstances = useCallback(() => {
       toast.error("Something went wrong while loading channels")
     },
   })
-}, [])
+}, [selectedGroupId])
 
   // Load existing subscriptions for the group
   // const loadExistingSubscriptions = useCallback((topicKey: string) => {
@@ -88,8 +89,8 @@ const loadChannelInstances = useCallback(() => {
   //     successTask: (response) => {
   //       // Response format: { status: "Success", data: [...subscribers], count: X }
   //       if (response.data && Array.isArray(response.data)) {
-  //         // Extract novu_subscriber_id from each subscriber object
-  //         const subscriberIds = response.data.map((sub: any) => sub.novu_subscriber_id).filter(Boolean)
+  //         // Extract subscriber_id from each subscriber object
+  //         const subscriberIds = response.data.map((sub: any) => sub.subscriber_id).filter(Boolean)
   //         setExistingSubscriberIds(subscriberIds)
   //       }
   //     },
@@ -413,9 +414,9 @@ const loadChannelInstances = useCallback(() => {
                   <div className="border rounded-lg p-3 bg-muted/30 max-h-64 overflow-y-auto">
                     <div className="space-y-2">
                       {subscribers.map((subscriber) => {
-                        const isAlreadyMapped = existingSubscriberIds.includes(subscriber.novu_subscriber_id)
-                        const isChecked = isAlreadyMapped || selectedSubscribers.includes(subscriber.novu_subscriber_id)
-                        const isRemoving = removingSubscriberId === subscriber.novu_subscriber_id
+                        const isAlreadyMapped = existingSubscriberIds.includes(subscriber.subscriber_id)
+                        const isChecked = isAlreadyMapped || selectedSubscribers.includes(subscriber.subscriber_id)
+                        const isRemoving = removingSubscriberId === subscriber.subscriber_id
                         
                         return (
                           <div
@@ -426,7 +427,7 @@ const loadChannelInstances = useCallback(() => {
                               id={`sub-${subscriber.id}`}
                               checked={isChecked}
                               disabled={isAlreadyMapped || isRemoving}
-                              onCheckedChange={() => handleSubscriberToggle(subscriber.novu_subscriber_id)}
+                              onCheckedChange={() => handleSubscriberToggle(subscriber.subscriber_id)}
                             />
                             <Label
                               htmlFor={`sub-${subscriber.id}`}
@@ -450,7 +451,7 @@ const loadChannelInstances = useCallback(() => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-                                onClick={() => handleRemoveSubscriber(subscriber.novu_subscriber_id)}
+                                onClick={() => handleRemoveSubscriber(subscriber.subscriber_id)}
                                 title="Remove from group"
                               >
                                 <X className="h-4 w-4" />

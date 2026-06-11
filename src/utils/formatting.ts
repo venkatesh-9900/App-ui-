@@ -5,8 +5,11 @@ export function truncateText (address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-// Ensures a date string is parsed as UTC (appends Z if no timezone designator)
-const asUTC = (s: string) => s.endsWith('Z') ? s : s + 'Z'
+// Ensures a date string is parsed as UTC. Only appends 'Z' when the string has
+// no timezone designator at all — a trailing 'Z' or numeric offset like
+// "+05:30"/"-08:00" is already unambiguous and must be left untouched (appending
+// 'Z' to e.g. "...+05:30" produces an invalid date).
+const asUTC = (s: string) => /(Z|[+-]\d{2}:?\d{2})$/.test(s) ? s : s + 'Z'
 
 export function formatDate(dateString?: string) {
     if (!dateString) return 'N/A'

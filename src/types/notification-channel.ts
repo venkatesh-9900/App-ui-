@@ -4,7 +4,7 @@ export interface NotificationChannel {
   notification_channel: string
   display_name: string
   description: string
-  novu_supported: boolean
+  listing: boolean
   created_at: string
   updated_at: string
 }
