@@ -6,10 +6,36 @@ set -e
 # Configuration
 # --------------------------------------------------
 ENVIRONMENT=${1:-dev}
-REMOTE_URL="https://${ENVIRONMENT}.app.kernelmind.ai"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_UI_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 MONOREPO_ROOT="$(cd "$APP_UI_DIR/.." && pwd)"
+
+# Per-environment hosts.
+#   dev  -> dev.app.kernelmind.ai   + dev.brokeridp.kernelmind.ai
+#   qa   -> qa.app.kernelmind.ai    + qa.brokeridp.kernelmind.ai
+#   prod -> app.kernelmind.ai       + brokeridp.kernelmind.ai
+case "$ENVIRONMENT" in
+  dev)
+    REMOTE_URL="https://dev.app.kernelmind.ai"
+    KEYCLOAK_HOST="dev.brokeridp.kernelmind.ai"
+    ;;
+  qa)
+    REMOTE_URL="https://qa.app.kernelmind.ai"
+    KEYCLOAK_HOST="qa.brokeridp.kernelmind.ai"
+    ;;
+  prod)
+    REMOTE_URL="https://app.kernelmind.ai"
+    KEYCLOAK_HOST="brokeridp.kernelmind.ai"
+    ;;
+  *)
+    echo "ERROR: unknown environment '$ENVIRONMENT' (expected: dev | qa | prod)"
+    exit 1
+    ;;
+esac
+
+KEYCLOAK_REALM="brokeridp"
+KEYCLOAK_BASE_URL="https://${KEYCLOAK_HOST}"
+KC_REALM_BASE="${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect"
 
 DB_HOST=localhost
 DB_PORT=5432
@@ -65,6 +91,7 @@ REQUIRED_TOOLS=(
   "atlas|Atlas CLI — applies versioned DB migrations from sql-scripts/migrations|brew install ariga/tap/atlas|curl -sSf https://atlasgo.sh | sh"
   "lsof|lsof — frees required ports before startup|MANUAL|sudo apt-get install -y lsof"
   "curl|curl — readiness probes|MANUAL|sudo apt-get install -y curl"
+  "openssl|OpenSSL — generates the gateway's root signing keypair|brew install openssl|sudo apt-get install -y openssl"
 )
 
 case "$(uname -s)" in
@@ -148,8 +175,130 @@ fi
 
 echo "============================================="
 echo "  Local Gateway Dev Environment"
+echo "  Environment:    $ENVIRONMENT"
 echo "  Remote backend: $REMOTE_URL"
+echo "  Keycloak:       $KEYCLOAK_BASE_URL (realm=$KEYCLOAK_REALM)"
 echo "============================================="
+
+# --------------------------------------------------
+# Load .env (OAuth client_id / client_secret) and prompt for any missing
+# values. The file lives next to this script and is gitignored.
+# --------------------------------------------------
+ENV_FILE="$SCRIPT_DIR/.env"
+ENV_EXAMPLE="$SCRIPT_DIR/.env.example"
+
+if [ ! -f "$ENV_FILE" ]; then
+  if [ -f "$ENV_EXAMPLE" ]; then
+    cp "$ENV_EXAMPLE" "$ENV_FILE"
+    echo "Created $ENV_FILE from .env.example — secrets will be prompted below."
+  else
+    : > "$ENV_FILE"
+  fi
+fi
+
+# Source .env. `allexport` makes every assignment automatically exported
+# so child processes (gateway, gatekeeper) inherit them.
+set -o allexport
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +o allexport
+
+# Persist a key=value back into .env (creating or replacing the line).
+write_env() {
+  local key="$1"
+  local value="$2"
+  local tmp
+  tmp="$(mktemp)"
+  if [ -f "$ENV_FILE" ] && grep -q "^${key}=" "$ENV_FILE"; then
+    awk -v k="$key" -v v="$value" -F= '
+      BEGIN { OFS="=" }
+      $1 == k { print k "=" v; next }
+      { print }
+    ' "$ENV_FILE" > "$tmp"
+    mv "$tmp" "$ENV_FILE"
+  else
+    cat "$ENV_FILE" 2>/dev/null > "$tmp" || true
+    echo "${key}=${value}" >> "$tmp"
+    mv "$tmp" "$ENV_FILE"
+  fi
+}
+
+# Prompt (hidden input) for a secret if not already set, then persist it.
+prompt_secret() {
+  local var="$1"
+  local label="$2"
+  if [ -z "${!var:-}" ]; then
+    if [ ! -t 0 ]; then
+      echo "ERROR: $var is not set in $ENV_FILE and stdin is not a TTY (cannot prompt)."
+      exit 1
+    fi
+    local value
+    read -r -s -p "Enter $label ($var): " value
+    echo
+    if [ -z "$value" ]; then
+      echo "ERROR: $var is required."
+      exit 1
+    fi
+    export "$var=$value"
+    write_env "$var" "$value"
+  fi
+}
+
+# Defaults for the non-secret IDs (per-env they rarely change; .env can override).
+: "${KEYCLOAK_OAUTH_CLIENT_ID:=kernelmind-auth}"
+: "${KEYCLOAK_ADMIN_CLIENT_ID:=gatekeeper-admin}"
+
+prompt_secret KEYCLOAK_OAUTH_CLIENT_SECRET "OAuth client_secret for $KEYCLOAK_OAUTH_CLIENT_ID"
+prompt_secret KEYCLOAK_ADMIN_CLIENT_SECRET "Admin client_secret for $KEYCLOAK_ADMIN_CLIENT_ID"
+
+# Export everything Gateway + Gatekeeper need.
+#
+# Gateway (Rust) does whole-string ENV_* substitution only, so it gets the
+# fully-built endpoint URLs.
+# Gatekeeper (Spring Boot) uses ${KEYCLOAK_BASE_URL} placeholders directly.
+export KEYCLOAK_BASE_URL
+export KEYCLOAK_REALM
+export KEYCLOAK_OAUTH_CLIENT_ID
+export KEYCLOAK_OAUTH_CLIENT_SECRET
+export KEYCLOAK_ADMIN_CLIENT_ID
+export KEYCLOAK_ADMIN_CLIENT_SECRET
+export KEYCLOAK_ISSUER_URL="${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}"
+export KEYCLOAK_TOKEN_URL="${KC_REALM_BASE}/token"
+export KEYCLOAK_JWKS_URL="${KC_REALM_BASE}/certs"
+export KEYCLOAK_AUTH_URL="${KC_REALM_BASE}/auth"
+export KEYCLOAK_LOGOUT_URL="${KC_REALM_BASE}/logout"
+
+# --------------------------------------------------
+# Gateway root signing keypair.
+#
+# The gateway signs its own JWTs (separate from Keycloak's tokens) with an
+# RSA keypair declared at `auth.root.{private_key,public_key}`. Instead of
+# committing real keys, we generate a per-developer pair on first run,
+# stash them under `local-run/.keys/` (gitignored), and inject them via
+# env vars. Delete the directory to rotate.
+# --------------------------------------------------
+KEYS_DIR="$SCRIPT_DIR/.keys"
+GATEWAY_PRIVATE_KEY_PATH="$KEYS_DIR/gateway-root.private.pem"
+GATEWAY_PUBLIC_KEY_PATH="$KEYS_DIR/gateway-root.public.pem"
+
+mkdir -p "$KEYS_DIR"
+chmod 700 "$KEYS_DIR"
+
+if [ ! -s "$GATEWAY_PRIVATE_KEY_PATH" ] || [ ! -s "$GATEWAY_PUBLIC_KEY_PATH" ]; then
+  echo "Generating gateway root RSA-2048 keypair at $KEYS_DIR ..."
+  openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
+    -out "$GATEWAY_PRIVATE_KEY_PATH" 2>/dev/null
+  openssl rsa -pubout \
+    -in "$GATEWAY_PRIVATE_KEY_PATH" \
+    -out "$GATEWAY_PUBLIC_KEY_PATH" 2>/dev/null
+  chmod 600 "$GATEWAY_PRIVATE_KEY_PATH"
+  chmod 644 "$GATEWAY_PUBLIC_KEY_PATH"
+fi
+
+GATEWAY_ROOT_PRIVATE_KEY="$(cat "$GATEWAY_PRIVATE_KEY_PATH")"
+GATEWAY_ROOT_PUBLIC_KEY="$(cat "$GATEWAY_PUBLIC_KEY_PATH")"
+export GATEWAY_ROOT_PRIVATE_KEY
+export GATEWAY_ROOT_PUBLIC_KEY
 
 # --------------------------------------------------
 # 0. Free up required ports (kill leftover processes)
