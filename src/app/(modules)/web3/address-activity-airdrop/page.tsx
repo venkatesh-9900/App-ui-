@@ -149,7 +149,7 @@ export default function AddressActivityAirdropPage() {
         setIsSubmitting(true)
 
         const request = selectedGroupId
-            ? { ...formData, group_id: selectedGroupId }
+            ? { ...formData, iam_group_id: selectedGroupId }
             : formData
 
         await createAddressActivityAirdrop({

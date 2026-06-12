@@ -52,7 +52,8 @@ export const createAddressActivityAirdrop = async ({
     failureTask,
     errorTask,
     forbiddenTask,
-    retry = false
+    retry = false,
+    groupId
 }: CreateAddressActivityAirdropParams) => {
     try {
         if (retry) {
@@ -62,7 +63,10 @@ export const createAddressActivityAirdrop = async ({
 
         const response = await fetch(ADDRESS_ACTIVITY_AIRDROP_ENDPOINTS.CREATE, {
             method: 'POST',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
             body: JSON.stringify(request),
         });
 
@@ -77,7 +81,8 @@ export const createAddressActivityAirdrop = async ({
                     successTask,
                     failureTask,
                     errorTask,
-                    forbiddenTask
+                    forbiddenTask,
+                    groupId
                 });
             }
         } else if (response.status === 403) {
@@ -112,14 +117,14 @@ export const listAddressAirdropActivities = async ({
             await refreshAccessToken({ failureTask, errorTask });
         }
 
-        let url = ADDRESS_ACTIVITY_AIRDROP_ENDPOINTS.LIST;
-        if (groupId !== undefined) {
-            url += `?group_id=${groupId}`;
-        }
+        const url = ADDRESS_ACTIVITY_AIRDROP_ENDPOINTS.LIST;
 
         const response = await fetch(url, {
             method: 'GET',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId !== undefined ? { 'x-iam-group-id': String(groupId) } : {})
+            },
         });
 
         if (response.status === 401) {
