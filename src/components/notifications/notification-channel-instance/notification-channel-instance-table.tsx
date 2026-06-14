@@ -85,8 +85,10 @@ export function NotificationChannelInstanceTable({
     }
     
 
-    const isChannelEmailOrSms = (instances: NotificationChannelInstance) => {
-        if ([1, 2].includes(instances.channel_id)) return true
+    // SMS channels are still managed via subscribers (a phone number is required).
+    // Email no longer collects a recipient, so it can be edited inline.
+    const isSmsChannel = (instances: NotificationChannelInstance) => {
+        if ([2].includes(instances.channel_id)) return true
         return false
     }
 
@@ -247,14 +249,14 @@ export function NotificationChannelInstanceTable({
                                                         <TooltipTrigger asChild>
                                                             <DropdownMenuItem
                                                                 onClick={(e) => {
-                                                                    if (isChannelEmailOrSms(instance)) {
+                                                                    if (isSmsChannel(instance)) {
                                                                         e.preventDefault()
                                                                         return
                                                                     }
                                                                     onEdit(instance)
                                                                 }}
-                                                                aria-disabled={isChannelEmailOrSms(instance)}
-                                                                className={`cursor-pointer ${isChannelEmailOrSms(instance)
+                                                                aria-disabled={isSmsChannel(instance)}
+                                                                className={`cursor-pointer ${isSmsChannel(instance)
                                                                     ? "cursor-not-allowed text-muted-foreground"
                                                                     : ""
                                                                     }`}
@@ -264,7 +266,7 @@ export function NotificationChannelInstanceTable({
                                                             </DropdownMenuItem>
                                                         </TooltipTrigger>
 
-                                                        {isChannelEmailOrSms(instance) && (
+                                                        {isSmsChannel(instance) && (
                                                             <TooltipContent
                                                                 side="top"
                                                                 align="center"

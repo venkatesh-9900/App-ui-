@@ -128,9 +128,9 @@ export default function NotificationChannelInstancesPage() {
             description: data.description,
             channel_id: data.channel_id,
             publish_type: data.publish_type,
-            payload: {
-                webhook_url: data.webhook_url,
-            },
+            payload: data.channel_id === 1
+                ? { email: data.email }
+                : { webhook_url: data.webhook_url },
         }
 
         await createNotificationChannelInstance({
@@ -174,9 +174,9 @@ export default function NotificationChannelInstancesPage() {
             name: data.name,
             description: data.description,
             publish_type: data.publish_type,
-            payload: {
-                webhook_url: data.webhook_url,
-            },
+            payload: data.channel_id === 1
+                ? { email: data.email }
+                : { webhook_url: data.webhook_url },
         }
 
         await updateNotificationChannelInstance({

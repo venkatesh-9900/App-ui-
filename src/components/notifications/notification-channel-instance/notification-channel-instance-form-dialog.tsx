@@ -19,7 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Loader2, Webhook } from "lucide-react"
+import { Loader2, Webhook, Mail } from "lucide-react"
 import { NotificationChannel } from "@/types/notification-channel"
 
 export interface NotificationChannelInstanceFormData {
@@ -27,6 +27,7 @@ export interface NotificationChannelInstanceFormData {
     description?: string
     channel_id: number
     webhook_url: string
+    email: string
     publish_type: string
 }
 
@@ -44,6 +45,7 @@ interface Props {
         channel_id?: number
         payload?: {
             webhook_url?: string
+            email?: string
         },
         publish_type?: string
     }
@@ -68,8 +70,12 @@ export function NotificationChannelInstanceFormDialog({
     const [description, setDescription] = useState("")
     const [channelId, setChannelId] = useState<number | undefined>()
     const [webhookUrl, setWebhookUrl] = useState("")
+    const [email, setEmail] = useState("")
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [publishType, setPublishType] = useState<string>("batch")
+
+    // Email channel (id 1) collects a recipient email instead of a webhook URL.
+    const isEmail = channelId === 1
 
 
     useEffect(() => {
@@ -79,13 +85,15 @@ export function NotificationChannelInstanceFormDialog({
                 setDescription(initialData.description || "")
                 setChannelId(initialData.channel_id)
                 setWebhookUrl(initialData.payload?.webhook_url || "")
+                setEmail(initialData.payload?.email || "")
                 setPublishType(initialData.publish_type || "batch")
             } else {
                 // CREATE
                 setName("")
                 setDescription("")
-                setChannelId(3)               // default Custom Webhook
+                setChannelId(1)               // default Email
                 setWebhookUrl("")
+                setEmail("")
                 setPublishType("batch")       // default
             }
             setErrors({})
@@ -96,14 +104,15 @@ export function NotificationChannelInstanceFormDialog({
             setDescription("")
             setChannelId(undefined)
             setWebhookUrl("")
+            setEmail("")
             setPublishType("batch")
             setErrors({})
         }
     }, [open, initialData])
 
     useEffect(() => {
-        if (channelId === 4) {
-            // Teams Webhook
+        if (channelId === 4 || channelId === 1) {
+            // Teams Webhook and Email only support batch delivery
             setPublishType("batch")
         }
     }, [channelId])
@@ -115,15 +124,25 @@ export function NotificationChannelInstanceFormDialog({
 
         if (!name.trim()) e.name = "Name is required"
         if (!channelId) e.channel_id = "Channel type is required"
-        if (!webhookUrl.trim()) {
-            e.webhook_url = "Webhook URL is required"
-        } else if (!/^https?:\/\//i.test(webhookUrl)) {
-            e.webhook_url = "Invalid URL"
+
+        // Email channel collects a recipient email; other channels require a webhook URL.
+        if (isEmail) {
+            if (!email.trim()) {
+                e.email = "Email is required"
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                e.email = "Invalid email address"
+            }
+        } else {
+            if (!webhookUrl.trim()) {
+                e.webhook_url = "Webhook URL is required"
+            } else if (!/^https?:\/\//i.test(webhookUrl)) {
+                e.webhook_url = "Invalid URL"
+            }
         }
 
         setErrors(e)
         return Object.keys(e).length === 0
-    }, [name, channelId, webhookUrl])
+    }, [name, channelId, webhookUrl, email, isEmail])
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -134,7 +153,8 @@ export function NotificationChannelInstanceFormDialog({
             description: description || undefined,
             channel_id: channelId!,
             publish_type: publishType,
-            webhook_url: webhookUrl.trim(),
+            webhook_url: isEmail ? "" : webhookUrl.trim(),
+            email: isEmail ? email.trim() : "",
         })
     }
 
@@ -195,7 +215,7 @@ export function NotificationChannelInstanceFormDialog({
 
                                 <SelectContent>
                                     {channels.map((c) => (
-                                        <SelectItem key={c.id} value={c.id.toString()} disabled={c.id == 5 || c.id == 1}>
+                                        <SelectItem key={c.id} value={c.id.toString()} disabled={c.id == 5}>
                                             {c.display_name}
                                         </SelectItem>
                                     ))}
@@ -214,7 +234,7 @@ export function NotificationChannelInstanceFormDialog({
                                 onValueChange={(v) =>
                                     setPublishType(v as "batch" | "realtime")
                                 }
-                                disabled={channelId === 4 || isSubmitting}
+                                disabled={channelId === 4 || channelId === 1 || isSubmitting}
                             >
                                 <SelectTrigger className="w-full">
                                     <SelectValue />
@@ -231,29 +251,57 @@ export function NotificationChannelInstanceFormDialog({
                                     Teams Webhook only supports batch delivery
                                 </p>
                             )}
-                        </div>
-
-
-                        <div className="grid gap-2">
-                            <Label>Webhook URL <span className="text-destructive">*</span></Label>
-                            <div className="relative">
-                                <Webhook className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    value={webhookUrl}
-                                    onChange={(e) => setWebhookUrl(e.target.value)}
-                                    disabled={isSubmitting}
-                                    className={`pl-9 placeholder:text-muted-foreground ${errors.webhook_url ? "border-destructive" : ""
-                                        }`}
-                                    placeholder="https://example.com/webhook"
-                                />
-
-                            </div>
-                            {errors.webhook_url && (
-                                <p className="text-sm text-destructive">
-                                    {errors.webhook_url}
+                            {channelId === 1 && (
+                                <p className="text-xs text-muted-foreground">
+                                    Email only supports batch delivery
                                 </p>
                             )}
                         </div>
+
+
+                        {isEmail ? (
+                            <div className="grid gap-2">
+                                <Label>Email <span className="text-destructive">*</span></Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className={`pl-9 placeholder:text-muted-foreground ${errors.email ? "border-destructive" : ""
+                                            }`}
+                                        placeholder="recipient@example.com"
+                                    />
+                                </div>
+                                {errors.email && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.email}
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="grid gap-2">
+                                <Label>Webhook URL <span className="text-destructive">*</span></Label>
+                                <div className="relative">
+                                    <Webhook className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        value={webhookUrl}
+                                        onChange={(e) => setWebhookUrl(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className={`pl-9 placeholder:text-muted-foreground ${errors.webhook_url ? "border-destructive" : ""
+                                            }`}
+                                        placeholder="https://example.com/webhook"
+                                    />
+
+                                </div>
+                                {errors.webhook_url && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.webhook_url}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter>
