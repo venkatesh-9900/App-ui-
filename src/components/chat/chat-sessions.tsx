@@ -78,9 +78,10 @@ export function ChatSessionsList() {
     };
   }, [])
 
-  // Reload sessions when selected space changes
+  // Reload sessions and schedules when selected space changes
   useEffect(() => {
     loadChatSessions()
+    loadSchedules()
   }, [selectedSpace])
 
   useEffect(() => {
@@ -128,6 +129,7 @@ export function ChatSessionsList() {
 
   const loadSchedules = () => {
     fetchUserSchedules({
+      iamGroupId: selectedSpace?.id ?? null,
       successTask: (schedules) => {
         console.log("Schedules loaded", schedules)
         // Create a map of scheduleId -> status
@@ -156,6 +158,7 @@ export function ChatSessionsList() {
         // Stop the scheduler first, then delete the chat
         deleteSchedule({
           scheduleId,
+          iamGroupId: selectedSpace?.id ?? null,
           successTask: () => {
             console.log("Schedule stopped successfully")
           },
@@ -216,6 +219,7 @@ export function ChatSessionsList() {
     setScheduleActionSessionId(sessionId)
     pauseSchedule({
       scheduleId,
+      iamGroupId: selectedSpace?.id ?? null,
       successTask: () => {
         toast.success("Schedule paused successfully")
         setScheduleActionSessionId(null)
@@ -250,6 +254,7 @@ export function ChatSessionsList() {
     setScheduleActionSessionId(sessionId)
     resumeSchedule({
       scheduleId,
+      iamGroupId: selectedSpace?.id ?? null,
       successTask: () => {
         toast.success("Schedule resumed successfully")
         setScheduleActionSessionId(null)

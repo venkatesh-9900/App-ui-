@@ -128,14 +128,14 @@ export default function NotificationChannelInstancesPage() {
             description: data.description,
             channel_id: data.channel_id,
             publish_type: data.publish_type,
-            payload: {
-                webhook_url: data.webhook_url,
-            },
-            ...(selectedGroupId ? { iam_group_id: selectedGroupId } : {}),
+            payload: data.channel_id === 1
+                ? { email: data.email }
+                : { webhook_url: data.webhook_url },
         }
 
         await createNotificationChannelInstance({
             request,
+            groupId: selectedGroupId,
             successTask: () => {
                 toast.success("Channel created successfully")
                 setDialogOpen(false)
@@ -174,14 +174,15 @@ export default function NotificationChannelInstancesPage() {
             name: data.name,
             description: data.description,
             publish_type: data.publish_type,
-            payload: {
-                webhook_url: data.webhook_url,
-            },
+            payload: data.channel_id === 1
+                ? { email: data.email }
+                : { webhook_url: data.webhook_url },
         }
 
         await updateNotificationChannelInstance({
             id,
             request,
+            groupId: selectedGroupId,
             successTask: () => {
                 toast.success("Channel updated successfully")
                 setDialogOpen(false)
@@ -208,6 +209,7 @@ export default function NotificationChannelInstancesPage() {
     const handleDelete = async (id: number) => {
         await deleteNotificationChannelInstance({
             id,
+            groupId: selectedGroupId,
             successTask: () => {
                 toast.success("Channel deleted successfully")
                 fetchInstances()

@@ -19,15 +19,18 @@ interface BaseServiceParams {
 
 interface CreateNotificationChannelInstanceParams extends BaseServiceParams {
     request: CreateNotificationChannelInstanceRequest;
+    groupId?: number;
 }
 
 interface UpdateNotificationChannelInstanceParams extends BaseServiceParams {
     id: number;
     request: UpdateNotificationChannelInstanceRequest;
+    groupId?: number;
 }
 
 interface DeleteNotificationChannelInstanceParams extends BaseServiceParams {
     id: number;
+    groupId?: number;
 }
 
 interface ListNotificationChannelInstanceParams extends BaseServiceParams {
@@ -49,6 +52,7 @@ const ENDPOINTS = {
 /** CREATE */
 export const createNotificationChannelInstance = async ({
     request,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -60,14 +64,17 @@ export const createNotificationChannelInstance = async ({
 
         const res = await fetch(ENDPOINTS.CREATE, {
             method: 'POST',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
+            },
             body: JSON.stringify(request),
         })
 
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await createNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask })
+                : await createNotificationChannelInstance({ retry: true, request, groupId, successTask, failureTask, errorTask, forbiddenTask })
             return
         }
 
@@ -90,6 +97,7 @@ export const createNotificationChannelInstance = async ({
 /** CREATE */
 export const upsertNotificationChannelInstance = async ({
     request,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -101,14 +109,17 @@ export const upsertNotificationChannelInstance = async ({
 
         const res = await fetch(ENDPOINTS.UPSERT, {
             method: 'POST',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
+            },
             body: JSON.stringify(request),
         })
 
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await upsertNotificationChannelInstance({ retry: true, request, successTask, failureTask, errorTask, forbiddenTask })
+                : await upsertNotificationChannelInstance({ retry: true, request, groupId, successTask, failureTask, errorTask, forbiddenTask })
             return
         }
 
@@ -144,7 +155,6 @@ export const listNotificationChannelInstances = async ({
         const params = new URLSearchParams()
         if (page !== undefined) params.append('page', String(page))
         if (limit !== undefined) params.append('limit', String(limit))
-        if (groupId !== undefined) params.append('iam_group_id', String(groupId))
 
         const url =
             params.toString().length > 0
@@ -153,7 +163,10 @@ export const listNotificationChannelInstances = async ({
 
         const res = await fetch(url, {
             method: 'GET',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
+            },
         })
 
         if (res.status === 401) {
@@ -227,6 +240,7 @@ export const NotificationChannelInstancesSubscriberInfo = async ({
 export const updateNotificationChannelInstance = async ({
     id,
     request,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -238,14 +252,17 @@ export const updateNotificationChannelInstance = async ({
 
         const res = await fetch(ENDPOINTS.UPDATE(id), {
             method: 'PUT',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
+            },
             body: JSON.stringify(request),
         })
 
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await updateNotificationChannelInstance({ retry: true, id, request, successTask, failureTask, errorTask, forbiddenTask })
+                : await updateNotificationChannelInstance({ retry: true, id, request, groupId, successTask, failureTask, errorTask, forbiddenTask })
             return
         }
 
@@ -268,6 +285,7 @@ export const updateNotificationChannelInstance = async ({
 /** DELETE */
 export const deleteNotificationChannelInstance = async ({
     id,
+    groupId,
     successTask,
     failureTask,
     errorTask,
@@ -279,13 +297,16 @@ export const deleteNotificationChannelInstance = async ({
 
         const res = await fetch(ENDPOINTS.DELETE(id), {
             method: 'DELETE',
-            headers: buildHeaderJSON(false),
+            headers: {
+                ...buildHeaderJSON(false),
+                ...(groupId != null ? { 'x-iam-group-id': String(groupId) } : {})
+            },
         })
 
         if (res.status === 401) {
             retry
                 ? await reauthenticationStep(errorTask)
-                : await deleteNotificationChannelInstance({ retry: true, id, successTask, failureTask, errorTask, forbiddenTask })
+                : await deleteNotificationChannelInstance({ retry: true, id, groupId, successTask, failureTask, errorTask, forbiddenTask })
             return
         }
 

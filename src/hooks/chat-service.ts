@@ -132,7 +132,7 @@ export const fetchUserChatSessions = async ({successTask, failureTask, errorTask
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
         });
         console.log(response);
@@ -682,7 +682,7 @@ export const fetchUserChatGroups = async ({successTask, failureTask, errorTask, 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
         });
         console.log(response);
@@ -784,7 +784,7 @@ export const createChatGroup = async ({ groupName, iamGroupId, successTask, fail
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'x-app-name': app_name,
-                ...(iamGroupId ? { 'x-iam-group-id': String(iamGroupId) } : {})
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             },
             body: JSON.stringify(payload)
         });
@@ -953,6 +953,7 @@ export interface ScheduleListResponse {
 
 interface FetchSchedulesParams {
     retry?: boolean;
+    iamGroupId?: number | null;
     successTask: (schedules: ScheduleItem[]) => void;
     failureTask: () => void;
     errorTask: () => void;
@@ -962,6 +963,7 @@ interface FetchSchedulesParams {
 interface ScheduleActionParams {
     scheduleId: string;
     retry?: boolean;
+    iamGroupId?: number | null;
     successTask: () => void;
     failureTask: (message?: string) => void;
     errorTask: () => void;
@@ -1014,7 +1016,7 @@ export function canResumeSchedule(status: string): boolean {
 /**
  * Fetch all schedules for the current user
  */
-export async function fetchUserSchedules({successTask, failureTask, errorTask, forbiddenTask, retry = false}: FetchSchedulesParams) {
+export async function fetchUserSchedules({successTask, failureTask, errorTask, forbiddenTask, iamGroupId, retry = false}: FetchSchedulesParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -1026,7 +1028,8 @@ export async function fetchUserSchedules({successTask, failureTask, errorTask, f
             headers: {
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
-                'x-app-name': app_name
+                'x-app-name': app_name,
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
@@ -1039,6 +1042,7 @@ export async function fetchUserSchedules({successTask, failureTask, errorTask, f
                     failureTask,
                     errorTask,
                     forbiddenTask,
+                    iamGroupId,
                     retry: true
                 });
             }
@@ -1060,7 +1064,7 @@ export async function fetchUserSchedules({successTask, failureTask, errorTask, f
 /**
  * Pause a scheduled chat
  */
-export async function pauseSchedule({scheduleId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
+export async function pauseSchedule({scheduleId, iamGroupId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -1072,7 +1076,8 @@ export async function pauseSchedule({scheduleId, successTask, failureTask, error
             headers: {
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
-                'x-app-name': app_name
+                'x-app-name': app_name,
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
@@ -1082,6 +1087,7 @@ export async function pauseSchedule({scheduleId, successTask, failureTask, error
             } else {
                 return await pauseSchedule({
                     scheduleId,
+                    iamGroupId,
                     successTask,
                     failureTask,
                     errorTask,
@@ -1107,7 +1113,7 @@ export async function pauseSchedule({scheduleId, successTask, failureTask, error
 /**
  * Resume a paused scheduled chat
  */
-export async function resumeSchedule({scheduleId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
+export async function resumeSchedule({scheduleId, iamGroupId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -1119,7 +1125,8 @@ export async function resumeSchedule({scheduleId, successTask, failureTask, erro
             headers: {
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
-                'x-app-name': app_name
+                'x-app-name': app_name,
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
@@ -1129,6 +1136,7 @@ export async function resumeSchedule({scheduleId, successTask, failureTask, erro
             } else {
                 return await resumeSchedule({
                     scheduleId,
+                    iamGroupId,
                     successTask,
                     failureTask,
                     errorTask,
@@ -1154,7 +1162,7 @@ export async function resumeSchedule({scheduleId, successTask, failureTask, erro
 /**
  * Delete a scheduled chat permanently
  */
-export async function deleteSchedule({scheduleId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
+export async function deleteSchedule({scheduleId, iamGroupId, successTask, failureTask, errorTask, forbiddenTask, retry = false}: ScheduleActionParams) {
     try {
         if (retry) {
             console.log("Refreshing access token");
@@ -1166,7 +1174,8 @@ export async function deleteSchedule({scheduleId, successTask, failureTask, erro
             headers: {
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json',
-                'x-app-name': app_name
+                'x-app-name': app_name,
+                ...(iamGroupId != null ? { 'x-iam-group-id': String(iamGroupId) } : {})
             }
         });
         console.log(response);
@@ -1176,6 +1185,7 @@ export async function deleteSchedule({scheduleId, successTask, failureTask, erro
             } else {
                 return await deleteSchedule({
                     scheduleId,
+                    iamGroupId,
                     successTask,
                     failureTask,
                     errorTask,
