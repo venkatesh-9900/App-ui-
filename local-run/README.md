@@ -89,6 +89,18 @@ From the `app-ui/` directory:
 ./local-run/start.sh prod     # prod
 ```
 
+## Grant superadmin
+
+Use `./local-run/grant-superadmin.sh` to give a logged-in user the superadmin role — no manual token copying.
+
+- **Prereqs**: stack running (`start.sh`) and you've logged in via the UI at least once.
+- **Common usage**:
+  ```bash
+  ./local-run/grant-superadmin.sh                 # auto-discover session(s) from Redis
+  ```
+- If multiple sessions are found, it prompts you to pick one (pass `<email>` to skip the prompt).
+- **After granting**: refresh the UI to see the role take effect.
+
 ## Stop
 
 - `Ctrl+C` — kills the local processes and tears down the docker-compose infra. Postgres / NATS data persists across runs in named docker volumes.
