@@ -45,6 +45,7 @@ import { formatDate, formatRelativeDate } from "@/utils/formatting"
 import { NotificationChannelInstance } from "@/types/notification-channel-instance"
 import { TooltipProvider, TooltipTrigger, Tooltip, TooltipContent } from "@radix-ui/react-tooltip"
 import { useAuth } from '@/contexts';
+import { useSpace } from '@/contexts/space-context';
 
 interface NotificationChannelInstanceTableProps {
     instances: NotificationChannelInstance[]
@@ -70,6 +71,14 @@ export function NotificationChannelInstanceTable({
     const [selectedInstance, setSelectedInstance] =
         useState<NotificationChannelInstance | null>(null)
       const { userInfo } = useAuth()
+    const { selectedGroupId } = useSpace()
+
+    // An instance may be deleted by its owner, or — when a space is active — by any
+    // member of that space (the list is already scoped to the selected space, so
+    // every visible row belongs to a space the user is a member of). Mirrors the
+    // notification-engine authorizeMutation rule.
+    const canModify = (instance: NotificationChannelInstance) =>
+        instance.user_id === userInfo?.email || selectedGroupId != null
 
     const handleDeleteClick = (instance: NotificationChannelInstance) => {
         setSelectedInstance(instance)
@@ -294,7 +303,7 @@ export function NotificationChannelInstanceTable({
                                                 <DropdownMenuItem
                                                     onClick={() => handleDeleteClick(instance)}
                                                     className="cursor-pointer text-destructive focus:text-destructive"
-                                                    disabled={instance.user_id !== userInfo?.email}
+                                                    disabled={!canModify(instance)}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     Delete

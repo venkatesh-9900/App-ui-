@@ -33,6 +33,7 @@ import { MoreHorizontal, Pencil, Trash2, Copy, Calendar, Tag, Key, Clock, UserCi
 import { NotificationGroup } from '@/types/notification-group'
 import { formatDate } from '@/utils/formatting'
 import { useAuth } from '@/contexts'
+import { useSpace } from '@/contexts/space-context'
 import { NotificationChannelInstance } from '@/types/notification-channel-instance'
 
 interface GroupsTableProps {
@@ -55,6 +56,14 @@ export function GroupsTable({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<NotificationGroup | null>(null)
   const { userInfo } = useAuth()
+  const { selectedGroupId } = useSpace()
+
+  // A group may be edited/deleted by its owner, or — when a space is active — by
+  // any member of that space (the list is already scoped to the selected space,
+  // so every visible row belongs to a space the user is a member of). Mirrors the
+  // notification-engine authorizeMutation rule.
+  const canModify = (group: NotificationGroup) =>
+    group.user_id === userInfo?.email || selectedGroupId != null
 
   const handleDeleteClick = (group: NotificationGroup) => {
     setSelectedGroup(group)
@@ -230,14 +239,14 @@ export function GroupsTable({
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onEdit(group)} className="cursor-pointer" disabled={group.user_id !== userInfo?.email}>
+                        <DropdownMenuItem onClick={() => onEdit(group)} className="cursor-pointer" disabled={!canModify(group)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(group)}
                           className="text-destructive focus:text-destructive cursor-pointer"
-                          disabled={group.user_id !== userInfo?.email}
+                          disabled={!canModify(group)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
