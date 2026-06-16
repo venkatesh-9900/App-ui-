@@ -511,4 +511,7 @@ echo "============================================="
 
 open "http://localhost:$UI_PORT" || xdg-open "http://localhost:$UI_PORT" || true
 
+# To grant superadmin to a user, use the standalone helper after the user has
+# logged in at least once:  ./local-run/grant-superadmin.sh <email>
+
 wait
