@@ -94,14 +94,12 @@ From the `app-ui/` directory:
 Use `./local-run/grant-superadmin.sh` to give a logged-in user the superadmin role — no manual token copying.
 
 - **Prereqs**: stack running (`start.sh`) and you've logged in via the UI at least once.
-- **How it works**: discovers active sessions from Redis (`auth_access_token:-:*`), calls `/api/auth/user-info` to resolve email + org, then seeds the local DB via `9999_seed_superadmin.sql`.
 - **Common usage**:
   ```bash
   ./local-run/grant-superadmin.sh                 # auto-discover session(s) from Redis
   ```
 - If multiple sessions are found, it prompts you to pick one (pass `<email>` to skip the prompt).
 - **After granting**: refresh the UI to see the role take effect.
-- **Overrides** (defaults match local-run): `--gateway-url`, `--redis-host`, `--redis-port`, and Postgres flags `-h -p -U -d -W`. See `--help` for details.
 
 ## Stop
 
