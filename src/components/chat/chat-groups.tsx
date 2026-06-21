@@ -45,7 +45,7 @@ import { useSpace } from "@/contexts/space-context"
 interface ChatGroupWithCollapseState extends ChatGroup {
   is_collapsed: boolean
 }
-  
+
 
 export function ChatGroupsList() {
   const searchParams = useSearchParams()
@@ -99,47 +99,6 @@ export function ChatGroupsList() {
         setIsLoadingChats(false)
       },
     });
-    // setChatGroups([
-    //   {
-    //     group_id: "371e2a04-ab03-4050-8adf-9dda95fb6cfc",
-    //     group_name: "Group 1",
-    //     is_collapsed: true,
-    //     sessions: [
-    //       {
-    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6dfc",
-    //         initial_text: "Find out the solution of",
-    //         is_sharable: false
-    //       },
-    //       {
-    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6efc",
-    //         initial_text: "What is meant by the term",
-    //         is_sharable: false
-    //       }
-    //     ]
-    //   },
-    //   {
-    //     group_id: "371e2a04-ab03-4050-8adf-9dda95fb6cfd",
-    //     group_name: "Group 2",
-    //     is_collapsed: true,
-    //     sessions: [
-    //       {
-    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6efc",
-    //         initial_text: "Give me 3 examples of the",
-    //         is_sharable: false
-    //       },
-    //       {
-    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6ffc",
-    //         initial_text: "Where can I find the best",
-    //         is_sharable: false
-    //       },
-    //       {
-    //         session_id: "371e2a04-ab03-4050-8adf-9dda95fb6ffc",
-    //         initial_text: "I want the recipe for my fav",
-    //         is_sharable: false
-    //       }
-    //     ]
-    //   }
-    // ])
     setIsLoadingChats(false)
   }, [selectedSpace])
 
@@ -164,7 +123,7 @@ export function ChatGroupsList() {
         toast.success("Chat group deleted successfully")
         setDeletingGroupId(null)
         // Remove the deleted chat from the UI
-        setChatGroups((prevGroups) => 
+        setChatGroups((prevGroups) =>
           prevGroups.filter((group) => group.group_id !== groupId)
         )
       },
@@ -195,7 +154,7 @@ export function ChatGroupsList() {
         setDeletingSessionId(null)
         // Remove the deleted chat from the UI
         fetchChatGroupSessions({
-          groupId: group_id, 
+          groupId: group_id,
           successTask: (sessions) => {
             setChatGroups(prevGroups => {
               return prevGroups.map(group => {
@@ -244,11 +203,11 @@ export function ChatGroupsList() {
       )
       return
     }
-    
+
     const duplicate = chatGroups.some(g =>
       g.group_name.toLowerCase() === addGroupName.trim().toLowerCase()
     )
-    if (duplicate) { 
+    if (duplicate) {
       toast.error("Already exists. Please try with a different name.")
       return
     }
@@ -386,9 +345,9 @@ export function ChatGroupsList() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="Chat Groups" className="cursor-pointer">
+          <SidebarMenuButton tooltip="Analysis Groups" className="cursor-pointer">
             <ComponentIcon onClick={subMenuExpansion} className="h-4 w-4" />
-            <span>Chat Groups</span>
+            <span>Analysis Groups</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -405,9 +364,6 @@ export function ChatGroupsList() {
                 <DialogContent data-testid="chat-groups-new-group-dialog" className="sm:max-w-md flex flex-col gap-8" showCloseButton={false}>
                   <DialogHeader>
                     <DialogTitle className="flex items-center justify-between"><div>Add a New Group</div><div><X className="h-4 w-4 cursor-pointer" onClick={() => setOpenAddGroupDialog(false)} /></div></DialogTitle>
-                    {/* <DialogDescription>
-                      Anyone who has this link will be able to view this.
-                    </DialogDescription> */}
                   </DialogHeader>
                   <div className="flex items-center gap-2">
                     <div className="grid flex-1 gap-2">
@@ -431,7 +387,7 @@ export function ChatGroupsList() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              
+
             </SidebarMenuSubItem>
             {isLoadingChats ? (
               <SidebarMenuSubItem>
@@ -483,13 +439,6 @@ export function ChatGroupsList() {
                                 side={isMobile ? "bottom" : "right"}
                                 align={isMobile ? "end" : "start"}
                               >
-                                {/* <DropdownMenuItem className="cursor-pointer"
-                                  onClick={() => handleOpenGroup(group.group_id)}
-                                >
-                                  <IconFolder />
-                                  <span>Open</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator /> */}
                                 <DropdownMenuItem className="cursor-pointer"
                                   data-testid="chat-groups-list-items-action-dropdown-delete-button"
                                   variant="destructive"

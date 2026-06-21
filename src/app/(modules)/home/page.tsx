@@ -491,34 +491,39 @@ function Accordion({
   title,
   meta,
   children,
-  defaultOpen = true,
+  open,
+  onOpenChange,
 }: {
   title: string;
   meta?: string;
   children: React.ReactNode;
-  defaultOpen?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
       <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 group py-1.5 cursor-pointer"
+        onClick={() => onOpenChange(!open)}
+        className={cn(
+          "flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50",
+          open && "bg-slate-50 border-b-2 border-slate-200"
+        )}
         aria-expanded={open}
       >
-        <div className="flex-1 h-px bg-border group-hover:bg-foreground/20 transition-colors" />
-        <div className="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground group-hover:text-foreground transition-colors select-none">
-          <span className="font-semibold tracking-wide">{title}</span>
-          {meta && <span className="text-muted-foreground/50">· {meta}</span>}
-          <ChevronDown
-            className={cn(
-              "w-3.5 h-3.5 transition-transform duration-200",
-              open && "rotate-180"
-            )}
-          />
+        <div className="flex items-center gap-3">
+          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-slate-900" : "bg-slate-300")} />
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-800">{title}</p>
+            {meta && <p className="mt-0.5 text-xs text-slate-400">{meta}</p>}
+          </div>
         </div>
-        <div className="flex-1 h-px bg-border group-hover:bg-foreground/20 transition-colors" />
+        <div className={cn(
+          "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0",
+          open ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-500"
+        )}>
+          {open ? "Collapse" : "Expand"}
+          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
+        </div>
       </button>
 
       <motion.div
@@ -527,7 +532,7 @@ function Accordion({
         transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
         className="overflow-hidden"
       >
-        <div className="pt-4 pb-2">{children}</div>
+        <div className="px-5 pb-5 pt-4">{children}</div>
       </motion.div>
     </div>
   );
@@ -535,7 +540,10 @@ function Accordion({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function HomePage() {
+export default function TransactionRiskAnalysisPage() {
+  const [activePanel, setActivePanel] = useState<"how" | "analyze" | null>(null);
+  const [howStarted, setHowStarted] = useState(false);
+
   return (
     <ProtectedRoute>
       <div className="flex items-center gap-2 md:hidden">
@@ -543,14 +551,34 @@ export default function HomePage() {
       </div>
 
       <div className="flex flex-col px-6 py-6 gap-3 max-w-5xl mx-auto w-full">
+        <div className="space-y-1 pb-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+            Transaction Risk Analysis
+          </p>
+          <h1 className="text-2xl font-bold text-foreground">
+            Transaction Risk Analysis
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Investigate on-chain transactions end-to-end — from raw hash to risk verdict.
+            Surface policy breaches, sanctions exposure, and counterparty red flags across any chain.
+            Route findings directly to compliance workflows or export structured reports for audit.
+          </p>
+        </div>
 
-        {/* How it works */}
-        <Accordion title="How it works" meta="3 agents · human in the loop" defaultOpen>
-          <WorkflowDiagram />
+        <Accordion
+          title="How it works"
+          meta="3 agents · human in the loop"
+          open={activePanel === "how"}
+          onOpenChange={(o) => { setActivePanel(o ? "how" : null); if (o) setHowStarted(true) }}
+        >
+          {howStarted && <WorkflowDiagram />}
         </Accordion>
 
-        {/* Analyze yourself */}
-        <Accordion title="Analyze yourself" defaultOpen>
+        <Accordion
+          title="Analyze yourself"
+          open={activePanel === "analyze"}
+          onOpenChange={(o) => setActivePanel(o ? "analyze" : null)}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-fr">
             {prompts.map((prompt, index) => (
               <Link

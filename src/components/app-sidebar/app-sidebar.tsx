@@ -2,18 +2,11 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
+  LayoutGrid,
   MessageCirclePlus,
-  Home
+  Home,
+  Activity,
+  Bell,
 } from "lucide-react"
 
 import { NavMain } from "@/components/app-sidebar/nav-main"
@@ -31,12 +24,27 @@ import {
 const data = {  
   menuItems: [
     {
-      name: "Home",
+      name: "Dashboard",
+      url: "/dashboard",
+      icon: LayoutGrid,
+    },
+    {
+      name: "Transaction Risk Analysis",
       url: "/home",
       icon: Home,
     },
     {
-      name: "New Chat",
+      name: "Wallet Risk Scoring",
+      url: "/wallet-risk",
+      icon: Activity,
+    },
+    {
+      name: "Airdrop Notifications",
+      url: "/airdrop-notifications",
+      icon: Bell,
+    },
+    {
+      name: "Interacitive Analysis",
       url: "/chat?new=true",
       icon: MessageCirclePlus,
     }

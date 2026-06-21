@@ -556,7 +556,7 @@ export default function LandingPage() {
         successTask: () => {
           const returnUrl = sessionStorage.getItem("return_url");
           if (returnUrl && returnUrl !== '/') { sessionStorage.removeItem("return_url"); router.push(returnUrl); }
-          else { router.push('/home'); }
+          else { router.push('/dashboard'); }
         },
         errorTask: (error) => toast.error(error || "Login failed"),
       });
