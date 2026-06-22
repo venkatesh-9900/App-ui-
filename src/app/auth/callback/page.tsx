@@ -56,7 +56,7 @@ function AuthCallbackContent() {
                         sessionStorage.removeItem("return_url");
                         router.push(returnUrl);
                     } else {
-                        router.push("/home");
+                        router.push("/dashboard");
                     }
                 } else {
                     throw new Error("No access token in response");

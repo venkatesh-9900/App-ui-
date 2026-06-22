@@ -38,6 +38,9 @@ export function NavMain({
   const sessionId = searchParams.get('sessionId')
 
   const isActive = (url: string) => {
+    if (url === "/dashboard" && pathname === "/dashboard") {
+      return true
+    }
     // Check for home
     if (url === "/home" && pathname === "/home") {
       return true

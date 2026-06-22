@@ -116,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             sessionStorage.removeItem('return_url');
                             router.push(returnUrl);
                         } else {
-                            router.push('/home');
+                            router.push('/dashboard');
                         }
                     }
                 } else {
@@ -181,7 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         sessionStorage.removeItem('return_url');
                         router.push(returnUrl);
                     } else {
-                        router.push('/home');
+                        router.push('/dashboard');
                     }
                 }
             } else if (response.status === 401) {

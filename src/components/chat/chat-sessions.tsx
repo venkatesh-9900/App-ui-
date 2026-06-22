@@ -388,9 +388,9 @@ export function ChatSessionsList() {
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip="All Chats" className="cursor-pointer" data-testid="all-chats-sidebar-button">
+          <SidebarMenuButton tooltip="All Analysis" className="cursor-pointer" data-testid="all-chats-sidebar-button">
             <MessageSquare onClick={subMenuExpansion} className="h-4 w-4" />
-            <span>All Chats</span>
+            <span>All Analysis</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
