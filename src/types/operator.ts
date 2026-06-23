@@ -22,6 +22,7 @@ export interface Permission {
   id: number
   name: string
   description: string
+  only_for_super_admin: boolean
   status: string
   created_at: string
 }

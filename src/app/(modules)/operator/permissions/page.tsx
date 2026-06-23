@@ -93,6 +93,25 @@ export default function PermissionsPage() {
     })
   }
 
+  const handleToggleSuperAdmin = (perm: Permission, value: boolean) => {
+    toast.info(value ? "Restricting to super admin..." : "Allowing all admins...")
+    updatePermission({
+      id: perm.id,
+      request: { only_for_super_admin: value },
+      successTask: () => {
+        toast.success(
+          value
+            ? "Permission restricted to super admin"
+            : "Permission available to all admins"
+        )
+        loadPermissions()
+      },
+      failureTask: () => toast.error("Failed to update super-admin access"),
+      errorTask: () => toast.error("Error updating super-admin access"),
+      forbiddenTask: () => toast.error("Super admin role is required to change this"),
+    })
+  }
+
   const handleDelete = (id: number) => {
     toast.info("Deleting permission...")
     deletePermission({
@@ -131,6 +150,7 @@ export default function PermissionsPage() {
             onCreate={handleCreate}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
+            onToggleSuperAdmin={handleToggleSuperAdmin}
           />
         </div>
       </div>
