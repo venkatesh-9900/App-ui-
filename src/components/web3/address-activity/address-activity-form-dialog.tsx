@@ -208,7 +208,7 @@ export function AddressActivityFormDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {mode === "edit" ? "Update" : mode === "create" ? "Create" : ""} Address Activity Watcher
+              {mode === "edit" ? "Update" : mode === "create" ? "Create" : ""} Wallet Monitoring
             </DialogTitle>
             <DialogDescription>
               Monitor blockchain addresses for activity and send notifications to selected groups and subscribers.
@@ -400,18 +400,18 @@ export function AddressActivityFormDialog({
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting}
               className="cursor-pointer"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {mode === "edit" ? "Updating..." : "Creating..."}
+                  {mode === "edit" ? "Updating..." : "Configuring..."}
                 </>
               ) : (
-                mode === "edit" ? "Update Watcher" : "Create Watcher"
+                mode === "edit" ? "Update Configuration" : "Configure Wallets"
               )}
             </Button>
           </DialogFooter>}

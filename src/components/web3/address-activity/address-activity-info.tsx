@@ -40,10 +40,9 @@ export function AddressWatcherInfo() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg [&_[data-radix-dialog-close]]:cursor-pointer">
           <DialogHeader>
-            <DialogTitle>Address Activity Watcher</DialogTitle>
+            <DialogTitle>Wallet Monitoring</DialogTitle>
             <DialogDescription>
-              Monitors blockchain address activity and sends notifications when
-              activity is detected.
+              Monitor blockchain wallet activity and receive notifications when transactions occur.
             </DialogDescription>
           </DialogHeader>
 
@@ -92,11 +91,10 @@ export function AddressWatcherInfo() {
 
             <div>
               <DialogTitle className="text-lg">
-                Address Activity Watcher
+                Wallet Monitoring
               </DialogTitle>
               <DialogDescription className="text-sm">
-                Monitors blockchain address activity and sends notifications
-                when activity is detected.
+                Monitor blockchain wallet activity and receive real-time notifications when transactions occur.
               </DialogDescription>
             </div>
           </div>
@@ -111,29 +109,46 @@ export function AddressWatcherInfo() {
           <div className="grid gap-3">
             <InfoRow
               icon={<Activity className="h-4 w-4" />}
-              title="Watcher Name"
-              description="Give this watcher a recognizable name."
+              title="Give it a Name"
+              description="Name your monitoring setup (e.g., 'Suspicious Wallet Monitor')"
             />
             <InfoRow
               icon={<Layers className="h-4 w-4" />}
-              title="Address Groups"
-              description="Wallet addresses you want to monitor."
+              title="Select Wallets to Monitor"
+              description="Choose from your saved address groups."
             />
             <InfoRow
               icon={<Bell className="h-4 w-4" />}
-              title="Notification Groups"
-              description="Groups of subscribers that will receive notifications when activity is detected."
+              title="Set Notification Recipients"
+              description="Choose notification groups or individual subscribers."
             />
             <InfoRow
               icon={<Users className="h-4 w-4" />}
-              title="Subscribers"
-              description="Select individual subscribers to notify."
+              title="Pick Delivery Channels"
+              description="Receive alerts via email or other channels."
             />
-            <InfoRow
-              icon={<Send className="h-4 w-4" />}
-              title="Notification Channels"
-              description="Email."
-            />
+          </div>
+        </div>
+
+        {/* Example Section */}
+        <div className="mt-6 space-y-3 border-t pt-4">
+          <h4 className="text-sm font-semibold text-foreground">
+            Example
+          </h4>
+          <div className="rounded-lg border bg-slate-50 p-3 space-y-2 text-xs">
+            <div>
+              <p className="font-medium text-slate-900">Setup:</p>
+              <p className="text-slate-700">Monitor wallet: 0x742d35Cc6634C0532925a3b844Bc... (Suspicious Account Group)</p>
+            </div>
+            <div>
+              <p className="font-medium text-slate-900">When a transaction occurs:</p>
+              <p className="text-slate-700">📤 Outbound: 50 ETH transferred to exchange</p>
+              <p className="text-slate-700">⏰ Timestamp: Jan 15, 2:34 PM UTC</p>
+            </div>
+            <div>
+              <p className="font-medium text-slate-900">You receive:</p>
+              <p className="text-slate-700">✉️ Email alert with full transaction details and risk assessment</p>
+            </div>
           </div>
         </div>
 

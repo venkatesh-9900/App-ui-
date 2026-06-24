@@ -6,8 +6,17 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Card, CardContent } from "@/components/ui/card"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { ChevronDown, RotateCcw, CheckCircle2, Activity, Copy } from "lucide-react"
+import { ChevronDown, RotateCcw, CheckCircle2, Activity, Copy, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+
+const SAMPLE_INPUTS = [
+  "Enter wallet address (e.g., 0x742d35Cc...)",
+  "Enter transaction hash (e.g., 0xab12cd...)",
+  "Compare risk profiles of two wallets",
+  "Show wallets with increased risk",
+  "Check for sanctioned addresses",
+]
 
 const prompts = [
   { title: "What is the risk score for wallet '0xde.....8as' and what are the contributing factors?" },
@@ -389,6 +398,67 @@ function WorkflowDiagram() {
   )
 }
 
+function ChatInterface() {
+  const router = useRouter()
+  const [inputValue, setInputValue] = useState("")
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+  const [isFocused, setIsFocused] = useState(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % SAMPLE_INPUTS.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleSubmit = (e: React.FormEvent, text: string) => {
+    e.preventDefault()
+    if (!text.trim()) return
+    const encoded = encodeURIComponent(text)
+    router.push(`/chat?prompt=${encoded}`)
+  }
+
+  return (
+    <div className="space-y-4">
+      <form onSubmit={(e) => handleSubmit(e, inputValue)} className="space-y-3">
+        <div className="relative">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder={isFocused ? "" : SAMPLE_INPUTS[placeholderIndex]}
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-colors"
+          />
+          <button
+            type="submit"
+            disabled={!inputValue.trim()}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+      </form>
+
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-slate-400">Quick examples:</p>
+        <div className="grid gap-2">
+          {SAMPLE_INPUTS.slice(0, 3).map((example, i) => (
+            <button
+              key={i}
+              onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent, example)}
+              className="text-left px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-xs text-slate-700 font-medium transition-colors"
+            >
+              {example}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Accordion({ title, meta, children, open, onOpenChange }: { title: string; meta?: string; children: React.ReactNode; open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
     <div className="w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
@@ -417,8 +487,8 @@ function Accordion({ title, meta, children, open, onOpenChange }: { title: strin
 }
 
 export default function WalletRiskPage() {
-  const [activePanel, setActivePanel] = useState<"how" | "analyze" | null>(null)
-  const [howStarted, setHowStarted] = useState(false)
+  const [activePanel, setActivePanel] = useState<"how" | "analyze" | null>("how")
+  const [howStarted, setHowStarted] = useState(true)
 
   return (
     <ProtectedRoute>
@@ -451,19 +521,7 @@ export default function WalletRiskPage() {
           open={activePanel === "analyze"}
           onOpenChange={(o) => setActivePanel(o ? "analyze" : null)}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-fr">
-            {prompts.map((prompt, index) => (
-              <Link key={index} href={`/chat?prompt=${encodeURIComponent(prompt.title)}`} className="group h-full">
-                <Card className="h-full flex items-center justify-center transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
-                  <CardContent className="p-4 flex items-center justify-center h-full">
-                    <p className="text-xs text-muted-foreground text-center leading-relaxed group-hover:text-blue-500 transition-colors">
-                      {prompt.title}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          <ChatInterface />
         </Accordion>
       </div>
     </ProtectedRoute>
