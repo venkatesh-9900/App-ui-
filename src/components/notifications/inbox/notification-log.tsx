@@ -39,9 +39,9 @@ export function NotificationLog({
   const getNotificationType = (type: string) => {
     switch (type) {
       case "WEB3_ADDRESS_ACTIVITY":
-        return "Address Activity"
+        return "Wallet Monitoring"
       case "WEB3_ADDRESS_ACTIVITY_AIRDROP":
-        return "Address Activity Airdrop"
+        return "Airdrop Activity"
       case "SCHEDULED_CHAT":
         return "Scheduled Chat"
       case "SCEDULED_EMAIL":

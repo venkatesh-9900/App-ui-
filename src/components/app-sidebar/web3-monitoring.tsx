@@ -25,7 +25,7 @@ const menuItems = [
     icon: Activity,
   },
   {
-    name: "Address Activity",
+    name: "Wallet Monitoring",
     url: "/web3/address-activity",
     icon: Activity,
   },

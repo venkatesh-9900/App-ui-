@@ -41,7 +41,7 @@ const widgets = [
     links: [
       { label: "Address Analytics", href: "/web3/address" },
       { label: "Top Accounts", href: "/web3/top-accounts" },
-      { label: "Address Activity", href: "/web3/address-activity" },
+      { label: "Wallet Monitoring", href: "/web3/address-activity" },
     ],
   },
   {
