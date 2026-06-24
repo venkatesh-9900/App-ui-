@@ -32,7 +32,7 @@ import { toast } from "sonner"
 import { formatDate, formatRelativeDate } from "@/utils/formatting"
 import { DataTable } from "@/components/common/data-table"
 import { ColumnDef } from "@tanstack/react-table"
-import { Shield, FileText, Calendar, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { Shield, ShieldAlert, ShieldOff, FileText, Calendar, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,7 @@ export interface PermissionsViewProps {
   onCreate: (data: { name: string; description: string }) => Promise<void>
   onUpdate: (id: number, data: { name: string; description: string }) => Promise<void>
   onDelete: (id: number) => void
+  onToggleSuperAdmin: (perm: Permission, value: boolean) => void
 }
 
 export function PermissionsView({
@@ -60,6 +61,7 @@ export function PermissionsView({
   onCreate,
   onUpdate,
   onDelete,
+  onToggleSuperAdmin,
 }: PermissionsViewProps) {
   // Dialog state (local UI state)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -127,8 +129,16 @@ export function PermissionsView({
         </div>
       ),
       cell: ({ row }) => (
-        <div className="font-medium text-foreground text-sm">
-          {row.getValue("name")}
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-foreground text-sm">
+            {row.getValue("name")}
+          </span>
+          {row.original.only_for_super_admin && (
+            <Badge variant="secondary" className="gap-1 text-[10px] font-normal">
+              <ShieldAlert className="h-3 w-3" />
+              Super Admin
+            </Badge>
+          )}
         </div>
       ),
     },
@@ -188,14 +198,32 @@ export function PermissionsView({
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[160px]">
+              <DropdownMenuContent align="start" className="w-[200px]">
                 <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => openEditDialog(perm)} className="cursor-pointer">
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                {perm.only_for_super_admin ? (
+                  <DropdownMenuItem
+                    onClick={() => onToggleSuperAdmin(perm, false)}
+                    className="cursor-pointer"
+                  >
+                    <ShieldOff className="mr-2 h-4 w-4" />
+                    Allow all admins
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => onToggleSuperAdmin(perm, true)}
+                    className="cursor-pointer"
+                  >
+                    <ShieldAlert className="mr-2 h-4 w-4" />
+                    Restrict to super admin
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
                   className="text-destructive focus:text-destructive cursor-pointer"
                   onClick={() => onDelete(perm.id)}
                 >
