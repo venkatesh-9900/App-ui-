@@ -96,7 +96,7 @@ export function ChatNavbar({
       
       <div className="flex items-center gap-2">
         <p className="text-xs text-muted-foreground hidden md:inline">Conversation with Kernel Mind</p>
-        <div className="h-2 w-2 rounded-full bg-green-500 hidden md:inline"></div>
+        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse hidden md:inline"></div>
       </div>
 
       <div className="flex items-center gap-3 cursor-pointer">

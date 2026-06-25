@@ -130,8 +130,9 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
   }
 
   return (
-    <div className="sticky bottom-2 bg-background pb-3 shrink-0">
-      <div className="flex gap-4 flex-wrap mb-2 px-3 items-center">
+    <div className="sticky bottom-2 bg-background pb-3 shrink-0 flex flex-col items-center w-full">
+      <div className="w-full max-w-2xl flex flex-col px-4 md:px-0">
+        <div className="flex gap-4 flex-wrap mb-2 items-center">
         {attachedFiles.map((file) => (
           <div key={file.file_id} className="relative border rounded-lg overflow-visible max-w-xs h-auto" data-testid="chat-input-attached-file">
             <button
@@ -166,15 +167,15 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
       </div>
 
       {/* Input Area */}
-      <div className="flex gap-3 items-center px-3">
+      <div className="flex gap-2 items-center bg-secondary/60 rounded-full px-4 min-h-[48px] w-full transition-all">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 disabled={isLoading || isUploading}
-                className="flex-shrink-0 h-10 w-10 cursor-pointer"
+                className="flex-shrink-0 h-9 w-9 rounded-full text-muted-foreground hover:bg-transparent hover:text-foreground cursor-pointer -ml-2"
                 onClick={() => fileInputRef.current?.click()}
                 data-testid="chat-input-attach-file-button"
               >
@@ -201,23 +202,25 @@ export function ChatInput({ onSend, isLoading = false, initialValue = "", curren
         <Textarea
           data-testid="chat-input-textarea"
           ref={textareaRef}
-          placeholder="Enter to send, Shift+Enter for new line..."
+          placeholder="Ask Kernel Mind anything..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isLoading || isUploading}
-          className="min-h-10 max-h-32 resize-none flex-1 py-2 px-3 !focus-visible:ring-0 !focus-visible:border-transparent"
+          className="min-h-[24px] max-h-32 resize-none flex-1 py-3 px-2 !bg-transparent !border-0 focus-visible:!ring-0 focus-visible:ring-offset-0 !shadow-none outline-none text-base placeholder:text-muted-foreground/70"
+          rows={1}
         />
 
         <Button
           data-testid="chat-input-send-button"
           onClick={handleSend}
           disabled={isLoading || isUploading || !input.trim()}
-          className="flex-shrink-0 h-10 w-10 px-0 cursor-pointer"
+          className="flex-shrink-0 h-9 w-9 rounded-full px-0 cursor-pointer bg-background text-foreground shadow-sm hover:bg-background/90 transition-all border border-border/10"
           size="icon"
         >
           <ArrowUp className="h-4 w-4" />
         </Button>
+      </div>
       </div>
     </div>
   )

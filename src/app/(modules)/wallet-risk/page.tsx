@@ -47,7 +47,7 @@ function buildHeatmap() {
 
 const heatmapData = buildHeatmap()
 
-const intensityClass = ["bg-slate-100", "bg-emerald-200", "bg-emerald-300", "bg-emerald-500", "bg-emerald-700"]
+const intensityClass = ["bg-muted", "bg-emerald-200", "bg-emerald-300", "bg-emerald-500", "bg-emerald-700"]
 
 const dappRows = [
   { rank: "🥇", name: "Lido: Execution Layer Rewards Vault", txn: "46,937", value: "$986,418.45" },
@@ -143,7 +143,7 @@ function AgentCard({ agent, logCount, done: agentDone }: { agent: typeof AGENTS[
           <Activity className="w-2.5 h-2.5 text-white" />
         </div>
         <div className="min-w-0">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{agent.label}</p>
+          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{agent.label}</p>
           <p className="text-[11px] font-semibold text-foreground truncate">{agent.title}</p>
         </div>
         {!agentDone && logCount >= 0 && (
@@ -156,7 +156,7 @@ function AgentCard({ agent, logCount, done: agentDone }: { agent: typeof AGENTS[
         {agent.logs.map((log, i) => (
           <motion.p key={i} initial={{ opacity: 0 }} animate={{ opacity: i <= logCount ? 1 : 0 }}
             transition={{ duration: 0.2 }}
-            className={cn("text-[9px] leading-relaxed", log.startsWith("✓") ? "text-emerald-600 font-semibold" : "text-slate-400")}>
+            className={cn("text-[9px] leading-relaxed", log.startsWith("✓") ? "text-emerald-600 font-semibold" : "text-muted-foreground")}>
             {log}
           </motion.p>
         ))}
@@ -201,12 +201,12 @@ function WorkflowDiagram() {
 
       {/* ── Address input strip ── */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: step >= 0 ? 1 : 0, y: step >= 0 ? 0 : 6 }}
-        className="flex items-center gap-3 rounded-xl border bg-card px-4 py-2.5">
-        <div className="w-6 h-6 rounded-md bg-slate-900 flex items-center justify-center shrink-0">
-          <Activity className="w-3 h-3 text-white" />
+        className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-2.5">
+        <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+          <Activity className="w-3 h-3 text-primary-foreground" />
         </div>
         <code className="text-[11px] font-mono text-muted-foreground flex-1 truncate">0x7f3a4d2e9c1b8f06a5d39e7c2b4f1a8d6e9c3b5a</code>
-        <Copy className="w-3 h-3 text-slate-400 shrink-0 cursor-pointer" />
+        <Copy className="w-3 h-3 text-muted-foreground shrink-0 cursor-pointer" />
         <span className="shrink-0 inline-flex items-center gap-1 text-[10px] text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-full px-2 py-0.5">
           <motion.span className="w-1.5 h-1.5 rounded-full bg-cyan-500 block" animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
           Live
@@ -222,14 +222,14 @@ function WorkflowDiagram() {
 
       {/* ── Output transition banner ── */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: step >= 13 ? 1 : 0 }}
-        className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-2.5">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-muted/60 px-4 py-2.5">
+        <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           <motion.div className="w-1.5 h-1.5 rounded-full bg-emerald-500"
             animate={{ scale: [1, 1.5, 1] }} transition={{ duration: 0.8, repeat: Infinity }} />
           Agent output
         </div>
-        <div className="flex-1 h-px bg-slate-200" />
-        <span className="text-[10px] text-slate-400">4 agents · coordinated · report generated</span>
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[10px] text-muted-foreground">4 agents · coordinated · report generated</span>
       </motion.div>
 
       {/* ── Stats cards ── */}
@@ -241,26 +241,26 @@ function WorkflowDiagram() {
           { label: "UNIQUE DAYS ACTIVE", value: "1Y 92D", sub: "Since Mon 08, Jul 2024" },
           { label: "LONGEST STREAK", value: "1Y 80D", sub: "Since Thu 03, Apr 2025" },
         ].map(({ label, value, sub }) => (
-          <div key={label} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-slate-400">{label}</p>
-            <p className="mt-1 text-base font-bold text-slate-900 leading-tight">{value}</p>
-            <p className="mt-0.5 text-[9px] text-slate-400">{sub}</p>
+          <div key={label} className="rounded-xl border border-border bg-card px-4 py-3">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">{label}</p>
+            <p className="mt-1 text-base font-bold text-foreground leading-tight">{value}</p>
+            <p className="mt-0.5 text-[9px] text-muted-foreground">{sub}</p>
           </div>
         ))}
       </motion.div>
 
       {/* ── Transaction Heatmap ── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: step >= 15 ? 1 : 0, y: step >= 15 ? 0 : 8 }}
-        className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+        className="rounded-xl border border-border bg-card px-4 py-3">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold text-slate-800">Transaction Heatmap</p>
-          <p className="text-[10px] text-slate-400">Tue 1, Jul 2025 – Sun 21, Jun 2026</p>
+          <p className="text-xs font-semibold text-foreground">Transaction Heatmap</p>
+          <p className="text-[10px] text-muted-foreground">Tue 1, Jul 2025 – Sun 21, Jun 2026</p>
         </div>
         <div className="flex gap-2">
           {/* Day labels */}
           <div className="flex flex-col justify-between pr-1" style={{ paddingTop: 14, paddingBottom: 2 }}>
             {DAYS.map((d, i) => (
-              <div key={i} className="text-[8px] text-slate-400 leading-none" style={{ height: 8 }}>{d}</div>
+              <div key={i} className="text-[8px] text-muted-foreground leading-none" style={{ height: 8 }}>{d}</div>
             ))}
           </div>
           {/* Grid */}
@@ -268,7 +268,7 @@ function WorkflowDiagram() {
             {/* Month labels */}
             <div className="flex mb-1" style={{ gap: 2 }}>
               {MONTHS.map((m) => (
-                <div key={m} className="text-[8px] text-slate-400 flex-1 text-center">{m}</div>
+                <div key={m} className="text-[8px] text-muted-foreground flex-1 text-center">{m}</div>
               ))}
             </div>
             <div className="flex" style={{ gap: 2 }}>
@@ -282,11 +282,11 @@ function WorkflowDiagram() {
               ))}
             </div>
             <div className="flex items-center justify-end gap-1 mt-1.5">
-              <span className="text-[8px] text-slate-400">Less</span>
+              <span className="text-[8px] text-muted-foreground">Less</span>
               {intensityClass.map((c, i) => (
                 <div key={i} className={cn("w-2 h-2 rounded-[2px]", c)} />
               ))}
-              <span className="text-[8px] text-slate-400">More</span>
+              <span className="text-[8px] text-muted-foreground">More</span>
             </div>
           </div>
         </div>
@@ -297,32 +297,32 @@ function WorkflowDiagram() {
         className="grid grid-cols-1 lg:grid-cols-2 gap-3">
 
         {/* dApp Activity */}
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-            <p className="text-xs font-semibold text-slate-800">dApp Activity</p>
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50">
+            <p className="text-xs font-semibold text-foreground">dApp Activity</p>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">180 Days</span>
-              <span className="text-[10px] font-medium text-slate-500 border border-slate-200 rounded px-1.5 py-0.5">Volume</span>
-              <span className="text-[10px] font-semibold bg-slate-900 text-white rounded px-1.5 py-0.5">Gas Spent</span>
+              <span className="text-[10px] text-muted-foreground border border-border rounded px-1.5 py-0.5">180 Days</span>
+              <span className="text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5">Volume</span>
+              <span className="text-[10px] font-semibold bg-primary text-primary-foreground rounded px-1.5 py-0.5">Gas Spent</span>
             </div>
           </div>
           <table className="w-full text-[10px]">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="text-left px-3 py-1.5 text-slate-400 font-medium">Rank</th>
-                <th className="text-left px-2 py-1.5 text-slate-400 font-medium">Project</th>
-                <th className="text-right px-2 py-1.5 text-slate-400 font-medium">Txn Count</th>
-                <th className="text-right px-3 py-1.5 text-slate-400 font-medium">Value</th>
+              <tr className="border-b border-border/50">
+                <th className="text-left px-3 py-1.5 text-muted-foreground font-medium">Rank</th>
+                <th className="text-left px-2 py-1.5 text-muted-foreground font-medium">Project</th>
+                <th className="text-right px-2 py-1.5 text-muted-foreground font-medium">Txn Count</th>
+                <th className="text-right px-3 py-1.5 text-muted-foreground font-medium">Value</th>
               </tr>
             </thead>
             <tbody>
               {dappRows.map((r, i) => (
                 <motion.tr key={i} initial={{ opacity: 0 }} animate={{ opacity: step >= 16 ? 1 : 0 }}
-                  transition={{ delay: i * 0.08 }} className="border-b border-slate-50 hover:bg-slate-50">
+                  transition={{ delay: i * 0.08 }} className="border-b border-border/50 hover:bg-muted/50">
                   <td className="px-3 py-1.5">{r.rank}</td>
-                  <td className="px-2 py-1.5 text-blue-600 truncate max-w-[140px]">{r.name}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-600">{r.txn}</td>
-                  <td className="px-3 py-1.5 text-right font-medium text-slate-800">{r.value}</td>
+                  <td className="px-2 py-1.5 text-blue-600 dark:text-blue-400 truncate max-w-[140px]">{r.name}</td>
+                  <td className="px-2 py-1.5 text-right text-muted-foreground">{r.txn}</td>
+                  <td className="px-3 py-1.5 text-right font-medium text-foreground">{r.value}</td>
                 </motion.tr>
               ))}
             </tbody>
@@ -330,33 +330,33 @@ function WorkflowDiagram() {
         </div>
 
         {/* Neighbors */}
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-            <p className="text-xs font-semibold text-slate-800">Neighbors</p>
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50">
+            <p className="text-xs font-semibold text-foreground">Neighbors</p>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">180 Days</span>
-              <span className="text-[10px] font-medium text-slate-500 border border-slate-200 rounded px-1.5 py-0.5">Volume</span>
-              <span className="text-[10px] font-semibold bg-slate-900 text-white rounded px-1.5 py-0.5">Txn Count</span>
+              <span className="text-[10px] text-muted-foreground border border-border rounded px-1.5 py-0.5">180 Days</span>
+              <span className="text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5">Volume</span>
+              <span className="text-[10px] font-semibold bg-primary text-primary-foreground rounded px-1.5 py-0.5">Txn Count</span>
             </div>
           </div>
           <table className="w-full text-[10px]">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="text-left px-3 py-1.5 text-slate-400 font-medium">#</th>
-                <th className="text-left px-2 py-1.5 text-slate-400 font-medium">Address</th>
-                <th className="text-right px-2 py-1.5 text-slate-400 font-medium">Inflow</th>
-                <th className="text-right px-2 py-1.5 text-slate-400 font-medium">Outflow</th>
+              <tr className="border-b border-border/50">
+                <th className="text-left px-3 py-1.5 text-muted-foreground font-medium">#</th>
+                <th className="text-left px-2 py-1.5 text-muted-foreground font-medium">Address</th>
+                <th className="text-right px-2 py-1.5 text-muted-foreground font-medium">Inflow</th>
+                <th className="text-right px-2 py-1.5 text-muted-foreground font-medium">Outflow</th>
                 <th className="text-right px-3 py-1.5 text-blue-500 font-medium">Net Flow</th>
               </tr>
             </thead>
             <tbody>
               {neighborRows.map((r, i) => (
                 <motion.tr key={i} initial={{ opacity: 0 }} animate={{ opacity: step >= 16 ? 1 : 0 }}
-                  transition={{ delay: i * 0.08 }} className="border-b border-slate-50 hover:bg-slate-50">
-                  <td className="px-3 py-1.5 text-slate-400">{i + 1}</td>
-                  <td className="px-2 py-1.5 text-blue-600 truncate max-w-[110px]">{r.addr}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-600">{r.inflow}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-600">{r.outflow}</td>
+                  transition={{ delay: i * 0.08 }} className="border-b border-border/50 hover:bg-muted/50">
+                  <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
+                  <td className="px-2 py-1.5 text-blue-600 dark:text-blue-400 truncate max-w-[110px]">{r.addr}</td>
+                  <td className="px-2 py-1.5 text-right text-muted-foreground">{r.inflow}</td>
+                  <td className="px-2 py-1.5 text-right text-muted-foreground">{r.outflow}</td>
                   <td className={cn("px-3 py-1.5 text-right font-semibold", r.neg ? "text-red-500" : "text-emerald-600")}>{r.net}</td>
                 </motion.tr>
               ))}
@@ -381,13 +381,13 @@ function WorkflowDiagram() {
       <AnimatePresence>
         {done && (
           <motion.div key="rerun" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 bg-slate-50/60 px-4 py-2.5 w-full">
+            className="flex items-center justify-between rounded-lg border border-dashed border-border bg-muted/60 px-4 py-2.5 w-full">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
               <span className="text-xs text-muted-foreground">Analysis complete · heatmap · dApps · neighbours · risk verdict</span>
             </div>
             <button onClick={restart}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-blue-600 border border-slate-200 rounded-md px-3 py-1.5 bg-white hover:bg-blue-50/50 hover:border-blue-200 transition-colors shrink-0">
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-primary border border-border rounded-md px-3 py-1.5 bg-card hover:bg-accent/50 hover:border-primary transition-colors shrink-0">
               <RotateCcw className="w-3 h-3" />
               Re-run
             </button>
@@ -429,12 +429,12 @@ function ChatInterface() {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={isFocused ? "" : SAMPLE_INPUTS[placeholderIndex]}
-            className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-colors"
+            className="w-full px-4 py-3 rounded-lg border border-border bg-card text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
           />
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -442,13 +442,13 @@ function ChatInterface() {
       </form>
 
       <div className="space-y-2">
-        <p className="text-xs font-medium text-slate-400">Quick examples:</p>
+        <p className="text-xs font-medium text-muted-foreground">Quick examples:</p>
         <div className="grid gap-2">
           {SAMPLE_INPUTS.slice(0, 3).map((example, i) => (
             <button
               key={i}
               onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent, example)}
-              className="text-left px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-xs text-slate-700 font-medium transition-colors"
+              className="text-left px-3 py-2 rounded-lg border border-border bg-muted hover:bg-accent hover:text-accent-foreground text-xs text-foreground font-medium transition-colors"
             >
               {example}
             </button>
@@ -461,20 +461,20 @@ function ChatInterface() {
 
 function Accordion({ title, meta, children, open, onOpenChange }: { title: string; meta?: string; children: React.ReactNode; open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
-    <div className="w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+    <div className="w-full overflow-hidden rounded-2xl border-2 border-border bg-card shadow-sm">
       <button
         onClick={() => onOpenChange(!open)}
-        className={cn("flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50", open && "bg-slate-50 border-b-2 border-slate-200")}
+        className={cn("flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted", open && "bg-muted border-b-2 border-border")}
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-slate-900" : "bg-slate-300")} />
+          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-primary" : "bg-muted-foreground")} />
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-800">{title}</p>
-            {meta && <p className="mt-0.5 text-xs text-slate-400">{meta}</p>}
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-foreground">{title}</p>
+            {meta && <p className="mt-0.5 text-xs text-muted-foreground">{meta}</p>}
           </div>
         </div>
-        <div className={cn("flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0", open ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-500")}>
+        <div className={cn("flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0", open ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground")}>
           {open ? "Collapse" : "Expand"}
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
         </div>
@@ -498,7 +498,7 @@ export default function WalletRiskPage() {
 
       <div className="flex flex-col px-6 py-6 gap-3 max-w-5xl mx-auto w-full">
         <div className="space-y-1 pb-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Wallet Risk Scoring</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Wallet Risk Scoring</p>
           <h1 className="text-2xl font-bold text-foreground">Wallet Risk Scoring</h1>
           <p className="text-sm text-muted-foreground">
             Score any wallet address against sanctions lists, behavioural patterns, and counterparty exposure in seconds.

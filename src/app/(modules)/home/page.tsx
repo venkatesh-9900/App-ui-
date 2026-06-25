@@ -90,7 +90,7 @@ function useAnimation() {
 
 function HumanBadge() {
   return (
-    <span className="inline-flex items-center gap-1 text-[9px] font-semibold tracking-wide uppercase text-slate-500 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5">
+    <span className="inline-flex items-center gap-1 text-[9px] font-semibold tracking-wide uppercase text-muted-foreground bg-muted border border-border rounded px-1.5 py-0.5">
       <User className="w-2 h-2" />
       Human in the loop
     </span>
@@ -128,8 +128,8 @@ function InputStrip({ show }: { show: boolean }) {
       animate={{ opacity: 1, y: 0 }}
       className="w-full flex items-center gap-3 rounded-xl border bg-card px-4 py-2.5"
     >
-      <div className="w-6 h-6 rounded-md bg-slate-900 flex items-center justify-center shrink-0">
-        <Hash className="w-3 h-3 text-white" />
+      <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+        <Hash className="w-3 h-3 text-primary-foreground" />
       </div>
       <code className="text-[11px] font-mono text-muted-foreground flex-1 truncate">
         0x7f3a4d2e9c1b8f06a5d39e7c2b4f1a8d6e9c3b5a
@@ -234,7 +234,7 @@ function ComplianceChecks() {
           transition={{ delay: i * 0.12 + 0.2 }}
           className={cn(
             "flex items-center gap-1 rounded px-1.5 py-0.5 border",
-            pass ? "bg-white border-slate-100" : "bg-red-50/80 border-red-200"
+            pass ? "bg-card border-border" : "bg-red-50/80 border-red-200"
           )}
         >
           {pass
@@ -313,24 +313,24 @@ function HumanLoopRow({ show }: { show: boolean }) {
       {/* ticket + alert under breach side */}
       <div className="flex-1 flex gap-2">
         {/* Ticket */}
-        <div className="flex-1 rounded-xl border-2 border-dashed border-slate-300 bg-white px-2.5 py-2 flex flex-col gap-1.5">
+        <div className="flex-1 rounded-xl border-2 border-dashed border-border bg-card px-2.5 py-2 flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-md bg-slate-800 flex items-center justify-center shrink-0">
-              <FileText className="w-2.5 h-2.5 text-white" />
+            <div className="w-5 h-5 rounded-md bg-primary flex items-center justify-center shrink-0">
+              <FileText className="w-2.5 h-2.5 text-primary-foreground" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-semibold text-foreground truncate">Ops Ticket</p>
               <p className="text-[9px] text-muted-foreground">TKT-2026-8841</p>
             </div>
           </div>
-          <div className="flex items-center gap-1 rounded bg-slate-50 border border-slate-100 px-1.5 py-1">
-            <User className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-            <span className="text-[9px] text-slate-500 truncate">Operations Team</span>
+          <div className="flex items-center gap-1 rounded bg-muted border border-border px-1.5 py-1">
+            <User className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
+            <span className="text-[9px] text-muted-foreground truncate">Operations Team</span>
           </div>
           <HumanBadge />
         </div>
         {/* Alert */}
-        <div className="flex-1 rounded-xl border-2 border-dashed border-slate-300 bg-white px-2.5 py-2 flex flex-col gap-1.5">
+        <div className="flex-1 rounded-xl border-2 border-dashed border-border bg-card px-2.5 py-2 flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5">
             <div className="w-5 h-5 rounded-md bg-red-600 flex items-center justify-center shrink-0">
               <Bell className="w-2.5 h-2.5 text-white" />
@@ -340,9 +340,9 @@ function HumanLoopRow({ show }: { show: boolean }) {
               <p className="text-[9px] text-muted-foreground">Email · Slack · SMS</p>
             </div>
           </div>
-          <div className="flex items-center gap-1 rounded bg-slate-50 border border-slate-100 px-1.5 py-1">
-            <Users className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-            <span className="text-[9px] text-slate-500 truncate">Security Team (+4)</span>
+          <div className="flex items-center gap-1 rounded bg-muted border border-border px-1.5 py-1">
+            <Users className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
+            <span className="text-[9px] text-muted-foreground truncate">Security Team (+4)</span>
           </div>
           <HumanBadge />
         </div>
@@ -473,7 +473,7 @@ function WorkflowDiagram() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 bg-slate-50/60 px-4 py-2.5 w-full mt-1"
+            className="flex items-center justify-between rounded-lg border border-dashed border-border bg-muted/60 px-4 py-2.5 w-full mt-1"
           >
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -483,7 +483,7 @@ function WorkflowDiagram() {
             </div>
             <button
               onClick={restart}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-blue-600 border border-slate-200 rounded-md px-3 py-1.5 bg-white hover:bg-blue-50/50 hover:border-blue-200 transition-colors shrink-0"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-primary border border-border rounded-md px-3 py-1.5 bg-card hover:bg-accent/50 hover:border-primary transition-colors shrink-0"
             >
               <RotateCcw className="w-3 h-3" />
               Re-run
@@ -528,12 +528,12 @@ function ChatInterface() {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={isFocused ? "" : SAMPLE_INPUTS[placeholderIndex]}
-            className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-colors"
+            className="w-full px-4 py-3 rounded-lg border border-border bg-card text-sm placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
           />
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -541,13 +541,13 @@ function ChatInterface() {
       </form>
 
       <div className="space-y-2">
-        <p className="text-xs font-medium text-slate-400">Quick examples:</p>
+        <p className="text-xs font-medium text-muted-foreground">Quick examples:</p>
         <div className="grid gap-2">
           {SAMPLE_INPUTS.slice(0, 3).map((example, i) => (
             <button
               key={i}
               onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent, example)}
-              className="text-left px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-xs text-slate-700 font-medium transition-colors"
+              className="text-left px-3 py-2 rounded-lg border border-border bg-muted hover:bg-accent hover:text-accent-foreground text-xs text-foreground font-medium transition-colors"
             >
               {example}
             </button>
@@ -572,25 +572,25 @@ function Accordion({
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <div className="w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+    <div className="w-full overflow-hidden rounded-2xl border-2 border-border bg-card shadow-sm">
       <button
         onClick={() => onOpenChange(!open)}
         className={cn(
-          "flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50",
-          open && "bg-slate-50 border-b-2 border-slate-200"
+          "flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted",
+          open && "bg-muted border-b-2 border-border"
         )}
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-slate-900" : "bg-slate-300")} />
+          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-primary" : "bg-muted-foreground")} />
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-800">{title}</p>
-            {meta && <p className="mt-0.5 text-xs text-slate-400">{meta}</p>}
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-foreground">{title}</p>
+            {meta && <p className="mt-0.5 text-xs text-muted-foreground">{meta}</p>}
           </div>
         </div>
         <div className={cn(
           "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0",
-          open ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-500"
+          open ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground"
         )}>
           {open ? "Collapse" : "Expand"}
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
@@ -623,7 +623,7 @@ export default function TransactionRiskAnalysisPage() {
 
       <div className="flex flex-col px-6 py-6 gap-3 max-w-5xl mx-auto w-full">
         <div className="space-y-1 pb-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Transaction Risk Analysis
           </p>
           <h1 className="text-2xl font-bold text-foreground">

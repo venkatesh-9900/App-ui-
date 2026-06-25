@@ -61,9 +61,11 @@ export function ChatMessages({ messages, isLoading = false, isLoadingSession = f
   }
 
   return (
-    <ScrollArea className="flex-1 bg-background pt-10 overflow-hidden">
-      <div className="w-full flex flex-col">
-        <div className="space-y-4 py-6 w-full">
+    <ScrollArea className="flex-1 bg-background pt-10 overflow-hidden min-h-0">
+      <div className="w-full flex flex-col items-center">
+        {/* Conversation Message List Layout
+            Scrolls independently within a unified max-w-3xl column to mimic ChatGPT sizing */}
+        <div className="py-6 w-full max-w-3xl px-4 md:px-0 flex flex-col">
           {messages.map((message) => (
             <ChatMessage
               key={message.id}

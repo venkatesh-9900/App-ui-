@@ -62,7 +62,9 @@ export default function ChatLayout({
 
   return (
     <ChatContext.Provider value={{ selectedModel, setSelectedModel, isShared, setIsShared, shareableLink, setShareableLink, isSharedByOther, setIsSharedByOther }}>
-      <div className="flex flex-col h-screen">
+      {/* Chat Layout Bounds 
+          Constrains scroll behavior to the chat thread internally */}
+      <div className="flex flex-col h-full w-full overflow-hidden min-w-0 min-h-0">
         <ChatNavbar
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
@@ -71,7 +73,7 @@ export default function ChatLayout({
           isLoadingAgents={isLoadingAgents}
           sessionId={sessionId}
         />
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden min-h-0 relative">
           {children}
         </div>
       </div>

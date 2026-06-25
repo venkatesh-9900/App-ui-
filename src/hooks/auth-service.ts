@@ -329,6 +329,9 @@ export const reauthenticationStep = async (errorTask: () => void) => {
     if (typeof window !== 'undefined' && window.location.pathname.includes('/auth/callback')) {
         return;
     }
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === "true") {
+        return;
+    }
     window.location.href = '/';
 }
 

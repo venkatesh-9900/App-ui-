@@ -1,14 +1,14 @@
-
+﻿
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkBreaks from "remark-breaks"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Copy } from "lucide-react"
+import { Copy, Check } from "lucide-react"
 import { extractRenderVizUrls, stripRenderVizUrls } from "@/utils/utils"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
@@ -37,6 +37,8 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
   // Detect if content is HTML
   const isHtmlContent = /<[^>]*>/.test(cleanContent)
 
+  const [hasCopied, setHasCopied] = useState(false)
+
   // Get user initial from user info
   const getUserInitial = () => {
     if (!userInfo) return "U"
@@ -44,9 +46,19 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
     return name.charAt(0).toUpperCase()
   }
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(cleanContent)
-    toast.success("Message copied!")
+  // Message Copy Action
+  // Handles async copy-to-clipboard with temporary toast feedback
+  const handleCopy = async () => {
+    if (hasCopied) return;
+    try {
+      await navigator.clipboard.writeText(cleanContent)
+      setHasCopied(true)
+      toast.success("Message copied to clipboard")
+      setTimeout(() => setHasCopied(false), 2000)
+    } catch (error) {
+      console.error("Failed to copy:", error)
+      toast.error("Failed to copy message")
+    }
   }
 
   // Post-render fix for lingering **bold** text
@@ -75,28 +87,39 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
 
   if (isUser) {
     return (
-      <div className="flex gap-3 mb-3 justify-end px-3 group">
-        <div className="flex flex-col items-end gap-1 max-w-3xl">
-          <div className="flex items-end gap-1" style={{ flexDirection: 'column' }}>
+      <div className="flex gap-1.5 mb-1 justify-end px-3 group">
+        {/* Responsive Message Layout
+            Constrains user bubble width and enforces text wrap to prevent overflow */}
+        <div className="flex flex-col items-end gap-1 max-w-[85%] md:max-w-3xl">
+          <div className="flex items-end gap-2 max-w-full">
             <Card
-              className="w-fit px-4 py-3 bg-primary text-primary-foreground rounded-2xl rounded-tr-sm shadow-md"
+              className="w-fit max-w-full px-3 py-2 bg-muted text-foreground rounded-2xl rounded-tr-sm shadow-sm"
             >
               <FileAttachments
                 attachments={attachments}
                 sessionId={sessionId}
                 readOnly={readOnly}
               />
-              <p className="text-sm leading-7 break-words whitespace-pre-wrap">{cleanContent}</p>
+              <div 
+                className="text-sm leading-6"
+                style={{ 
+                  overflowWrap: 'anywhere', 
+                  wordBreak: 'break-word', 
+                  whiteSpace: 'pre-wrap' 
+                }}
+              >
+                {cleanContent}
+              </div>
             </Card>
-            {/* Copy button - visible on hover only for user messages */}
+            {/* Copy button - permanently visible on mobile/tablet, hover on desktop */}
             <Button
               onClick={handleCopy}
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              className="h-6 w-6 md:h-7 md:w-7 p-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity cursor-pointer flex-shrink-0"
               title="Copy message"
             >
-              <Copy className="h-4 w-4" />
+              {hasCopied ? <Check className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <Copy className="h-3.5 w-3.5 md:h-4 md:w-4" />}
             </Button>
           </div>
           {/* {timestamp && (
@@ -137,28 +160,43 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
 
   // Assistant message - full width with view-based or markdown/HTML rendering
   return (
-    <div className="mb-4 py-4">
+    <div className="mb-4 py-4 group">
       <div className="flex gap-3 px-3">
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src="/logo.png" alt="Argus" />
           <AvatarFallback>AI</AvatarFallback>
         </Avatar>
 
-        <div className="flex flex-col items-start gap-3 flex-1 w-full" ref={containerRef}>
-          {cleanContent && (
-            <>
-              {isStructuredResponse ? (
-                // Use ViewRenderer for structured agent responses
-                <ViewRenderer 
-                  content={cleanContent} 
-                  fallbackRenderer={renderDefaultContent}
-                />
-              ) : (
-                // Use default rendering for non-structured content
-                renderDefaultContent(cleanContent)
+        <div className="flex flex-col items-start gap-3 flex-1 min-w-0" ref={containerRef}>
+          <div className="flex items-start gap-2 max-w-full w-full">
+            <div className="flex-1 min-w-0" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+              {cleanContent && (
+                <>
+                  {isStructuredResponse ? (
+                    // Use ViewRenderer for structured agent responses
+                    <ViewRenderer 
+                      content={cleanContent} 
+                      fallbackRenderer={renderDefaultContent}
+                    />
+                  ) : (
+                    // Use default rendering for non-structured content
+                    renderDefaultContent(cleanContent)
+                  )}
+                </>
               )}
-            </>
-          )}
+            </div>
+            {cleanContent && !isStructuredResponse && (
+              <Button
+                onClick={handleCopy}
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 md:h-7 md:w-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0"
+                title="Copy message"
+              >
+                {hasCopied ? <Check className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500" /> : <Copy className="h-3.5 w-3.5 md:h-4 md:w-4" />}
+              </Button>
+            )}
+          </div>
           
           {vizUrls.length > 0 && (
             <div className="w-full space-y-2">
@@ -175,17 +213,7 @@ export function ChatMessage({ role, content, timestamp, attachments, sessionId, 
             </div>
           )}
 
-          {cleanContent && !isStructuredResponse && (
-            <Button
-              onClick={handleCopy}
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-              title="Copy message"
-            >
-              <Copy className="h-3.5 w-3.5 mr-1.5" />
-            </Button>
-          )}
+
           
           {/* {timestamp && (
             <p className="text-xs font-medium text-muted-foreground">

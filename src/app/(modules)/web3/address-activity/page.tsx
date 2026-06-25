@@ -29,20 +29,20 @@ import { cn } from "@/lib/utils"
 
 function Accordion({ title, meta, children, open, onOpenChange }: { title: string; meta?: string; children: React.ReactNode; open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
-    <div className="w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+    <div className="w-full overflow-hidden rounded-2xl border-2 border-border bg-card shadow-sm">
       <button
         onClick={() => onOpenChange(!open)}
-        className={cn("flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50", open && "bg-slate-50 border-b-2 border-slate-200")}
+        className={cn("flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted", open && "bg-muted border-b-2 border-border")}
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-slate-900" : "bg-slate-300")} />
+          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-primary" : "bg-muted-foreground")} />
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-800">{title}</p>
-            {meta && <p className="mt-0.5 text-xs text-slate-400">{meta}</p>}
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-foreground">{title}</p>
+            {meta && <p className="mt-0.5 text-xs text-muted-foreground">{meta}</p>}
           </div>
         </div>
-        <div className={cn("flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0", open ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-500")}>
+        <div className={cn("flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0", open ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground")}>
           {open ? "Collapse" : "Expand"}
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
         </div>
@@ -263,8 +263,8 @@ export default function AddressActivityPage() {
                         <p className="text-xs text-muted-foreground">Choose one or more wallet groups you want to monitor for activity.</p>
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-slate-50 p-3 ml-11">
-                      <p className="text-xs font-medium text-slate-700">Example: Suspicious Accounts Group</p>
+                    <div className="rounded-lg border border-border bg-muted p-3 ml-11">
+                      <p className="text-xs font-medium text-foreground">Example: Suspicious Accounts Group</p>
                       <p className="text-xs text-muted-foreground mt-1">Contains 3 wallet addresses: 0x742d35Cc..., 0x8a0e1d7a..., 0x5f3e2b1c...</p>
                     </div>
                   </div>
@@ -277,8 +277,8 @@ export default function AddressActivityPage() {
                         <p className="text-xs text-muted-foreground">Choose who receives alerts when wallet activity is detected.</p>
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-slate-50 p-3 ml-11">
-                      <p className="text-xs font-medium text-slate-700">Example: Compliance Team</p>
+                    <div className="rounded-lg border border-border bg-muted p-3 ml-11">
+                      <p className="text-xs font-medium text-foreground">Example: Compliance Team</p>
                       <p className="text-xs text-muted-foreground mt-1">Members: alice@company.com, bob@company.com</p>
                     </div>
                   </div>
@@ -291,13 +291,13 @@ export default function AddressActivityPage() {
                         <p className="text-xs text-muted-foreground">Confirm your settings and start receiving real-time alerts.</p>
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-slate-50 p-3 ml-11 space-y-2">
+                    <div className="rounded-lg border border-border bg-muted p-3 ml-11 space-y-2">
                       <div className="space-y-1">
-                        <p className="text-xs font-medium text-slate-700">Sample Alert Email:</p>
-                        <div className="border rounded p-2 bg-white text-xs space-y-1">
-                          <p className="font-medium">📬 Wallet Activity Detected</p>
-                          <p className="text-slate-600">50 ETH transferred from 0x742d35Cc... to exchange</p>
-                          <p className="text-slate-500">2024-01-15 14:32 UTC • Risk: Medium</p>
+                        <p className="text-xs font-medium text-foreground">Sample Alert Email:</p>
+                        <div className="border border-border rounded p-2 bg-card text-xs space-y-1">
+                          <p className="font-medium text-foreground">📬 Wallet Activity Detected</p>
+                          <p className="text-muted-foreground">50 ETH transferred from 0x742d35Cc... to exchange</p>
+                          <p className="text-muted-foreground">2024-01-15 14:32 UTC • Risk: Medium</p>
                         </div>
                       </div>
                     </div>

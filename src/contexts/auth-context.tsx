@@ -138,6 +138,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Skip validation/redirect logic if on auth callback page to avoid race conditions
         const isCallbackPage = pathname.includes('/auth/callback');
         
+        if (process.env.NEXT_PUBLIC_MOCK_AUTH === "true") {
+            setAuthState({
+                isAuthenticated: true,
+                accessToken: "mock-token",
+                userInfo: {
+                    id: "local-dev-user",
+                    name: "Local Developer",
+                    email: "developer@localhost"
+                },
+                isLoading: false,
+                isRootUser: true,
+                isSuperAdmin: true,
+                isGroupAdmin: true,
+                adminGroupIds: []
+            });
+            localStorage.setItem('is_authenticated', 'true');
+            localStorage.setItem('access_token', 'mock-token');
+            if (pathname === '/' || pathname === '') {
+                router.push('/home');
+            }
+            return;
+        }
+
         if (isCallbackPage) {
             setAuthState({ isLoading: false });
             return;

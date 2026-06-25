@@ -29,20 +29,20 @@ import { cn } from "@/lib/utils"
 
 function Accordion({ title, meta, children, open, onOpenChange }: { title: string; meta?: string; children: React.ReactNode; open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
-    <div className="w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+    <div className="w-full overflow-hidden rounded-2xl border-2 border-border bg-card shadow-sm">
       <button
         onClick={() => onOpenChange(!open)}
-        className={cn("flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50", open && "bg-slate-50 border-b-2 border-slate-200")}
+        className={cn("flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted", open && "bg-muted border-b-2 border-border")}
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-slate-900" : "bg-slate-300")} />
+          <div className={cn("h-2 w-2 rounded-full shrink-0", open ? "bg-primary" : "bg-muted-foreground")} />
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-800">{title}</p>
-            {meta && <p className="mt-0.5 text-xs text-slate-400">{meta}</p>}
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-foreground">{title}</p>
+            {meta && <p className="mt-0.5 text-xs text-muted-foreground">{meta}</p>}
           </div>
         </div>
-        <div className={cn("flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0", open ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-500")}>
+        <div className={cn("flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-colors shrink-0", open ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground")}>
           {open ? "Collapse" : "Expand"}
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
         </div>
@@ -93,7 +93,7 @@ function AirdropSimulation({ started }: { started: boolean }) {
           <Gift className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Step 1</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step 1</p>
           <p className="text-xs font-semibold text-foreground">Airdrop Detected</p>
         </div>
         {step >= 1 && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
@@ -106,7 +106,7 @@ function AirdropSimulation({ started }: { started: boolean }) {
           <Activity className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Step 2</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step 2</p>
           <p className="text-xs font-semibold text-foreground">Matching Address Groups</p>
           {step >= 2 && <p className="text-[10px] text-emerald-600 mt-0.5">✓ 3 addresses matched in Airdrop Eligible</p>}
         </div>
@@ -120,7 +120,7 @@ function AirdropSimulation({ started }: { started: boolean }) {
           <CheckCircle2 className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Step 3</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step 3</p>
           <p className="text-xs font-semibold text-foreground">Eligibility Verified</p>
           {step >= 3 && <p className="text-[10px] text-emerald-600 mt-0.5">✓ All conditions met • Amount: 500 tokens</p>}
         </div>
@@ -134,7 +134,7 @@ function AirdropSimulation({ started }: { started: boolean }) {
           <Users className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Step 4</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step 4</p>
           <p className="text-xs font-semibold text-foreground">Notifying Recipients</p>
           {step >= 4 && <p className="text-[10px] text-emerald-600 mt-0.5">✓ Finance Team (2 members)</p>}
         </div>
@@ -148,7 +148,7 @@ function AirdropSimulation({ started }: { started: boolean }) {
           <Send className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Step 5</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step 5</p>
           <p className="text-xs font-semibold text-foreground">Alert Delivered</p>
           {step >= 5 && <p className="text-[10px] text-emerald-600 mt-0.5">✓ Email sent to all recipients</p>}
         </div>
@@ -159,20 +159,20 @@ function AirdropSimulation({ started }: { started: boolean }) {
       <AnimatePresence>
         {done && (
           <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-            className="rounded-lg border bg-slate-50 p-3 space-y-2 text-sm">
-            <p className="font-semibold text-slate-900">Sample Alert Email:</p>
-            <div className="bg-white border rounded p-3 space-y-2 text-xs">
+            className="rounded-lg border border-border bg-muted p-3 space-y-2 text-sm">
+            <p className="font-semibold text-foreground">Sample Alert Email:</p>
+            <div className="bg-card border border-border rounded p-3 space-y-2 text-xs">
               <div className="flex items-center gap-2">
                 <Gift className="h-4 w-4 text-amber-500" />
                 <span className="font-semibold">Airdrop Opportunity Detected</span>
               </div>
-              <div className="space-y-1 text-slate-600">
+              <div className="space-y-1 text-muted-foreground">
                 <p><strong>Token:</strong> USDC Airdrop</p>
                 <p><strong>Amount:</strong> 500 USDC per address</p>
                 <p><strong>Eligible Addresses:</strong> 3 addresses in your Airdrop Eligible group</p>
                 <p><strong>Claim Deadline:</strong> 2024-02-15</p>
               </div>
-              <div className="border-t pt-2 text-slate-500 text-[10px]">
+              <div className="border-t border-border pt-2 text-muted-foreground text-[10px]">
                 Sent: 2024-01-15 14:32 UTC
               </div>
             </div>
