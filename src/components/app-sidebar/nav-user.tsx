@@ -2,12 +2,12 @@
 
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
   CreditCard,
   FolderCode,
   LogOut,
   Sparkles,
+  BookOpen,
 } from "lucide-react"
 
 import {
@@ -112,9 +112,12 @@ export function NavUser() {
                 <CreditCard />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem data-testid="nav-user-notifications" className="cursor-pointer">
-                <Bell />
-                Notifications
+
+              {/* Ticket #357
+                  Adds quick access to the public API Documentation. */}
+              <DropdownMenuItem data-testid="nav-user-documentation" className="cursor-pointer" onClick={() => window.open('https://docs.kernelmind.ai/', '_blank')}>
+                <BookOpen />
+                API Documentation
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

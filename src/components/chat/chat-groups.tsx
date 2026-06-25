@@ -47,10 +47,15 @@ interface ChatGroupWithCollapseState extends ChatGroup {
 }
 
 
+// Ticket #356
+// Improves the visual hierarchy of Analysis Groups while
+// preserving all existing sidebar behaviour.
 export function ChatGroupsList() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const currentSessionId = searchParams.get('sessionId')
+  const isNewChat = searchParams.get('new') === 'true' // Ticket #355
+  const groupId = searchParams.get('groupId') // Ticket #355
 
   const [addGroupName, setAddGroupName] = useState("")
   const [chatGroups, setChatGroups] = useState<ChatGroupWithCollapseState[]>([])
@@ -400,6 +405,7 @@ export function ChatGroupsList() {
                   {/* <SidebarMenuSubItem> */}
                     <CollapsibleTrigger asChild>
                   <SidebarMenuSubItem
+                    className="mb-1"
                     onDragOver={(e) => handleDragOver(e, group.group_id)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, group.group_id)}
@@ -409,8 +415,7 @@ export function ChatGroupsList() {
                       transition: 'outline 0.15s ease',
                     }}
                   >
-                        <div className="flex flex-row gap-2">
-                      <SidebarMenuButton data-testid="chat-groups-list-items-button" tooltip={group.group_name} className="cursor-pointer">
+                      <SidebarMenuButton data-testid="chat-groups-list-items-button" tooltip={group.group_name} className="cursor-pointer font-medium text-muted-foreground hover:text-foreground">
                         {group.is_collapsed ? <Folder className="h-4 w-4 shrink-0" /> : <FolderOpen className="h-4 w-4 shrink-0" />}
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -452,12 +457,16 @@ export function ChatGroupsList() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                        </div>
                       </SidebarMenuSubItem>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pl-4">
+                    <CollapsibleContent>
+                      <SidebarMenuSub className="ml-4 border-l pl-2 py-1 flex flex-col gap-1">
                   <SidebarMenuSubItem className="cursor-pointer" key={`${group.group_id}-new-session`}>
-                    <SidebarMenuSubButton onClick={() => { handleOpenNewChat(group.group_id, group.group_name) }}>
+                    <SidebarMenuSubButton 
+                      isActive={isNewChat && groupId === group.group_id} 
+                      className="text-muted-foreground hover:text-foreground" 
+                      onClick={() => { handleOpenNewChat(group.group_id, group.group_name) }}
+                    >
                             <MessageSquarePlus className="h-4 w-4" />
                             <span>New Chat</span>
                           </SidebarMenuSubButton>
@@ -468,6 +477,7 @@ export function ChatGroupsList() {
                             data-testid="chat-groups-list-items-session-button"
                             asChild
                             isActive={currentSessionId === session.session_id}
+                            className="text-muted-foreground hover:text-foreground"
                           >
                             <Link href={`/chat?sessionId=${session.session_id}`} className="w-37">
                               <Tooltip>
@@ -520,6 +530,7 @@ export function ChatGroupsList() {
                           </DropdownMenu>
                         </SidebarMenuSubItem>
                       ))}
+                      </SidebarMenuSub>
                     </CollapsibleContent>
                   {/* </SidebarMenuSubItem> */}
                 </Collapsible>

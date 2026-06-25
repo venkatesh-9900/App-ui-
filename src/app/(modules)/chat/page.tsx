@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useContext } from "react"
 import { useSearchParams } from "next/navigation"
 import { ChatMessages, Message } from "@/components/chat/chat-messages"
 import { ChatInput } from "@/components/chat/chat-input"
+import ChatStarter from "@/components/chat/chat-starter"
 import { ProtectedRoute } from "@/components/protected-route"
 import { loadChatMessages } from "@/hooks/chat-service"
 import { getChatTitle, handleStreamMessage } from "@/hooks/message-service"
@@ -270,22 +271,36 @@ export default function ChatPage() {
 
     return (
         <ProtectedRoute>
-            <div className="flex flex-col h-screen justify-center">
+            <div className="flex flex-col h-full justify-center">
                 {isLoadingSession && (
                     <div className="border-b p-4 bg-muted">
                         <p className="text-sm text-muted-foreground">Loading chat session...</p>
                     </div>
                 )}
-                {
-                    // Group name
-                    (groupId && !sessionId) && (
-                        <div className="flex items-center gap-2 px-3 mb-2 font-bold" style={{ fontSize: '2rem' }}>
-                            <FolderClosedIcon className="h-12 w-12" />
-                            {localStorage.getItem("groupName")}
+                {/* Analysis Group New Chat Refinement */}
+                {/* Layout-only improvement matching the approved production design. */}
+                {/* Existing architecture and chat behaviour intentionally preserved. */}
+                <div className="w-full max-w-2xl mx-auto flex flex-col items-start px-4 md:px-0">
+                    {/* Empty State */}
+                    {(!sessionId && messages.length === 0) && (
+                        <div className="mb-6 w-full">
+                            <ChatStarter />
                         </div>
-                    )
-                }
-                {sessionId && <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} readOnly={readOnly} />}
+                    )}
+
+                    {/* Group Label (hugging the input) */}
+                    {(!sessionId && groupId && messages.length === 0) && (
+                        <div className="flex items-center gap-2 mb-2 text-xs font-medium text-muted-foreground ml-1">
+                            <FolderClosedIcon className="h-[14px] w-[14px]" />
+                            <span className="truncate overflow-hidden whitespace-nowrap min-w-0 max-w-[250px]">
+                                {localStorage.getItem("groupName")}
+                            </span>
+                            <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        </div>
+                    )}
+                </div>
+
+                {(sessionId || messages.length > 0) && <ChatMessages messages={messages} isLoading={isLoading} isLoadingSession={isLoadingSession} sessionId={sessionId} readOnly={readOnly} />}
                 {!readOnly && <ChatInput 
                     key={`${sessionId || 'new'}-${initialMessage}`}
                     onSend={handleSendMessage} 
@@ -293,21 +308,24 @@ export default function ChatPage() {
                     initialValue={initialMessage}
                     currentChatId={sessionId}
                 />}
-                {(!sessionId && groupId) && (
-                    <div className="mt-4 flex flex-col gap-2 px-3">
-                        <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+
+                {(!sessionId && groupId && messages.length === 0) && (
+                    <div className="w-full max-w-2xl mx-auto mt-7 px-4 md:px-0">
+                        <h3 className="mb-3 text-xs font-semibold text-muted-foreground ml-1">
                             Suggested Prompts
                         </h3>
-                        {defaultPromptList.map((prompt, index) => (
-                            <div
-                                key={index}
-                                onClick={() => setInitialMessage(prompt)}
-                                className="group flex cursor-pointer items-center justify-between rounded-lg border bg-card p-3 transition-all hover:bg-accent hover:text-accent-foreground active:scale-[0.98]"
-                            >
-                                <span className="text-sm font-medium">{prompt}</span>
-                                <ArrowRightIcon className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
-                            </div>
-                        ))}
+                        <div className="flex flex-col gap-3">
+                            {defaultPromptList.map((prompt, index) => (
+                                <div
+                                    key={index}
+                                    onClick={() => setInitialMessage(prompt)}
+                                    className="group flex cursor-pointer items-center justify-between rounded-2xl border border-border/50 bg-card p-4 transition-all hover:bg-accent/50 hover:text-accent-foreground active:scale-[0.98] shadow-sm hover:shadow"
+                                >
+                                    <span className="text-sm font-medium">{prompt}</span>
+                                    <ArrowRightIcon className="h-4 w-4 opacity-40 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 

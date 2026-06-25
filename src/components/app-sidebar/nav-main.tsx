@@ -37,6 +37,12 @@ export function NavMain({
   const hasPrompt = searchParams.get('prompt') !== null
   const sessionId = searchParams.get('sessionId')
 
+  // Ticket #355
+  // Prevents the global "New Chat" navigation item from
+  // appearing active while creating a conversation inside
+  // an Analysis Group.
+  const groupId = searchParams.get('groupId')
+
   const isActive = (url: string) => {
     if (url === "/dashboard" && pathname === "/dashboard") {
       return true
@@ -46,11 +52,11 @@ export function NavMain({
       return true
     }
     // Check for new chat (includes ?new=true or ?prompt=xxx)
-    if (url.indexOf("/chat?new=true") != -1 && pathname === "/chat" && (isNewChat || hasPrompt)) {
+    if (url.indexOf("/chat?new=true") != -1 && pathname === "/chat" && (isNewChat || hasPrompt) && !groupId) {
       return true
     }
     // Check for regular chat (not new, not with sessionId, not with prompt)
-    if (url === "/chat" && pathname === "/chat" && !isNewChat && !sessionId && !hasPrompt) {
+    if (url === "/chat" && pathname === "/chat" && !isNewChat && !sessionId && !hasPrompt && !groupId) {
       return true
     }
     return false
